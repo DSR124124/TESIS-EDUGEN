@@ -3,11 +3,11 @@
 echo "🚀 Iniciando EduGen en Azure App Service"
 
 # Activar entorno virtual si existe
-if [ -f "antenv/bin/activate" ]; then
+if [ -f "venv/bin/activate" ]; then
   echo "🐍 Activando entorno virtual..."
-  source antenv/bin/activate
+  source venv/bin/activate
 else
-  echo "⚠️ No se encontró entorno virtual llamado 'antenv'. Continuando sin activarlo..."
+  echo "⚠️ No se encontró entorno virtual llamado 'venv'. Continuando sin activarlo..."
 fi
 
 # Establecer variable de entorno de settings de Django
