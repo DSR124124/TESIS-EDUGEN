@@ -35,9 +35,8 @@ jobs:
         echo "📦 Installed packages:"
         pip list | grep -E "(django|rest|crispy|social)"
         
-    - name: 🧪 Test Django setup
+    - name: 🧪 Test individual imports (BEFORE Django setup)
       run: |
-        export DJANGO_SETTINGS_MODULE="config.settings.base"
         echo "🧪 Testing individual imports..."
         python -c "import django; print(f'✅ Django {django.get_version()} installed successfully')"
         python -c "import rest_framework; print('✅ rest_framework installed successfully')"
@@ -45,9 +44,15 @@ jobs:
         python -c "import social_django; print('✅ social_django installed successfully')"
         python -c "import corsheaders; print('✅ corsheaders installed successfully')"
         
+    - name: 🧪 Test Django setup
+      run: |
+        export DJANGO_SETTINGS_MODULE="config.settings.github_actions"
+        echo "🔧 Testing Django setup with simplified settings..."
+        python -c "import django; django.setup(); print('✅ Django setup completed successfully')"
+        
     - name: 📁 Collect static files
       run: |
-        export DJANGO_SETTINGS_MODULE="config.settings.base"
+        export DJANGO_SETTINGS_MODULE="config.settings.github_actions"
         python manage.py collectstatic --noinput --clear
         
     - name: 🗂️ Prepare deployment
