@@ -8,14 +8,9 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
 import os
-import logging
 from django.core.wsgi import get_wsgi_application
 
-# Configuración para Azure
+# Configuración para Azure App Service
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.azure_production')
-
-# Desactivar logs innecesarios en producción
-logging.getLogger('django.db.backends').disabled = True
-logging.getLogger('django.server').disabled = True
 
 application = get_wsgi_application()
