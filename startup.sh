@@ -29,6 +29,14 @@ pip install --no-cache-dir -r requirements-azure.txt
 # Verificar que Django está instalado
 python -c "import django; print(f'Django version: {django.get_version()}')"
 
+# Probar que la aplicación arranque correctamente
+echo "🧪 Probando configuración de Django..."
+python test_azure_startup.py
+if [ $? -ne 0 ]; then
+    echo "❌ Error en la configuración de Django"
+    exit 1
+fi
+
 # Verificar la configuración de Django
 echo "🔧 Verificando configuración de Django..."
 python manage.py check --deploy --settings=config.settings.azure_production

@@ -17,10 +17,14 @@ class DeepSeekService:
         # Cargar explícitamente las variables de entorno
         load_dotenv()
         
-        # Configuración para DeepSeek API
+        # Configuración para DeepSeek API con manejo de errores
         self.api_key = os.environ.get("DEEPSEEK_API_KEY") or getattr(settings, "DEEPSEEK_API_KEY", None)
+        self.api_available = bool(self.api_key)
+        
         if not self.api_key:
-            raise ValueError("No se encontró la clave API de DeepSeek. Configúrela en settings.py o como variable de entorno DEEPSEEK_API_KEY")
+            logger.warning("⚠️ API key de DeepSeek no encontrada. Servicio de IA no disponible.")
+            self.api_available = False
+            return
 
         logger.info(f"Tipo de clave API DeepSeek: {type(self.api_key)}")
         logger.info(f"Longitud de clave API: {len(self.api_key) if self.api_key else 0}")
@@ -40,6 +44,10 @@ class DeepSeekService:
 
     def _test_api_connection(self):
         """Prueba la conexión a la API de DeepSeek"""
+        if not self.api_available:
+            logger.info("⚠️ API de DeepSeek no disponible - saltando prueba de conexión")
+            return
+            
         try:
             logger.info("Probando conexión a la API de DeepSeek...")
             url = f"{self.base_url}/models"
@@ -60,6 +68,7 @@ class DeepSeekService:
             else:
                 logger.error(f"❌ Error al conectar con la API de DeepSeek: {response.status_code}")
                 logger.error(f"Respuesta: {response.text}")
+                self.api_available = False
                 # Verificar si es error de autenticación
                 if response.status_code == 401:
                     logger.error("ERROR CRÍTICO: Clave API de DeepSeek inválida o expirada")
@@ -67,6 +76,7 @@ class DeepSeekService:
                     logger.error("ERROR CRÍTICO: Sin permisos para acceder a la API de DeepSeek")
         except Exception as e:
             logger.exception(f"❌ Error al probar conexión a API de DeepSeek: {str(e)}")
+            self.api_available = False
 
     def generate_content(self, prompt: str, max_tokens: int = 8000, temperature: float = 0.8) -> str:
         """
@@ -80,6 +90,10 @@ class DeepSeekService:
         Returns:
             str: Contenido generado completo y extenso
         """
+        if not self.api_available:
+            logger.warning("⚠️ API de DeepSeek no disponible - retornando contenido de fallback")
+            return self._create_fallback_content(prompt)
+            
         try:
             # Validar que el prompt no esté vacío
             if not prompt or not prompt.strip():
@@ -198,81 +212,67 @@ IMPORTANTE: Responde ÚNICAMENTE con código HTML completo, sin explicaciones ad
                     response_data = response.json()
                     content = response_data["choices"][0]["message"]["content"].strip()
                     
-                    if not content:
-                        logger.error("La respuesta de DeepSeek está vacía")
-                        return "Error: La API de DeepSeek devolvió una respuesta vacía."
+                    # Log de estadísticas de la respuesta
+                    token_usage = response_data.get("usage", {})
+                    logger.info(f"✅ Contenido generado exitosamente")
+                    logger.info(f"📊 Tokens utilizados: {token_usage}")
+                    logger.info(f"📝 Longitud del contenido: {len(content)} caracteres")
                     
-                    # Verificar que el contenido sea suficientemente extenso
-                    word_count = len(content.split())
-                    multimedia_count = content.count('[MULTIMEDIA]')
-                    if word_count < 3000:  # Mínimo 3000 palabras para considerarlo completo
-                        logger.warning(f"Contenido generado es corto: {word_count} palabras (objetivo: 5000+)")
-                    if multimedia_count < 10:  # Mínimo 10 recursos multimedia
-                        logger.warning(f"Pocos recursos multimedia: {multimedia_count} (objetivo: 15+)")
-                        
-                    logger.info(f"Contenido generado exitosamente - {word_count} palabras, {len(content)} caracteres")
                     return content
-                except (KeyError, IndexError, TypeError) as e:
-                    logger.error(f"Error al procesar respuesta de DeepSeek: {str(e)}")
-                    logger.error(f"Estructura de respuesta: {response.text[:500]}...")
-                    return f"Error: Respuesta malformada de DeepSeek API. {str(e)}"
-                
+                    
+                except KeyError as e:
+                    logger.error(f"❌ Error en estructura de respuesta de DeepSeek: {e}")
+                    logger.error(f"Respuesta completa: {response.text}")
+                    return self._create_fallback_content(prompt)
+                    
             else:
-                # Manejar errores de la API con más detalle
-                error_msg = f"Error de API DeepSeek: {response.status_code}"
-                try:
-                    error_data = response.json()
-                    error_detail = error_data.get('error', {})
-                    if isinstance(error_detail, dict):
-                        error_msg = error_detail.get('message', error_msg)
-                        error_type = error_detail.get('type', 'unknown')
-                        error_code = error_detail.get('code', 'unknown')
-                        logger.error(f"Error DeepSeek tipo '{error_type}' código '{error_code}': {error_msg}")
-                        
-                        # Diagnósticos específicos por tipo de error
-                        if response.status_code == 401:
-                            error_msg = "Clave API de DeepSeek inválida o expirada. Verificar configuración."
-                        elif response.status_code == 403:
-                            error_msg = "Sin permisos para acceder a DeepSeek API. Verificar suscripción."
-                        elif response.status_code == 429:
-                            error_msg = "Límite de velocidad excedido en DeepSeek API. Reintente en unos minutos."
-                        elif response.status_code == 500:
-                            error_msg = "Error interno de DeepSeek API. Reintente más tarde."
-                        elif "quota" in error_msg.lower():
-                            error_msg = "Cuota agotada en DeepSeek API. Verificar créditos disponibles."
-                        elif "model" in error_msg.lower():
-                            error_msg = f"Error de modelo: {error_msg}. Verificar modelo configurado."
-                    else:
-                        error_msg = str(error_detail)
-                except json.JSONDecodeError:
-                    error_msg = f"{error_msg} - Respuesta no JSON: {response.text[:200]}..."
-                except Exception as e:
-                    error_msg = f"{error_msg} - Error al procesar respuesta: {str(e)}"
+                logger.error(f"❌ Error HTTP de DeepSeek API: {response.status_code}")
+                logger.error(f"Respuesta: {response.text}")
                 
-                logger.error(f"Error completo en DeepSeek API: {error_msg}")
+                # Manejo específico de errores HTTP
+                if response.status_code == 401:
+                    logger.error("🔐 Error de autenticación - verificar clave API")
+                elif response.status_code == 429:
+                    logger.error("⏰ Límite de velocidad excedido - intentar más tarde")
+                elif response.status_code == 500:
+                    logger.error("🔧 Error del servidor de DeepSeek")
                 
-                # Si es un error de prompt muy largo, intentar con prompt simplificado
-                if "context_length" in error_msg.lower() or "too long" in error_msg.lower():
-                    logger.info("Intentando con prompt simplificado debido a longitud...")
-                    return self._generate_with_simplified_prompt(prompt, max_tokens, temperature)
+                return self._create_fallback_content(prompt)
                 
-                return f"Error al generar contenido: {error_msg}"
-            
         except requests.exceptions.Timeout:
-            logger.error("Timeout al conectar con DeepSeek API después de 5 minutos")
-            return "Error: Tiempo de espera agotado al conectar con DeepSeek API (5 minutos)."
-        except requests.exceptions.ConnectionError as e:
-            logger.error(f"Error de conexión con DeepSeek API: {str(e)}")
-            return "Error: No se pudo conectar con DeepSeek API. Verificar conexión a internet."
+            logger.error("⏰ Timeout en la petición a DeepSeek API")
+            return self._create_fallback_content(prompt)
+            
         except requests.exceptions.RequestException as e:
-            logger.error(f"Error de requests con DeepSeek API: {str(e)}")
-            return f"Error de red al conectar con DeepSeek API: {str(e)}"
+            logger.exception(f"❌ Error de conexión con DeepSeek API: {str(e)}")
+            return self._create_fallback_content(prompt)
+            
         except Exception as e:
-            logger.error(f"Error inesperado al generar contenido con DeepSeek: {str(e)}")
-            logger.error(f"Tipo de error: {type(e).__name__}")
-            import traceback
-            logger.error(f"Traceback completo: {traceback.format_exc()}")
-            return f"Error inesperado al generar contenido: {str(e)}"
+            logger.exception(f"❌ Error inesperado en generate_content: {str(e)}")
+            return self._create_fallback_content(prompt)
+
+    def _create_fallback_content(self, prompt: str) -> str:
+        """Crea contenido de fallback cuando la API no está disponible"""
+        return f"""
+        <h2>Contenido Educativo: {prompt[:100]}...</h2>
+        <p><strong>Nota:</strong> El servicio de IA no está disponible en este momento. Este es contenido de ejemplo.</p>
+        <div class="content-section">
+            <h3>Introducción</h3>
+            <p>Este es un tema importante en el curriculum educativo que merece atención especial.</p>
+        </div>
+        <div class="content-section">
+            <h3>Desarrollo del Tema</h3>
+            <p>Para desarrollar este contenido educativo, se recomienda seguir una metodología estructurada.</p>
+        </div>
+        <div class="content-section">
+            <h3>Actividades Sugeridas</h3>
+            <ul>
+                <li>Investigación individual sobre el tema</li>
+                <li>Discusión grupal en clase</li>
+                <li>Presentación de resultados</li>
+            </ul>
+        </div>
+        """
 
     def generate_content_with_openai(self, prompt, max_tokens, temperature):
         """Método de compatibilidad - redirige a generate_content"""

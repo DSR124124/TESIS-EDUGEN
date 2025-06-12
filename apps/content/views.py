@@ -11,12 +11,15 @@ from django.core.paginator import Paginator
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.urls import reverse
+from django.views.decorators.csrf import csrf_exempt
+import zipfile
+import tempfile
 
-from .models import ContenidoInteractivo, ContenidoRecurso
+from .models import ContenidoInteractivo, ContenidoRecurso, TipoContenido
 from .forms import PrompterForm, EditorContenidoForm, RecursoForm, BuscarImagenForm
 from .services.image_service import image_service
 from .services.scorm_service import scorm_generator
-from apps.ai_content_generator.services.llm_service import OpenAIService
+from apps.ai_content_generator.services.llm_service import DeepSeekService
 
 
 
@@ -24,14 +27,23 @@ logger = logging.getLogger(__name__)
 # Posponer la inicialización hasta que se use
 
 
-openai_service = None
+# Servicio de IA con manejo de errores
+_openai_service = None
 
 def get_openai_service():
-    global openai_service
-    if not openai_service:
-        openai_service = OpenAIService()
-    return openai_service
+    """Obtiene el servicio de IA con manejo de errores"""
+    global _openai_service
+    if _openai_service is None:
+        try:
+            _openai_service = DeepSeekService()
+            logger.info("✅ Servicio de IA inicializado correctamente")
+        except Exception as e:
+            logger.warning(f"⚠️ No se pudo inicializar el servicio de IA: {e}")
+            _openai_service = None
+    return _openai_service
 
+# Alias para compatibilidad
+openai_service = None
 
 @login_required
 def dashboard(request):
@@ -128,20 +140,34 @@ def generar_contenido(request):
             """
             
             try:
-                # Llamar al servicio de IA
-                resultado = openai_service.generate_content(prompt_enriquecido)
+                # Obtener el servicio de IA con manejo de errores
+                ai_service = get_openai_service()
                 
-                if not resultado['success']:
-                    messages.error(request, f"Error al generar contenido: {resultado.get('error', 'Error desconocido')}")
+                if not ai_service:
+                    messages.error(request, "El servicio de IA no está disponible en este momento. Por favor, configure la API key de DeepSeek.")
                     return render(request, 'content/generar.html', {'form': form})
+                
+                # Llamar al servicio de IA
+                resultado = ai_service.generate_content(prompt_enriquecido)
+                
+                # El nuevo servicio retorna directamente el contenido, no un dict con 'success'
+                if isinstance(resultado, str):
+                    # El servicio retornó contenido directamente
+                    contenido_generado = resultado
+                else:
+                    # Compatibilidad con el formato anterior
+                    if not resultado.get('success', True):
+                        messages.error(request, f"Error al generar contenido: {resultado.get('error', 'Error desconocido')}")
+                        return render(request, 'content/generar.html', {'form': form})
+                    contenido_generado = resultado.get('content', resultado)
                 
                 # Procesar la respuesta JSON
                 try:
-                    contenido_json = json.loads(resultado['content'])
+                    contenido_json = json.loads(contenido_generado)
                 except json.JSONDecodeError as e:
                     # Si no es un JSON válido, intentar extraer el JSON de la respuesta
                     import re
-                    json_match = re.search(r'```json\s*(.*?)\s*```', resultado['content'], re.DOTALL)
+                    json_match = re.search(r'```json\s*(.*?)\s*```', contenido_generado, re.DOTALL)
                     if json_match:
                         try:
                             contenido_json = json.loads(json_match.group(1))
@@ -153,7 +179,7 @@ def generar_contenido(request):
                                 "secciones": [
                                     {
                                         "titulo": "Contenido",
-                                        "contenido": resultado['content'],
+                                        "contenido": contenido_generado,
                                         "imagen_sugerida": ""
                                     }
                                 ]
@@ -166,7 +192,7 @@ def generar_contenido(request):
                             "secciones": [
                                 {
                                     "titulo": "Contenido",
-                                    "contenido": resultado['content'],
+                                    "contenido": contenido_generado,
                                     "imagen_sugerida": ""
                                 }
                             ]
@@ -180,7 +206,7 @@ def generar_contenido(request):
                     titulo=contenido_json.get('titulo', 'Contenido sin título'),
                     descripcion=contenido_json.get('descripcion', ''),
                     prompt_original=prompt,
-                    contenido_ai_original=resultado['content'],
+                    contenido_ai_original=contenido_generado,
                     contenido_html=html_contenido,
                     creado_por=request.user,
                     nivel_educativo=nivel if nivel else None,
@@ -216,18 +242,33 @@ def generar_cuestionario_ia(request):
                     'error': 'Prompt es requerido'
                 }, status=400)
             
-            # Llamar al servicio de IA
-            resultado = openai_service.generate_content(prompt)
+            # Obtener el servicio de IA con manejo de errores
+            ai_service = get_openai_service()
             
-            if not resultado['success']:
+            if not ai_service:
                 return JsonResponse({
                     'success': False,
-                    'error': f"Error al generar cuestionario: {resultado.get('error', 'Error desconocido')}"
-                }, status=500)
+                    'error': 'El servicio de IA no está disponible en este momento'
+                }, status=503)
+            
+            # Llamar al servicio de IA
+            resultado = ai_service.generate_content(prompt)
+            
+            # El nuevo servicio retorna directamente el contenido
+            if isinstance(resultado, str):
+                contenido_generado = resultado
+            else:
+                # Compatibilidad con formato anterior
+                if not resultado.get('success', True):
+                    return JsonResponse({
+                        'success': False,
+                        'error': f"Error al generar cuestionario: {resultado.get('error', 'Error desconocido')}"
+                    }, status=500)
+                contenido_generado = resultado.get('content', resultado)
             
             return JsonResponse({
                 'success': True,
-                'contenido': resultado['content']
+                'contenido': contenido_generado
             })
             
         except json.JSONDecodeError:
