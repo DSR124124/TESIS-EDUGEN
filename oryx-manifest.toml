@@ -1,0 +1,16 @@
+[build]
+# Configuración para Oryx build en Azure
+platforms = ["python"]
+
+[python]
+version = "3.11"
+virtualenv_name = "venv"
+requirements_file = "requirements-azure.txt"
+
+[startup]
+script_path = "startup.sh"
+
+[settings]
+# Optimizaciones para build
+compress_node_modules = false
+prune_dev_dependencies = true 
