@@ -18,7 +18,12 @@ from .services.image_service import image_service
 from .services.scorm_service import scorm_generator
 from apps.ai_content_generator.services.llm_service import OpenAIService
 
+
+
 logger = logging.getLogger(__name__)
+# Posponer la inicialización hasta que se use
+
+
 openai_service = None
 
 def get_openai_service():
@@ -26,11 +31,7 @@ def get_openai_service():
     if not openai_service:
         openai_service = OpenAIService()
     return openai_service
-# Importar servicio de IA desde apps/ai_content_generator
-from apps.ai_content_generator.services.llm_service import OpenAIService
 
-logger = logging.getLogger(__name__)
-# Posponer la inicialización hasta que se use
 
 @login_required
 def dashboard(request):
