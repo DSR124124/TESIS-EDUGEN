@@ -26,13 +26,24 @@ jobs:
     - name: 📋 Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements-azure.txt
+        echo "📄 Contents of requirements-azure.txt:"
+        cat requirements-azure.txt
+        echo "🧹 Clearing pip cache..."
+        pip cache purge
+        echo "🔧 Installing dependencies with verbose output..."
+        pip install --no-cache-dir -r requirements-azure.txt -v
+        echo "📦 Installed packages:"
+        pip list | grep -E "(django|rest|crispy|social)"
         
     - name: 🧪 Test Django setup
       run: |
         export DJANGO_SETTINGS_MODULE="config.settings.base"
-        python -c "import django; print(f'Django {django.get_version()} installed successfully')"
-        python -c "import crispy_bootstrap5; print('crispy_bootstrap5 installed successfully')"
+        echo "🧪 Testing individual imports..."
+        python -c "import django; print(f'✅ Django {django.get_version()} installed successfully')"
+        python -c "import rest_framework; print('✅ rest_framework installed successfully')"
+        python -c "import crispy_bootstrap5; print('✅ crispy_bootstrap5 installed successfully')"
+        python -c "import social_django; print('✅ social_django installed successfully')"
+        python -c "import corsheaders; print('✅ corsheaders installed successfully')"
         
     - name: 📁 Collect static files
       run: |
