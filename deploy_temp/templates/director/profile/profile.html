@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #005CFF;       /* Azul intenso */
+        --secondary-color: #A142F5;     /* Púrpura vibrante */
+        --accent-color: #00CFFF;        /* Azul eléctrico */
+        --dark-accent: #3B0E6D;         /* Azul violeta oscuro */
+        --bg-dark: #0A0A0A;             /* Fondo negro degradado */
+        --light-accent: rgba(0, 207, 255, 0.1); /* Azul eléctrico con transparencia */
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 20px rgba(0, 92, 255, 0.15);
+    }
+
+    /* Container */
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .profile-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    /* Profile Header */
+    .profile-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: white;
+        box-shadow: var(--shadow-md);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-header::before {
+        content: "";
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        top: -75px;
+        right: -25px;
+    }
+
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1.5rem;
+        font-size: 2rem;
+        color: var(--primary-color);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Profile Cards */
+    .profile-card {
+        border-radius: 1rem;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-md);
+        border: none;
+        background: white;
+    }
+
+    .profile-card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        font-weight: 600;
+        color: var(--dark-accent);
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+
+    .profile-card-body {
+        padding: 1.25rem;
+    }
+
+    /* Info Groups */
+    .info-group {
+        margin-bottom: 1rem;
+    }
+
+    .info-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .info-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 0.25rem;
+    }
+
+    .info-value {
+        font-weight: 500;
+        color: var(--dark-accent);
+    }
+
+    /* Badges */
+    .role-badge {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 2rem;
+        background-color: rgba(255, 255, 255, 0.2);
+        margin-left: 0.5rem;
+    }
+
+    .badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 2rem;
+        font-weight: 500;
+    }
+
+    .badge.bg-success {
+        background: linear-gradient(45deg, #28a745, #20c997) !important;
+    }
+
+    .badge.bg-danger {
+        background: linear-gradient(45deg, #dc3545, #f86032) !important;
+    }
+
+    /* Academic Items */
+    .academic-item {
+        padding: 1rem;
+        border-radius: 0.75rem;
+        margin-bottom: 0.75rem;
+        background-color: rgba(0, 0, 0, 0.02);
+        transition: all 0.3s ease;
+    }
+
+    .academic-item:hover {
+        background-color: var(--light-accent);
+        transform: translateY(-2px);
+    }
+
+    .academic-item:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Buttons */
+    .edit-button {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        border-radius: 2rem;
+        padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .edit-button:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .btn-outline-primary {
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+        border-radius: 0.5rem;
+        padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        background-color: var(--light-accent);
+        color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-header-content {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .profile-avatar {
+            margin: 0 auto 1rem;
+        }
+
+        .edit-button {
+            position: relative;
+            top: auto;
+            right: auto;
+            margin-top: 1rem;
+            display: block;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 profile-container">
+    <!-- Perfil Header -->
+    <div class="profile-header">
+        <a href="{% url 'director:user_profile_edit' %}" class="edit-button">
+            <i class="fas fa-pencil-alt me-1"></i>
+            Editar
+        </a>
+        <div class="d-flex align-items-center profile-header-content">
+            <div class="profile-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div>
+                <h2 class="mb-1">{{ user_profile.get_full_name }}</h2>
+                <p class="mb-0">{{ user_profile.email }}
+                    <span class="role-badge">
+                        {% if is_director %}Director{% elif is_teacher %}Docente{% else %}{{ user_profile.get_role_display }}{% endif %}
+                    </span>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Información de Usuario -->
+        <div class="col-lg-6 mb-4">
+            <div class="profile-card">
+                <div class="profile-card-header bg-light">
+                    <i class="fas fa-user me-2"></i> Información Personal
+                </div>
+                <div class="profile-card-body">
+                    <div class="info-group">
+                        <div class="info-label">Nombre Completo</div>
+                        <div class="info-value">{{ user_profile.get_full_name }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Nombre de Usuario</div>
+                        <div class="info-value">{{ user_profile.username }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Correo Electrónico</div>
+                        <div class="info-value">{{ user_profile.email }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Rol en el Sistema</div>
+                        <div class="info-value">{{ user_profile.get_role_display }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Miembro desde</div>
+                        <div class="info-value">{{ user_profile.date_joined|date:"d/m/Y" }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Estado</div>
+                        <div class="info-value">
+                            {% if user_profile.is_active %}
+                            <span class="badge bg-success">Activo</span>
+                            {% else %}
+                            <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Información Específica del Perfil -->
+        <div class="col-lg-6 mb-4">
+            <div class="profile-card">
+                <div class="profile-card-header bg-light">
+                    <i class="fas fa-id-card me-2"></i> Datos de Perfil
+                </div>
+                <div class="profile-card-body">
+                    {% if profile %}
+                    <div class="info-group">
+                        <div class="info-label">DNI</div>
+                        <div class="info-value">{{ profile.dni }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Teléfono</div>
+                        <div class="info-value">{{ profile.phone }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Dirección</div>
+                        <div class="info-value">{{ profile.address }}</div>
+                    </div>
+                    {% if is_teacher %}
+                    <div class="info-group">
+                        <div class="info-label">Código de Docente</div>
+                        <div class="info-value">{{ profile.teacher_code }}</div>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    <div class="alert alert-info mb-0">
+                        No hay información adicional de perfil disponible.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if is_teacher and academic_profile %}
+            <div class="profile-card">
+                <div class="profile-card-header bg-light">
+                    <i class="fas fa-graduation-cap me-2"></i> Información Académica
+                </div>
+                <div class="profile-card-body">
+                    <div class="info-group">
+                        <div class="info-label">Especialidad</div>
+                        <div class="info-value">{{ academic_profile.get_speciality_display }}</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Cursos Asignados</div>
+                        <div class="info-value">
+                            {% with course_assignments=academic_profile.courseassignment_set.all %}
+                            {% if course_assignments %}
+                            <div class="mt-2">
+                                {% for assignment in course_assignments %}
+                                <div class="academic-item">
+                                    <div><strong>{{ assignment.course.name }}</strong> - {{ assignment.section }}</div>
+                                    <div class="small text-muted">{{ assignment.hours_per_week }} horas/semana</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <span class="badge bg-warning text-dark">No hay cursos asignados</span>
+                            {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Contraseña y Seguridad -->
+    <div class="profile-card">
+        <div class="profile-card-header bg-light">
+            <i class="fas fa-lock me-2"></i> Seguridad
+        </div>
+        <div class="profile-card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-group">
+                        <div class="info-label">Contraseña</div>
+                        <div class="info-value">••••••••</div>
+                    </div>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="#" class="btn btn-outline-primary">
+                        <i class="fas fa-key me-1"></i> Cambiar Contraseña
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

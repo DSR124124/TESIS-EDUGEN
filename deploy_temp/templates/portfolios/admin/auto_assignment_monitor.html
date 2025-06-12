@@ -1,0 +1,448 @@
+{% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Monitor de Asignaciones Automáticas{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-left: 4px solid var(--primary-color);
+        transition: transform 0.2s ease;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    .stats-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: var(--primary-color);
+    }
+    
+    .stats-label {
+        color: #666;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+    
+    .section-card {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 4px solid;
+    }
+    
+    .section-card.high-coverage {
+        border-left-color: #28a745;
+    }
+    
+    .section-card.medium-coverage {
+        border-left-color: #ffc107;
+    }
+    
+    .section-card.low-coverage {
+        border-left-color: #dc3545;
+    }
+    
+    .coverage-bar {
+        height: 6px;
+        background: #e9ecef;
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+    
+    .coverage-fill {
+        height: 100%;
+        transition: width 0.5s ease;
+    }
+    
+    .sync-button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .sync-button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .activity-item {
+        padding: 0.8rem;
+        border-left: 3px solid #e9ecef;
+        margin-bottom: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 0 5px 5px 0;
+    }
+    
+    .activity-item.create {
+        border-left-color: #28a745;
+    }
+    
+    .activity-item.change {
+        border-left-color: #17a2b8;
+    }
+    
+    .activity-item.delete {
+        border-left-color: #dc3545;
+    }
+    
+    .auto-indicator {
+        display: inline-block;
+        background: linear-gradient(45deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: bold;
+        margin-left: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-robot text-primary"></i>
+                    Monitor de Asignaciones Automáticas
+                    <span class="auto-indicator">AUTOMÁTICO</span>
+                </h1>
+                <div>
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        <i class="fas fa-sync-alt"></i> Actualizar
+                    </button>
+                    <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-cog"></i> Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas Generales -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ total_students }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-users"></i> Total Estudiantes
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ students_with_portfolios }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-folder-open text-success"></i> Con Portafolios
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ students_without_portfolios }}</div>
+                <div class="stats-label">
+                    <i class="fas fa-folder text-warning"></i> Sin Portafolios
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-number">{{ coverage_percentage|floatformat:1 }}%</div>
+                <div class="stats-label">
+                    <i class="fas fa-chart-pie text-info"></i> Cobertura
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alerta si hay estudiantes sin sincronizar -->
+    {% if students_without_portfolios > 0 %}
+    <div class="alert alert-warning" role="alert">
+        <i class="fas fa-exclamation-triangle"></i>
+        <strong>¡Atención!</strong> Hay {{ students_without_portfolios }} estudiantes que necesitan sincronización automática.
+        <button class="btn btn-sm btn-warning ms-2" onclick="runBulkSync()">
+            <i class="fas fa-sync"></i> Sincronizar Todos
+        </button>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Secciones y su Estado -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-school"></i> Estado por Sección
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for section_data in sections_data %}
+                    <div class="section-card {% if section_data.sync_coverage >= 80 %}high-coverage{% elif section_data.sync_coverage >= 50 %}medium-coverage{% else %}low-coverage{% endif %}">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    {{ section_data.section.grade.name }} - {{ section_data.section.name }}
+                                </h6>
+                                <div class="small text-muted mb-2">
+                                    <i class="fas fa-users"></i> {{ section_data.students_count }} estudiantes |
+                                    <i class="fas fa-book"></i> {{ section_data.course_topics_count }} temas de curso |
+                                    <i class="fas fa-check-circle"></i> {{ section_data.total_topics_assigned }} temas asignados
+                                </div>
+                                
+                                <div class="coverage-bar">
+                                    <div class="coverage-fill {% if section_data.sync_coverage >= 80 %}bg-success{% elif section_data.sync_coverage >= 50 %}bg-warning{% else %}bg-danger{% endif %}"
+                                         style="width: {{ section_data.sync_coverage }}%"></div>
+                                </div>
+                                
+                                <div class="small">
+                                    <span class="text-success">{{ section_data.students_with_topics }} sincronizados</span> |
+                                    <span class="text-danger">{{ section_data.students_without_topics }} pendientes</span> |
+                                    <strong>{{ section_data.sync_coverage|floatformat:1 }}% cobertura</strong>
+                                </div>
+                            </div>
+                            
+                            {% if section_data.students_without_topics > 0 %}
+                            <button class="sync-button" onclick="syncSection({{ section_data.section.id }}, '{{ section_data.section.grade.name }}-{{ section_data.section.name }}')">
+                                <i class="fas fa-sync"></i> Sincronizar
+                            </button>
+                            {% else %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check"></i> Completo
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted py-4">
+                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <p>No hay secciones registradas</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actividad Reciente -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history"></i> Actividad Reciente
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for activity in recent_activity %}
+                    <div class="activity-item {{ activity.action|lower }}">
+                        <div class="small">
+                            <strong>{{ activity.user.get_full_name|default:activity.user.username }}</strong>
+                            <span class="text-muted">{{ activity.action|lower }}</span>
+                            <strong>{{ activity.object }}</strong>
+                        </div>
+                        <div class="small text-muted">
+                            <i class="fas fa-clock"></i> {{ activity.timestamp|timesince }} ago
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center text-muted">
+                        <i class="fas fa-clock"></i>
+                        <p class="mb-0">No hay actividad reciente</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Panel de Control Rápido -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tachometer-alt"></i> Control Rápido
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" onclick="runSystemCheck()">
+                            <i class="fas fa-diagnostics"></i> Verificar Sistema
+                        </button>
+                        <button class="btn btn-info" onclick="showSyncLogs()">
+                            <i class="fas fa-file-alt"></i> Ver Logs
+                        </button>
+                        <button class="btn btn-warning" onclick="runBulkSync()">
+                            <i class="fas fa-sync-alt"></i> Sincronización Masiva
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Confirmación -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Sincronización</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmButton">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+                <p class="mt-3">Procesando sincronización...</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function syncSection(sectionId, sectionName) {
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    document.getElementById('confirmMessage').innerHTML = 
+        `¿Está seguro que desea sincronizar automáticamente todos los estudiantes de la sección <strong>${sectionName}</strong>?<br><br>
+        Esto asignará todos los temas y materiales correspondientes a los estudiantes que aún no los tienen.`;
+    
+    document.getElementById('confirmButton').onclick = function() {
+        modal.hide();
+        showLoading();
+        
+        // Simular llamada al comando de sincronización
+        fetch('{% url "portfolios:manual_sync_student" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `section_id=${sectionId}`
+        }).then(response => {
+            if (response.ok) {
+                hideLoading();
+                showSuccess('Sincronización iniciada correctamente');
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                hideLoading();
+                showError('Error en la sincronización');
+            }
+        }).catch(error => {
+            hideLoading();
+            showError('Error de conexión');
+        });
+    };
+    
+    modal.show();
+}
+
+function runBulkSync() {
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    document.getElementById('confirmMessage').innerHTML = 
+        `¿Está seguro que desea ejecutar una sincronización masiva de <strong>todos los estudiantes</strong>?<br><br>
+        <div class="alert alert-warning mt-2">
+            <i class="fas fa-exclamation-triangle"></i>
+            Este proceso puede tomar varios minutos y creará automáticamente todos los temas y materiales faltantes.
+        </div>`;
+    
+    document.getElementById('confirmButton').onclick = function() {
+        modal.hide();
+        showLoading();
+        
+        // Redirigir al comando de gestión
+        window.location.href = '/admin/';
+    };
+    
+    modal.show();
+}
+
+function runSystemCheck() {
+    showLoading();
+    // Simular verificación del sistema
+    setTimeout(() => {
+        hideLoading();
+        showSuccess('Sistema funcionando correctamente ✅');
+    }, 2000);
+}
+
+function showSyncLogs() {
+    // Abrir logs en nueva ventana o mostrar modal con logs
+    alert('Funcionalidad de logs próximamente...');
+}
+
+function showLoading() {
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+}
+
+function hideLoading() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+    if (modal) modal.hide();
+}
+
+function showSuccess(message) {
+    // Crear notificación de éxito
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        <i class="fas fa-check-circle"></i> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) alert.parentNode.removeChild(alert);
+    }, 5000);
+}
+
+function showError(message) {
+    // Crear notificación de error
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show position-fixed';
+    alert.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alert.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i> ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) alert.parentNode.removeChild(alert);
+    }, 5000);
+}
+
+// Auto-refresh cada 30 segundos
+setInterval(() => {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %} 

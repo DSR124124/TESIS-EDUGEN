@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Generar Paquete SCORM | {{ contenido.titulo }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0 text-gray-800">Crear Paquete SCORM</h1>
+            <p class="text-muted">Convierte tu contenido en un paquete SCORM compatible con cualquier LMS</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'content:editar_contenido' pk=contenido.id %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver al Editor
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Información del Paquete SCORM</h6>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="scorm-form">
+                        {% csrf_token %}
+                        
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">¿Qué es SCORM?</h5>
+                            <p>SCORM (Sharable Content Object Reference Model) es un estándar para crear objetos de aprendizaje que se pueden utilizar en diferentes sistemas de gestión de aprendizaje (LMS) como Moodle, Chamilo, Canvas, Blackboard, etc.</p>
+                            <hr>
+                            <p class="mb-0">Al convertir tu contenido a SCORM, podrás:</p>
+                            <ul>
+                                <li>Subir el material a cualquier plataforma LMS</li>
+                                <li>Registrar el progreso de los estudiantes</li>
+                                <li>Distribuir el contenido fácilmente</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h5>Resumen del Contenido</h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>Título:</th>
+                                        <td>{{ contenido.titulo }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Descripción:</th>
+                                        <td>{{ contenido.descripcion|default:"Sin descripción" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Nivel Educativo:</th>
+                                        <td>{{ contenido.nivel_educativo|default:"No especificado" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Estado:</th>
+                                        <td>
+                                            {% if contenido.estado == 'borrador' %}
+                                            <span class="badge bg-warning text-dark">Borrador</span>
+                                            {% elif contenido.estado == 'publicado' %}
+                                            <span class="badge bg-success">Publicado</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">{{ contenido.estado }}</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        {% if contenido.convertido_scorm %}
+                        <div class="alert alert-success">
+                            <h5 class="alert-heading">¡Ya existe un paquete SCORM!</h5>
+                            <p>Este contenido ya tiene un paquete SCORM generado. Puedes descargarlo o generar uno nuevo.</p>
+                            <hr>
+                            <a href="{% url 'content:descargar_scorm' pk=contenido.id %}" class="btn btn-success">
+                                <i class="fas fa-download"></i> Descargar Paquete SCORM
+                            </a>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary" id="generar-btn">
+                                {% if contenido.convertido_scorm %}
+                                <i class="fas fa-sync-alt"></i> Regenerar Paquete SCORM
+                                {% else %}
+                                <i class="fas fa-file-archive"></i> Generar Paquete SCORM
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">¿Cómo usar el paquete SCORM?</h6>
+                </div>
+                <div class="card-body">
+                    <ol class="list-group list-group-numbered mb-3">
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Genera el paquete</div>
+                                Haz clic en "Generar Paquete SCORM" y espera unos momentos.
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Descarga el archivo ZIP</div>
+                                Una vez generado, descarga el archivo ZIP que contiene tu paquete SCORM.
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Sube a tu LMS</div>
+                                En tu plataforma LMS (Moodle, Chamilo, etc.), busca la opción para agregar actividad SCORM y sube el archivo ZIP.
+                            </div>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-start">
+                            <div class="ms-2 me-auto">
+                                <div class="fw-bold">Configura y listo</div>
+                                Configura los parámetros según tu LMS y el contenido estará disponible para tus estudiantes.
+                            </div>
+                        </li>
+                    </ol>
+                    
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i> Los paquetes SCORM generados son compatibles con SCORM 1.2, el estándar más ampliamente soportado.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Generación en Proceso -->
+<div class="modal fade" id="generandoSCORMModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="generandoSCORMModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generandoSCORMModalLabel">Generando Paquete SCORM</h5>
+            </div>
+            <div class="modal-body text-center">
+                <div class="mb-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+                <p>Estamos generando tu paquete SCORM.</p>
+                <p class="text-muted small">Este proceso puede tardar entre 10-20 segundos dependiendo del tamaño del contenido y los recursos.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar modal al enviar formulario
+        document.getElementById('scorm-form').addEventListener('submit', function() {
+            const modal = new bootstrap.Modal(document.getElementById('generandoSCORMModal'));
+            modal.show();
+        });
+    });
+</script>
+{% endblock %} 

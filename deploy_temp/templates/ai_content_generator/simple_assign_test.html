@@ -1,0 +1,38 @@
+{% extends 'dashboard/teacher/base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2>Vista de diagnóstico para asignación de contenido</h2>
+        </div>
+        <div class="card-body">
+            <h3>Información del contenido</h3>
+            <ul>
+                <li><strong>ID:</strong> {{ content.id }}</li>
+                <li><strong>Título:</strong> {{ content.title }}</li>
+                <li><strong>Creado:</strong> {{ content.created_at }}</li>
+            </ul>
+            
+            <h3>Información de depuración</h3>
+            <pre>{{ debug_info }}</pre>
+            
+            <h3>Enlaces de prueba</h3>
+            <div class="mb-3">
+                <a href="{% url 'ai:content_detail' pk=content.id %}" class="btn btn-secondary">
+                    Volver al detalle de contenido
+                </a>
+            </div>
+            
+            <div class="mb-3">
+                <a href="{% url 'ai:direct_assign' pk=content.id %}" class="btn btn-primary">
+                    Ir a la vista de asignación normal
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

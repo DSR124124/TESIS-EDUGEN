@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if form.instance.pk %}Editar{% else %}Crear{% endif %} Sección{% endblock %}
+
+{% block extra_css %}
+<style>
+    .content-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+    
+    .section-form-card {
+        border-radius: 15px;
+        border: none;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .section-form-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 92, 255, 0.12);
+    }
+    
+    .card-header-gradient {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 1.5rem;
+        position: relative;
+    }
+    
+    .section-icon {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 4rem;
+        opacity: 0.2;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 10px;
+        padding: 0.7rem 1rem;
+        border: 1px solid #e0e0e0;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(0, 92, 255, 0.1);
+    }
+    
+    .form-switch .form-check-input {
+        width: 3rem;
+        height: 1.5rem;
+        cursor: pointer;
+    }
+    
+    .btn-action {
+        border-radius: 10px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action.btn-primary {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+    }
+    
+    .btn-action.btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 92, 255, 0.3);
+    }
+    
+    .btn-action.btn-secondary {
+        background: #f8f9fa;
+        color: #495057;
+        border: 1px solid #e0e0e0;
+    }
+    
+    .btn-action.btn-secondary:hover {
+        background: #e9ecef;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        color: #495057;
+    }
+    
+    .form-tip {
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+    }
+    
+    .form-section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid rgba(0, 92, 255, 0.1);
+    }
+    
+    @media (max-width: 768px) {
+        .content-container {
+            padding: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Mensajes -->
+    {% if messages %}
+    <div class="row mb-4">
+        <div class="col">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card section-form-card">
+                <div class="card-header-gradient">
+                    <h2 class="h3 mb-1 fw-bold">
+                        {% if form.instance.pk %}Editar{% else %}Crear{% endif %} Sección
+                    </h2>
+                    <p class="mb-0 opacity-75">Complete los datos para {% if form.instance.pk %}actualizar{% else %}crear{% endif %} la sección</p>
+                    <i class="fas fa-door-open section-icon"></i>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="form-section">
+                            <div class="form-section-title">Información Básica</div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.grade.id_for_label }}" class="form-label">Grado</label>
+                                    {{ form.grade }}
+                                    <div class="form-tip">Seleccione el grado al que pertenecerá esta sección</div>
+                                    {% if form.grade.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.grade.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.name.id_for_label }}" class="form-label">Nombre de la Sección</label>
+                                    {{ form.name }}
+                                    <div class="form-tip">Ej: A, B, C, etc.</div>
+                                    {% if form.name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.name.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <div class="form-section-title">Configuración</div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="{{ form.capacity.id_for_label }}" class="form-label">Capacidad</label>
+                                    {{ form.capacity }}
+                                    <div class="form-tip">Número máximo de estudiantes permitidos</div>
+                                    {% if form.capacity.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.capacity.errors }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="{{ form.is_active.id_for_label }}" class="form-label d-block">Estado</label>
+                                    <div class="form-check form-switch mt-2">
+                                        {{ form.is_active }}
+                                        <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                            Activo
+                                        </label>
+                                    </div>
+                                    <div class="form-tip">Una sección inactiva no recibirá nuevos estudiantes</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'director:academic_structure' %}" class="btn btn-action btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Volver
+                            </a>
+                            <button type="submit" class="btn btn-action btn-primary">
+                                <i class="fas fa-save me-2"></i>
+                                {% if form.instance.pk %}Actualizar{% else %}Crear{% endif %} Sección
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mejoras visuales a los campos de formulario
+        document.querySelectorAll('.form-control, .form-select').forEach(function(el) {
+            el.classList.add('shadow-sm');
+        });
+        
+        // Inicializar tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+        
+        // Animación en hover para los elementos del formulario
+        document.querySelectorAll('.form-control, .form-select').forEach(function(el) {
+            el.addEventListener('focus', function() {
+                this.closest('.col-md-6').style.transform = 'translateY(-3px)';
+                this.closest('.col-md-6').style.transition = 'transform 0.3s ease';
+            });
+            
+            el.addEventListener('blur', function() {
+                this.closest('.col-md-6').style.transform = 'translateY(0)';
+            });
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

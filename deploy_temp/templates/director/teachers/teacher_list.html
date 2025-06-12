@@ -1,0 +1,569 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #005CFF;       /* Azul intenso */
+        --secondary-color: #A142F5;     /* Púrpura vibrante */
+        --accent-color: #00CFFF;        /* Azul eléctrico */
+        --dark-accent: #3B0E6D;         /* Azul violeta oscuro */
+        --bg-dark: #0A0A0A;             /* Fondo negro degradado */
+        --light-accent: rgba(0, 207, 255, 0.1); /* Azul eléctrico con transparencia */
+    }
+
+    .teacher-card {
+        border: none;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .teacher-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 92, 255, 0.15);
+    }
+
+    .teacher-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 20px;
+        position: relative;
+        color: white;
+    }
+
+    .teacher-avatar {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        border: 4px solid white;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .teacher-avatar i {
+        font-size: 2rem;
+        color: var(--primary-color);
+    }
+
+    .teacher-info {
+        padding: 20px;
+        background: white;
+    }
+
+    .teacher-name {
+        font-weight: 600;
+        color: var(--dark-accent);
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .teacher-details {
+        margin-bottom: 15px;
+    }
+
+    .teacher-detail {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .teacher-detail i {
+        width: 20px;
+        margin-right: 10px;
+        color: var(--primary-color);
+    }
+
+    .teacher-status {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        margin-bottom: 15px;
+    }
+
+    .status-active {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+    .status-inactive {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .teacher-actions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .btn-action {
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-edit {
+        background: var(--light-accent);
+        color: var(--primary-color);
+    }
+
+    .btn-delete {
+        background: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+    .btn-action:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-edit:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background: #dc3545;
+        color: white;
+    }
+
+    .search-bar {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        margin-bottom: 30px;
+    }
+
+    .search-input {
+        border: none;
+        border-radius: 8px;
+        padding: 12px 15px;
+        background: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        box-shadow: 0 0 0 3px var(--light-accent);
+        background: white;
+    }
+
+    .filter-button {
+        border: none;
+        padding: 8px 15px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        color: var(--dark-accent);
+        transition: all 0.3s ease;
+    }
+
+    .filter-button.active {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .filter-button:hover:not(.active) {
+        background: var(--light-accent);
+        color: var(--primary-color);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 20px;
+    }
+
+    .empty-state h3 {
+        color: var(--dark-accent);
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+
+    /* Estilos para las tarjetas de estadísticas */
+    .stat-card {
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        transform: translate(30px, -30px);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 0;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        font-weight: 500;
+    }
+
+    .stat-icon {
+        opacity: 0.8;
+    }
+
+    /* Animaciones simples para las estadísticas */
+    .stat-card:hover .stat-number {
+        transform: scale(1.05);
+        transition: transform 0.2s ease;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-chalkboard-teacher text-primary me-2"></i>
+            Gestión de Docentes
+        </h2>
+        <a href="{% url 'director:teacher_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>
+            Nuevo Docente
+        </a>
+    </div>
+
+    <!-- Notificaciones simples de Django -->
+    {% if messages %}
+    <div class="row mb-4">
+        <div class="col">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                <i class="fas fa-info-circle me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Statistics Panel -->
+    <div class="row mb-4" id="statsPanel">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card bg-primary text-white">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon me-3">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <div>
+                        <h3 class="stat-number" id="totalTeachers">{{ total_teachers|default:0 }}</h3>
+                        <p class="stat-label mb-0">Total Docentes</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card bg-success text-white">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon me-3">
+                        <i class="fas fa-user-check fa-2x"></i>
+                    </div>
+                    <div>
+                        <h3 class="stat-number" id="activeTeachers">{{ active_teachers|default:0 }}</h3>
+                        <p class="stat-label mb-0">Activos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card bg-warning text-white">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon me-3">
+                        <i class="fas fa-user-times fa-2x"></i>
+                    </div>
+                    <div>
+                        <h3 class="stat-number" id="inactiveTeachers">{{ inactive_teachers|default:0 }}</h3>
+                        <p class="stat-label mb-0">Inactivos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="stat-card bg-info text-white">
+                <div class="d-flex align-items-center">
+                    <div class="stat-icon me-3">
+                        <i class="fas fa-calendar fa-2x"></i>
+                    </div>
+                    <div>
+                        <h3 class="stat-number">{{ teachers|length }}</h3>
+                        <p class="stat-label mb-0">Mostrados</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-bar">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control search-input border-0" placeholder="Buscar docentes por nombre, código o correo...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn filter-button active" data-filter="all">Todos</button>
+                    <button type="button" class="btn filter-button" data-filter="active">Activos</button>
+                    <button type="button" class="btn filter-button" data-filter="inactive">Inactivos</button>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <button class="btn filter-button w-100" id="sortButton">
+                    <i class="fas fa-sort-alpha-down me-1"></i> Ordenar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Teachers Grid -->
+    <div class="row" id="teachersContainer">
+        {% for teacher in teachers %}
+        <div class="col-lg-3 col-md-4 col-sm-6 mb-4 teacher-item" 
+             data-status="{% if teacher.is_active %}active{% else %}inactive{% endif %}"
+             data-name="{{ teacher.user.get_full_name }}"
+             data-email="{{ teacher.user.email }}"
+             data-code="{{ teacher.teacher_code }}">
+            <div class="teacher-card">
+                <div class="teacher-header">
+                    <div class="teacher-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+                <div class="teacher-info">
+                    <h5 class="teacher-name">{{ teacher.user.get_full_name }}</h5>
+                    <span class="teacher-status {% if teacher.is_active %}status-active{% else %}status-inactive{% endif %}">
+                        <i class="fas fa-circle me-1"></i>
+                        {% if teacher.is_active %}Activo{% else %}Inactivo{% endif %}
+                    </span>
+                    <div class="teacher-details">
+                        <div class="teacher-detail">
+                            <i class="fas fa-id-badge"></i>
+                            {{ teacher.teacher_code }}
+                        </div>
+                        <div class="teacher-detail">
+                            <i class="fas fa-envelope"></i>
+                            {{ teacher.user.email }}
+                        </div>
+                        <div class="teacher-detail">
+                            <i class="fas fa-id-card"></i>
+                            {{ teacher.dni }}
+                        </div>
+                        <div class="teacher-detail">
+                            <i class="fas fa-phone"></i>
+                            {{ teacher.phone }}
+                        </div>
+                    </div>
+                    <div class="teacher-actions">
+                        <a href="{% url 'director:teacher_update' teacher.id %}" class="btn-action btn-edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <a href="{% url 'director:teacher_delete' teacher.id %}" class="btn-action btn-delete">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state">
+                <i class="fas fa-chalkboard-teacher"></i>
+                <h3>No hay docentes registrados</h3>
+                <p>Comienza registrando un nuevo docente para gestionar el personal académico.</p>
+                <a href="{% url 'director:teacher_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>
+                    Registrar Docente
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Search functionality (sin notificaciones automáticas)
+        const searchInput = document.getElementById('searchInput');
+        const teacherItems = document.querySelectorAll('.teacher-item');
+        const teachersContainer = document.getElementById('teachersContainer');
+        
+        searchInput.addEventListener('input', function() {
+            const searchValue = this.value.toLowerCase();
+            let visibleCount = 0;
+            
+            teacherItems.forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                const email = item.dataset.email.toLowerCase();
+                const code = item.dataset.code.toLowerCase();
+                
+                if (name.includes(searchValue) || email.includes(searchValue) || code.includes(searchValue)) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+        
+        // Filter functionality
+        const filterButtons = document.querySelectorAll('.filter-button');
+        
+        filterButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const filter = this.dataset.filter;
+                
+                // Update active button
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Filter teachers
+                teacherItems.forEach(item => {
+                    if (filter === 'all' || item.dataset.status === filter) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Sort functionality
+        const sortButton = document.getElementById('sortButton');
+        let sortAscending = true;
+        
+        sortButton.addEventListener('click', function() {
+            const items = Array.from(teacherItems);
+            
+            items.sort((a, b) => {
+                const nameA = a.dataset.name;
+                const nameB = b.dataset.name;
+                
+                if (sortAscending) {
+                    return nameA.localeCompare(nameB);
+                } else {
+                    return nameB.localeCompare(nameA);
+                }
+            });
+            
+            // Update sort icon and toggle sort direction
+            sortAscending = !sortAscending;
+            const icon = this.querySelector('i');
+            if (sortAscending) {
+                icon.className = 'fas fa-sort-alpha-down me-1';
+            } else {
+                icon.className = 'fas fa-sort-alpha-up me-1';
+            }
+            
+            // Reappend sorted items
+            items.forEach(item => {
+                teachersContainer.appendChild(item);
+            });
+        });
+        
+        // Confirmación simple antes de eliminar docentes
+        const deleteLinks = document.querySelectorAll('.btn-delete');
+        deleteLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                const teacherCard = this.closest('.teacher-item');
+                const teacherName = teacherCard.dataset.name;
+                
+                if (confirm(`¿Está seguro de que desea eliminar al docente "${teacherName}"?`)) {
+                    window.location.href = this.href;
+                }
+            });
+        });
+        
+        // Efectos hover simples para las tarjetas
+        teacherItems.forEach(item => {
+            const card = item.querySelector('.teacher-card');
+            
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px)';
+                this.style.boxShadow = '0 12px 25px rgba(0, 92, 255, 0.2)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 8px 20px rgba(0, 92, 255, 0.15)';
+            });
+        });
+    });
+    
+    // Funciones simples para notificaciones únicas (solo cuando es necesario)
+    let lastNotification = null;
+    
+    function showSimpleNotification(message, type = 'info') {
+        // Evitar duplicados
+        if (lastNotification === message) {
+            return;
+        }
+        lastNotification = message;
+        
+        // Limpiar después de 3 segundos
+        setTimeout(() => {
+            lastNotification = null;
+        }, 3000);
+        
+        // Solo usar console.log para notificaciones simples
+        console.log(`${type.toUpperCase()}: ${message}`);
+    }
+</script>
+{% endblock %} 

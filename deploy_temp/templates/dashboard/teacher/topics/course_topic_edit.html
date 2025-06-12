@@ -1,0 +1,371 @@
+{% extends 'dashboard/teacher/base.html' %}
+{% load static %}
+
+{% block title %}Editar Tema - {{ course_topic.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Content Container */
+    .topic-edit-content {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+        box-sizing: border-box;
+        overflow-x: hidden;
+    }
+    
+    @media (max-width: 768px) {
+        .topic-edit-content {
+            padding: 15px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .topic-edit-content {
+            padding: 10px;
+        }
+    }
+
+    /* Header del formulario */
+    .edit-header {
+        background: linear-gradient(135deg, #005CFF, #A142F5);
+        border-radius: 12px;
+        color: white;
+        padding: 25px;
+        margin-bottom: 25px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .edit-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+        transform: rotate(30deg);
+    }
+
+    /* Formulario */
+    .form-container {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        padding: 20px;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .form-body {
+        padding: 30px;
+    }
+
+    .form-group {
+        margin-bottom: 25px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-control {
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px 15px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #005CFF;
+        box-shadow: 0 0 0 0.2rem rgba(0, 92, 255, 0.25);
+        outline: none;
+    }
+
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+
+    .invalid-feedback {
+        display: block;
+        color: #dc3545;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+
+    /* Botones personalizados */
+    .custom-btn-primary {
+        background: linear-gradient(135deg, #005CFF, #A142F5);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        font-size: 16px;
+    }
+
+    .custom-btn-primary:hover {
+        background: linear-gradient(135deg, #A142F5, #005CFF);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 92, 255, 0.25);
+    }
+
+    .custom-btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px 25px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        font-size: 16px;
+    }
+
+    .custom-btn-secondary:hover {
+        background-color: #5a6268;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(108, 117, 125, 0.25);
+    }
+
+    /* Información del contexto */
+    .context-info {
+        background: linear-gradient(135deg, rgba(0, 92, 255, 0.05), rgba(161, 66, 245, 0.05));
+        border: 1px solid rgba(0, 92, 255, 0.2);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .context-info h6 {
+        color: #005CFF;
+        margin-bottom: 10px;
+        font-weight: 600;
+    }
+
+    .context-info p {
+        margin-bottom: 5px;
+        color: #6c757d;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-body {
+            padding: 20px;
+        }
+        
+        .btn-group {
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .btn-group .btn {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block teacher_content %}
+<div class="topic-edit-content">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard:teacher' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'dashboard:teacher_sections' %}">Secciones</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'dashboard:teacher_section_detail' section.id %}">{{ section.grade.name }} - Sección {{ section.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'dashboard:course_topic_detail' course_topic.id %}">{{ course_topic.title }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Editar</li>
+        </ol>
+    </nav>
+
+    <!-- Header del formulario -->
+    <div class="edit-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap" style="position: relative; z-index: 2;">
+            <div class="edit-info mb-3 mb-md-0">
+                <span class="badge bg-light text-dark mb-2">{{ course.code }}</span>
+                <h1 class="h3 fw-bold mb-2">Editar Tema</h1>
+                <h2 class="h5 opacity-75 mb-2">{{ course.name }}</h2>
+                <p class="mb-0 opacity-90">{{ section.grade.name }} - Sección {{ section.name }}</p>
+            </div>
+            <div class="edit-actions d-flex gap-2 flex-wrap">
+                <a href="{% url 'dashboard:course_topic_detail' course_topic.id %}" 
+                   class="btn btn-outline-light">
+                    <i class="fas fa-arrow-left me-1"></i> Cancelar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información del contexto -->
+    <div class="context-info">
+        <h6><i class="fas fa-info-circle me-2"></i>Información del Tema</h6>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Curso:</strong> {{ course.name }} ({{ course.code }})</p>
+                <p><strong>Sección:</strong> {{ section.grade.name }} - Sección {{ section.name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Fecha de creación:</strong> {{ course_topic.created_at|date:"d/m/Y" }}</p>
+                <p><strong>Estado:</strong> <span class="badge bg-success">Activo</span></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de edición -->
+    <div class="form-container">
+        <div class="form-header">
+            <h5 class="fw-bold mb-0">
+                <i class="fas fa-edit me-2"></i>
+                Editar Información del Tema
+            </h5>
+        </div>
+        
+        <div class="form-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <!-- Campo Título -->
+                <div class="form-group">
+                    <label for="{{ form.title.id_for_label }}" class="form-label">
+                        <i class="fas fa-bookmark me-2"></i>Título del Tema *
+                    </label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.title.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-text text-muted">
+                        Ingresa un título descriptivo para el tema del curso.
+                    </small>
+                </div>
+
+                <!-- Campo Descripción -->
+                <div class="form-group">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">
+                        <i class="fas fa-align-left me-2"></i>Descripción
+                    </label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="invalid-feedback">
+                            {% for error in form.description.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small class="form-text text-muted">
+                        Proporciona una descripción detallada del tema (opcional).
+                    </small>
+                </div>
+
+                <!-- Botones de acción -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mt-4">
+                    <div class="btn-group d-flex gap-2">
+                        <button type="submit" class="custom-btn-primary">
+                            <i class="fas fa-save me-2"></i>
+                            Guardar Cambios
+                        </button>
+                        <a href="{% url 'dashboard:course_topic_detail' course_topic.id %}" 
+                           class="custom-btn-secondary">
+                            <i class="fas fa-times me-2"></i>
+                            Cancelar
+                        </a>
+                    </div>
+                    
+                    <div class="text-muted small">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Los campos marcados con * son obligatorios
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configurar los campos del formulario
+        const titleField = document.getElementById('{{ form.title.id_for_label }}');
+        const descriptionField = document.getElementById('{{ form.description.id_for_label }}');
+        
+        // Añadir clases CSS a los campos
+        if (titleField) {
+            titleField.classList.add('form-control');
+            titleField.setAttribute('placeholder', 'Ej: Introducción a las Matemáticas');
+            titleField.setAttribute('maxlength', '200');
+        }
+        
+        if (descriptionField) {
+            descriptionField.classList.add('form-control');
+            descriptionField.setAttribute('placeholder', 'Describe los objetivos y contenido del tema...');
+            descriptionField.setAttribute('rows', '4');
+            descriptionField.style.resize = 'vertical';
+        }
+        
+        // Validación en tiempo real
+        if (titleField) {
+            titleField.addEventListener('input', function() {
+                const value = this.value.trim();
+                if (value.length === 0) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                }
+            });
+        }
+        
+        // Confirmación antes de cancelar si hay cambios
+        const cancelButtons = document.querySelectorAll('a[href*="course_topic_detail"]');
+        const form = document.querySelector('form');
+        let originalData = new FormData(form);
+        
+        cancelButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                const currentData = new FormData(form);
+                let hasChanges = false;
+                
+                for (let [key, value] of currentData.entries()) {
+                    if (originalData.get(key) !== value) {
+                        hasChanges = true;
+                        break;
+                    }
+                }
+                
+                if (hasChanges) {
+                    if (!confirm('¿Estás seguro de que quieres cancelar? Se perderán los cambios no guardados.')) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+        
+        // Inicializar tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %} 

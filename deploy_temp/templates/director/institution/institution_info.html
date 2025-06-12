@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Colegio - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .institution-container {
+        max-width: 95%;
+        margin: 0 auto;
+        padding: 1.5rem;
+    }
+    
+    .institution-header {
+        background: linear-gradient(135deg, #005CFF, #A142F5);
+        color: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.2);
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+    }
+    
+    .info-card .card-header {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-bottom: 3px solid #005CFF;
+        padding: 1.5rem;
+        position: relative;
+    }
+    
+    .info-card .card-header::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: linear-gradient(to bottom, #005CFF, #A142F5);
+    }
+    
+    .info-card .card-body {
+        padding: 2rem;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: rgba(0, 92, 255, 0.05);
+        border-radius: 10px;
+        border-left: 4px solid #005CFF;
+        transition: all 0.3s ease;
+    }
+    
+    .info-item:hover {
+        background: rgba(0, 92, 255, 0.1);
+        transform: translateX(5px);
+    }
+    
+    .info-icon {
+        font-size: 1.5rem;
+        color: #005CFF;
+        margin-right: 1rem;
+        min-width: 40px;
+        text-align: center;
+    }
+    
+    .info-content h6 {
+        margin: 0 0 0.25rem 0;
+        font-weight: 600;
+        color: #333;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .info-content p {
+        margin: 0;
+        color: #555;
+        font-size: 1rem;
+        font-weight: 500;
+    }
+    
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #005CFF, #A142F5, #00CFFF);
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        color: #005CFF;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .section-title {
+        position: relative;
+        padding-left: 20px;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+        color: #333;
+        font-size: 1.5rem;
+    }
+    
+    .section-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 5px;
+        background: linear-gradient(to bottom, #005CFF, #A142F5);
+        border-radius: 3px;
+    }
+    
+    .no-data-message {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        padding: 2rem;
+        background: rgba(0, 92, 255, 0.05);
+        border-radius: 10px;
+        margin: 2rem 0;
+    }
+    
+    @media (max-width: 768px) {
+        .institution-container {
+            max-width: 100%;
+            padding: 1rem;
+        }
+        
+        .institution-header {
+            padding: 1.5rem;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .stats-container {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="institution-container">
+    <!-- Header -->
+    <div class="institution-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2 fw-bold">
+                    <i class="fas fa-university me-3"></i>
+                    {% if has_institution %}
+                        {{ institution.name }}
+                    {% else %}
+                        Información del Colegio
+                    {% endif %}
+                </h1>
+                <p class="mb-0 opacity-75 fs-5">Director: {{ director_name }}</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <a href="{% url 'director:institution_edit' %}" class="btn btn-light me-2">
+                    <i class="fas fa-edit me-2"></i>Editar Información
+                </a>
+                <div class="d-inline-block p-3 bg-white bg-opacity-25 rounded">
+                    <i class="fas fa-calendar-alt me-2"></i> {% now "l, j F Y" %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas del Sistema -->
+    <h2 class="section-title">Estadísticas del Sistema</h2>
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-user-graduate"></i>
+            </div>
+            <div class="stat-number">{{ system_stats.total_students }}</div>
+            <div class="stat-label">Estudiantes Activos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-chalkboard-teacher"></i>
+            </div>
+            <div class="stat-number">{{ system_stats.total_teachers }}</div>
+            <div class="stat-label">Docentes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-door-open"></i>
+            </div>
+            <div class="stat-number">{{ system_stats.total_sections }}</div>
+            <div class="stat-label">Secciones</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-book"></i>
+            </div>
+            <div class="stat-number">{{ system_stats.total_courses }}</div>
+            <div class="stat-label">Cursos</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="stat-number">{{ system_stats.active_enrollments }}</div>
+            <div class="stat-label">Matrículas Activas</div>
+        </div>
+    </div>
+
+    {% if has_institution %}
+        <!-- Logo y Información Principal -->
+        {% if institution.logo %}
+        <div class="info-card">
+            <div class="card-header">
+                <h4 class="mb-0 fw-bold">
+                    <i class="fas fa-image me-2"></i>
+                    Logo Institucional
+                </h4>
+            </div>
+            <div class="card-body text-center">
+                <img src="{{ institution.logo.url }}" alt="Logo de {{ institution.name }}" 
+                     style="max-width: 200px; max-height: 150px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Información General -->
+        <div class="info-card">
+            <div class="card-header">
+                <h4 class="mb-0 fw-bold">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información General
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="info-grid">
+                    {% if institution.name %}
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-university"></i>
+                        </div>
+                        <div class="info-content">
+                            <h6>Nombre de la Institución</h6>
+                            <p>{{ institution.name }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if institution.address %}
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <h6>Dirección</h6>
+                            <p>{{ institution.address }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if institution.phone %}
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-phone"></i>
+                        </div>
+                        <div class="info-content">
+                            <h6>Teléfono</h6>
+                            <p>{{ institution.phone }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if institution.email %}
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div class="info-content">
+                            <h6>Email</h6>
+                            <p>{{ institution.email }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if institution.website %}
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-globe"></i>
+                        </div>
+                        <div class="info-content">
+                            <h6>Sitio Web</h6>
+                            <p>{{ institution.website }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if institution.type %}
+                    <div class="info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="info-content">
+                            <h6>Tipo de Educación</h6>
+                            <p>{{ institution.type }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if institution.mission or institution.vision %}
+        <!-- Misión y Visión -->
+        <div class="info-card">
+            <div class="card-header">
+                <h4 class="mb-0 fw-bold">
+                    <i class="fas fa-bullseye me-2"></i>
+                    Misión y Visión
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if institution.mission %}
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-target me-2"></i>Misión</h5>
+                        <p>{{ institution.mission }}</p>
+                    </div>
+                    {% endif %}
+                    {% if institution.vision %}
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-eye me-2"></i>Visión</h5>
+                        <p>{{ institution.vision }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if institution.description %}
+        <!-- Descripción -->
+        <div class="info-card">
+            <div class="card-header">
+                <h4 class="mb-0 fw-bold">
+                    <i class="fas fa-info me-2"></i>
+                    Descripción de la Institución
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">{{ institution.description }}</p>
+            </div>
+        </div>
+        {% endif %}
+    {% else %}
+        <!-- Mensaje cuando no hay institución registrada -->
+        <div class="no-data-message">
+            <i class="fas fa-info-circle fa-2x mb-3"></i>
+            <h5>No hay información institucional registrada</h5>
+            <p>Actualmente no se ha registrado información detallada de la institución en el sistema.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animaciones suaves para las tarjetas
+    const cards = document.querySelectorAll('.info-card, .stat-card');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    });
+    
+    cards.forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    });
+});
+</script>
+{% endblock %} 

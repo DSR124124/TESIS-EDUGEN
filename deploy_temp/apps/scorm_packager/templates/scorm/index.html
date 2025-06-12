@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    
+    <!-- Estilos base de SCORM -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Font Awesome para iconos (CDN) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Google Fonts - Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- API SCORM -->
+    <script src="scorm_api.js"></script>
+    
+    <!-- Estilos nativos del contenido original preservados -->
+    {% if content_styles %}
+    <style>
+        /* Estilos extraídos del contenido original */
+        {{ content_styles }}
+        
+        /* Integración con wrapper de SCORM */
+        .scorm-content .generated-content {
+            /* Heredar estilos del contenido original */
+            font-family: inherit;
+            line-height: inherit;
+            color: inherit;
+        }
+        
+        /* Evitar conflictos de estilos */
+        .scorm-content .generated-content * {
+            max-width: 100% !important;
+            box-sizing: border-box;
+        }
+        
+        /* Preservar imágenes del contenido original */
+        .scorm-content .generated-content img {
+            height: auto !important;
+            max-width: 100% !important;
+            display: block;
+            margin: 1em auto;
+        }
+        
+        /* Preservar tablas del contenido original */
+        .scorm-content .generated-content table {
+            width: 100% !important;
+            border-collapse: collapse;
+            margin: 1em 0;
+        }
+        
+        /* Preservar títulos del contenido original */
+        .scorm-content .generated-content h1,
+        .scorm-content .generated-content h2,
+        .scorm-content .generated-content h3,
+        .scorm-content .generated-content h4,
+        .scorm-content .generated-content h5,
+        .scorm-content .generated-content h6 {
+            margin-top: 1.5em;
+            margin-bottom: 0.8em;
+            line-height: 1.3;
+        }
+    </style>
+    {% endif %}
+    
+    <!-- Estilos adicionales para mejorar la integración -->
+    <style>
+        /* Sobrescribir estilos que puedan generar conflictos */
+        .scorm-content {
+            /* Reset básico para evitar conflictos */
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        /* Asegurar que el contenido sea responsive */
+        .generated-content {
+            width: 100%;
+            overflow-x: auto;
+            word-wrap: break-word;
+        }
+        
+        /* Mejorar la presentación de listas */
+        .generated-content ul, 
+        .generated-content ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+        
+        /* Mejorar la presentación de párrafos */
+        .generated-content p {
+            margin: 1em 0;
+            text-align: justify;
+        }
+        
+        /* Mejorar la presentación de código */
+        .generated-content code, 
+        .generated-content pre {
+            background-color: #f4f4f4;
+            border-radius: 4px;
+            padding: 0.2em 0.4em;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .generated-content pre {
+            padding: 1em;
+            overflow-x: auto;
+        }
+        
+        /* Mejorar la presentación de citas */
+        .generated-content blockquote {
+            border-left: 4px solid var(--primary-color, #005CFF);
+            margin: 1em 0;
+            padding: 0.5em 1em;
+            background-color: #f9f9f9;
+            font-style: italic;
+        }
+        
+        /* Asegurar que los enlaces sean visibles */
+        .generated-content a {
+            color: var(--primary-color, #005CFF);
+            text-decoration: underline;
+        }
+        
+        .generated-content a:hover {
+            color: var(--accent-color, #00CFFF);
+        }
+    </style>
+</head>
+<body>
+    <div class="scorm-container">
+        <!-- Encabezado de SCORM (no duplicar si ya existe en contenido) -->
+        <div class="scorm-header">
+            <h1>{{ title }}</h1>
+            <div class="metadata">
+                <div><i class="fas fa-graduation-cap"></i> Material Educativo</div>
+                <div><i class="fas fa-calendar-alt"></i> {{ date|default:'Actual' }}</div>
+            </div>
+        </div>
+        
+        <div class="scorm-content">
+            <!-- Contenido principal preservando estilos nativos -->
+            <div class="generated-content">
+                {{ content|safe }}
+            </div>
+            
+            <!-- Navegación de SCORM -->
+            <div class="scorm-navigation">
+                <button class="scorm-btn prev" id="prevBtn" disabled>
+                    <i class="fas fa-arrow-left"></i> Anterior
+                </button>
+                
+                <button class="scorm-btn" id="completeBtn" onclick="markComplete()">
+                    <i class="fas fa-check-circle"></i> Marcar como completado
+                </button>
+                
+                <button class="scorm-btn next" id="nextBtn" disabled>
+                    Siguiente <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Inicialización de SCORM
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar la API de SCORM
+            if (window.API_1484_11) {
+                console.log("Inicializando SCORM API");
+                window.API_1484_11.Initialize("true");
+                
+                // Establecer estado inicial
+                window.API_1484_11.SetValue("cmi.completion_status", "incomplete");
+                window.API_1484_11.SetValue("cmi.success_status", "unknown");
+                window.API_1484_11.SetValue("cmi.score.scaled", "0");
+                window.API_1484_11.Commit("true");
+            } else {
+                console.warn("API SCORM no encontrada, ejecutando en modo standalone");
+            }
+            
+            // Verificar si hay encabezados duplicados y removerlos si es necesario
+            removeDuplicateHeaders();
+            
+            // Mejorar la accesibilidad del contenido
+            improveContentAccessibility();
+        });
+
+        // Función para remover encabezados duplicados que puedan haberse filtrado
+        function removeDuplicateHeaders() {
+            const generatedContent = document.querySelector('.generated-content');
+            if (!generatedContent) return;
+            
+            // Buscar elementos que parezcan encabezados institucionales
+            const institutionalPatterns = [
+                /INSTITUCIÓN EDUCATIVA/i,
+                /🎓.*INSTITUCIÓN.*EDUCATIVA/i,
+                /COLEGIO.*NACIONAL/i,
+                /I\.E\..*\d+/i
+            ];
+            
+            const allElements = generatedContent.querySelectorAll('*');
+            allElements.forEach(element => {
+                const textContent = element.textContent.trim();
+                const isHeaderLike = ['H1', 'H2', 'H3', 'HEADER', 'DIV'].includes(element.tagName);
+                
+                if (isHeaderLike) {
+                    for (let pattern of institutionalPatterns) {
+                        if (pattern.test(textContent)) {
+                            console.log('Removiendo encabezado duplicado detectado:', textContent.substring(0, 50));
+                            element.style.display = 'none';
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Función para mejorar la accesibilidad del contenido
+        function improveContentAccessibility() {
+            const generatedContent = document.querySelector('.generated-content');
+            if (!generatedContent) return;
+            
+            // Agregar alt text a imágenes que no lo tengan
+            const images = generatedContent.querySelectorAll('img:not([alt])');
+            images.forEach(img => {
+                img.setAttribute('alt', 'Imagen del contenido educativo');
+            });
+            
+            // Mejorar tablas sin encabezados
+            const tables = generatedContent.querySelectorAll('table');
+            tables.forEach(table => {
+                if (!table.querySelector('th')) {
+                    const firstRow = table.querySelector('tr');
+                    if (firstRow) {
+                        const cells = firstRow.querySelectorAll('td');
+                        cells.forEach(cell => {
+                            cell.style.fontWeight = 'bold';
+                            cell.style.backgroundColor = '#f5f5f5';
+                        });
+                    }
+                }
+            });
+        }
+
+        // Marcar como completado
+        function markComplete() {
+            const completeBtn = document.getElementById('completeBtn');
+            
+            if (window.API_1484_11) {
+                window.API_1484_11.SetValue("cmi.completion_status", "completed");
+                window.API_1484_11.SetValue("cmi.success_status", "passed");
+                window.API_1484_11.SetValue("cmi.score.scaled", "1");
+                window.API_1484_11.SetValue("cmi.score.raw", "100");
+                window.API_1484_11.Commit("true");
+                
+                completeBtn.innerHTML = '<i class="fas fa-check"></i> ¡Completado!';
+                completeBtn.classList.add('completed');
+                completeBtn.disabled = true;
+                
+                // Mostrar mensaje de éxito
+                showCompletionMessage();
+            } else {
+                console.warn("API SCORM no encontrada, sin embargo se marca como completado");
+                completeBtn.innerHTML = '<i class="fas fa-check"></i> ¡Completado!';
+                completeBtn.classList.add('completed');
+                completeBtn.disabled = true;
+                showCompletionMessage();
+            }
+        }
+        
+        // Mostrar mensaje de finalización
+        function showCompletionMessage() {
+            const navigation = document.querySelector('.scorm-navigation');
+            const message = document.createElement('div');
+            message.innerHTML = `
+                <div style="text-align: center; padding: 1em; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; margin-top: 1em;">
+                    <i class="fas fa-check-circle" style="color: #155724; font-size: 1.5em;"></i>
+                    <p style="margin: 0.5em 0 0 0; color: #155724; font-weight: bold;">¡Contenido completado exitosamente!</p>
+                </div>
+            `;
+            navigation.appendChild(message);
+        }
+
+        // Cerrar el contenido
+        window.addEventListener('beforeunload', function() {
+            if (window.API_1484_11) {
+                window.API_1484_11.Terminate("true");
+            }
+        });
+    </script>
+</body>
+</html> 

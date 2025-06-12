@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Matrícula{% else %}Nueva Matrícula{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #005CFF;       /* Azul intenso */
+        --secondary-color: #A142F5;     /* Púrpura vibrante */
+        --accent-color: #00CFFF;        /* Azul eléctrico */
+        --dark-accent: #3B0E6D;         /* Azul violeta oscuro */
+        --bg-dark: #0A0A0A;             /* Fondo negro degradado */
+        --light-accent: rgba(0, 207, 255, 0.1); /* Azul eléctrico con transparencia */
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 20px rgba(0, 92, 255, 0.15);
+    }
+
+    .content-container {
+        max-width: 1200px;
+        padding: 2rem 1rem;
+        margin: 0 auto;
+    }
+
+    /* Formulario */
+    .form-card {
+        border: none;
+        border-radius: 1rem;
+        background: white;
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .form-card:hover {
+        box-shadow: var(--shadow-lg);
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1));
+    }
+
+    .form-header h4 {
+        margin: 0;
+        color: white;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0.5rem 0 0;
+        font-size: 0.95rem;
+    }
+
+    .form-content {
+        padding: 2rem;
+    }
+
+    /* Campos del Formulario */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        font-weight: 500;
+        color: var(--dark-accent);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 0.5rem;
+        background: white;
+        color: var(--dark-accent);
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--light-accent);
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+    }
+
+    /* Select2 Personalización */
+    .select2-container .select2-selection--single {
+        height: 42px !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        border-radius: 0.5rem !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 42px !important;
+        padding-left: 1rem !important;
+        color: var(--dark-accent) !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 40px !important;
+        right: 0.5rem !important;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: var(--primary-color) !important;
+    }
+
+    /* Botones */
+    .btn-form {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-success {
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        color: white;
+    }
+
+    .btn-outline-secondary {
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+        background: transparent;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: var(--light-accent);
+        color: var(--primary-color);
+        border-color: var(--secondary-color);
+    }
+
+    /* Mensajes de Error */
+    .alert-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .content-container {
+            padding: 1rem;
+        }
+
+        .form-content {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'director:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'director:student_list' %}">Estudiantes</a></li>
+            {% if form.instance.pk %}
+            <li class="breadcrumb-item"><a href="{% url 'director:student_detail' form.instance.student.id %}">{{ form.instance.student }}</a></li>
+            <li class="breadcrumb-item active">Editar Matrícula</li>
+            {% else %}
+            {% if form.initial.student %}
+            <li class="breadcrumb-item"><a href="{% url 'director:student_detail' form.initial.student %}">Estudiante</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active">Nueva Matrícula</li>
+            {% endif %}
+        </ol>
+    </nav>
+
+    <!-- Form Card -->
+    <div class="card form-card">
+        <div class="form-header">
+            <h4 class="mb-1">
+                <i class="fas fa-graduation-cap me-2"></i>
+                {% if form.instance.pk %}Editar Matrícula{% else %}Nueva Matrícula{% endif %}
+            </h4>
+            <p class="mb-0">
+                {% if form.instance.pk %}
+                Actualiza la matrícula de {{ form.instance.student }} en {{ form.instance.section }}
+                {% else %}
+                Completa el formulario para registrar una nueva matrícula
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="form-content">
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.student.id_for_label }}">Estudiante</label>
+                            {{ form.student.errors }}
+                            {{ form.student }}
+                            <div class="form-text">
+                                Selecciona el estudiante a matricular
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.academic_year.id_for_label }}">Año Académico</label>
+                            {{ form.academic_year.errors }}
+                            <input type="text" 
+                                   name="{{ form.academic_year.name }}" 
+                                   id="{{ form.academic_year.id_for_label }}" 
+                                   class="form-control {% if form.academic_year.errors %}is-invalid{% endif %}"
+                                   value="{{ form.academic_year.value|default:'2023' }}"
+                                   placeholder="Año académico (YYYY)">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.section.id_for_label }}">Sección</label>
+                            {{ form.section.errors }}
+                            {{ form.section }}
+                            <div class="form-text">
+                                Selecciona la sección a la que se matriculará el estudiante
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.status.id_for_label }}">Estado</label>
+                            {{ form.status.errors }}
+                            {{ form.status }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.enrollment_date.id_for_label }}">Fecha de Matrícula</label>
+                            {{ form.enrollment_date.errors }}
+                            <input type="date" 
+                                   name="{{ form.enrollment_date.name }}" 
+                                   id="{{ form.enrollment_date.id_for_label }}" 
+                                   class="form-control {% if form.enrollment_date.errors %}is-invalid{% endif %}"
+                                   value="{{ form.enrollment_date.value|date:'Y-m-d'|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.notes.id_for_label }}">Observaciones</label>
+                    {{ form.notes.errors }}
+                    <textarea 
+                        name="{{ form.notes.name }}" 
+                        id="{{ form.notes.id_for_label }}" 
+                        class="form-control {% if form.notes.errors %}is-invalid{% endif %}"
+                        rows="3"
+                        placeholder="Observaciones o comentarios adicionales">{{ form.notes.value|default:'' }}</textarea>
+                </div>
+                
+                <div class="d-flex justify-content-end mt-4">
+                    {% if form.instance.pk %}
+                    <a href="{% url 'director:student_detail' form.instance.student.id %}" class="btn btn-outline-secondary me-2">
+                        Cancelar
+                    </a>
+                    {% else %}
+                    {% if form.initial.student %}
+                    <a href="{% url 'director:student_detail' form.initial.student %}" class="btn btn-outline-secondary me-2">
+                        Cancelar
+                    </a>
+                    {% else %}
+                    <a href="{% url 'director:student_list' %}" class="btn btn-outline-secondary me-2">
+                        Cancelar
+                    </a>
+                    {% endif %}
+                    {% endif %}
+                    
+                    <button type="submit" class="btn btn-success btn-form">
+                        <i class="fas fa-save me-2"></i>
+                        {% if form.instance.pk %}Actualizar{% else %}Guardar{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar Select2 para selectores
+        $('.select2').select2({
+            theme: 'bootstrap-5',
+            width: '100%'
+        });
+    });
+</script>
+{% endblock %} 

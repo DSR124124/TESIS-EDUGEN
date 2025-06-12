@@ -1,0 +1,833 @@
+{% extends 'base_student.html' %}
+{% load static %}
+
+{% block title %}Mi Salón - {{ block.super }}{% endblock %}
+
+{% block page_title %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        /* Esquema de colores principal - Estilo estudiante consistente */
+        --primary-color: #005CFF;       /* Azul intenso */
+        --primary-light: rgba(0, 92, 255, 0.1);
+        --secondary-color: #A142F5;     /* Púrpura vibrante */
+        --accent-color: #00CFFF;        /* Azul eléctrico */
+        --dark-accent: #3B0E6D;         /* Azul violeta oscuro */
+        --success-color: #10B981;
+        --warning-color: #F59E0B;
+        --danger-color: #EF4444;
+        --light-gray: #f5f7fa;
+        --medium-gray: #e9ecef;
+        --dark-gray: #495057;
+        --bg-dark: #0A0A0A;             /* Fondo negro degradado */
+        --card-bg: #FFFFFF;
+        --text-primary: #333333;
+        --text-secondary: #6B7280;
+        --border-radius: 12px;
+        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.12);
+        --transition-fast: all 0.2s ease;
+        --transition-normal: all 0.3s ease;
+    }
+
+    /* Content Container */
+    .content-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Animaciones consistentes con dashboard */
+    @keyframes headerFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* Dashboard Header - Estilo estudiante consistente */
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: var(--border-radius);
+        padding: 25px;
+        color: white;
+        box-shadow: 0 5px 15px rgba(0, 92, 255, 0.2);
+        margin-bottom: 25px;
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition-normal);
+        transform: translateY(0);
+        animation: headerFadeIn 0.5s ease-out;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 250px;
+        height: 100%;
+        background: url('{% static "img/pattern-dots.png" %}') no-repeat;
+        background-size: cover;
+        opacity: 0.15;
+    }
+    
+    .dashboard-header:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .header-left {
+        flex: 1;
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .welcome-message {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .greeting-text {
+        font-size: 1.65rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+    }
+    
+    .student-info {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-badge {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 15px 25px;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        text-align: center;
+        min-width: 200px;
+    }
+
+    .section-badge h4 {
+        margin: 0 0 5px 0;
+        font-weight: 700;
+    }
+
+    .section-badge p {
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    /* Stats Grid */
+    .stats-section {
+        margin-bottom: 1.5rem;
+        animation: fadeIn 0.6s ease-out;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid rgba(0, 92, 255, 0.08);
+        transition: var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+        transition: width 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .stat-card:hover::before {
+        width: 8px;
+    }
+    
+    .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: white;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        box-shadow: 0 4px 8px rgba(0, 92, 255, 0.2);
+    }
+    
+    .stat-content {
+        text-align: left;
+    }
+    
+    .stat-title {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-subtitle {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    /* Content Sections - Consistente con dashboard */
+    .main-sections {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .content-section {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        border: 1px solid rgba(0, 92, 255, 0.08);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: var(--transition-normal);
+    }
+    
+    .content-section:hover {
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .section-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-bottom: none;
+    }
+    
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .section-count {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        backdrop-filter: blur(5px);
+        font-size: 0.875rem;
+    }
+
+    .section-body {
+        padding: 1.5rem;
+    }
+
+    /* Person cards */
+    .person-grid {
+        display: grid;
+        gap: 1px;
+        background: #f0f4f8;
+    }
+
+    .person-item {
+        background: white;
+        padding: 20px;
+        transition: var(--transition);
+        cursor: pointer;
+        position: relative;
+        border: none;
+        border-left: 4px solid transparent;
+    }
+
+    .person-item:hover {
+        background: #f8fafc;
+        border-left-color: #667eea;
+        transform: translateX(5px);
+    }
+
+    .person-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .teacher-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-end;
+    }
+    
+    .btn-teacher-info {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition-normal);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+    
+    .btn-teacher-info:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 92, 255, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .person-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: white;
+        background: var(--primary-gradient);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .teacher-avatar {
+        background: var(--teacher-gradient);
+    }
+
+    .person-avatar::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+        animation: shimmer 2s infinite;
+    }
+
+    .person-info {
+        flex: 1;
+    }
+
+    .person-name {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 2px;
+        font-size: 1rem;
+    }
+
+    .person-email {
+        color: #718096;
+        font-size: 0.85rem;
+        margin: 0;
+    }
+
+    .person-role {
+        color: #667eea;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .course-badge {
+        background: #667eea;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    /* Empty states */
+    .empty-state {
+        text-align: center;
+        padding: 60px 30px;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    .empty-icon {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 20px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: white;
+        animation: pulse 2s infinite;
+    }
+
+    .empty-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 10px;
+    }
+
+    .empty-subtitle {
+        color: #718096;
+        font-size: 1rem;
+    }
+
+    /* No section state */
+    .no-section-card {
+        background: linear-gradient(135deg, #fef5e7 0%, #fed7aa 100%);
+        border-radius: var(--border-radius);
+        padding: 40px;
+        text-align: center;
+        animation: fadeInUp 0.6s ease-out;
+        border: 2px dashed #f59e0b;
+    }
+
+    .no-section-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        background: #f59e0b;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: white;
+    }
+
+    .no-section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #92400e;
+        margin-bottom: 10px;
+    }
+
+    .no-section-text {
+        color: #b45309;
+        font-size: 1.1rem;
+    }
+
+    /* Search functionality */
+    .search-container {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 12px 20px 12px 50px;
+        border: 2px solid #e2e8f0;
+        border-radius: 25px;
+        font-size: 1rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #718096;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .main-sections {
+            grid-template-columns: 1fr;
+        }
+        
+        .header-content {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .header-title {
+            font-size: 2rem;
+        }
+        
+        .person-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 10px;
+        }
+        
+        .section-header-content {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+
+    /* Loading states */
+    .loading-shimmer {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="welcome-message">
+                    <h1 class="greeting-text">
+                        <i class="fas fa-users me-3"></i>
+                        Mi Salón
+                    </h1>
+                    <p class="student-info">
+                        Conoce a tus compañeros de clase y profesores de tu sección
+                    </p>
+                </div>
+            </div>
+            {% if section %}
+                <div class="header-right">
+                    <div class="section-badge">
+                        <h4><i class="fas fa-graduation-cap me-2"></i>{{ section.grade.name }}</h4>
+                        <p>Sección "{{ section.name }}" - {{ section.academic_year|default:"2024" }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if section %}
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-title">Compañeros de Clase</div>
+                        <div class="stat-value">{{ classmates_count|default:0 }}</div>
+                        <div class="stat-subtitle">En tu sección</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-chalkboard-teacher"></i>
+                        </div>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-title">Profesores</div>
+                        <div class="stat-value">{{ section.course_assignments.count|default:0 }}</div>
+                        <div class="stat-subtitle">De tus materias</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-book-open"></i>
+                        </div>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-title">Cursos</div>
+                        <div class="stat-value">{{ section.course_assignments.count|default:0 }}</div>
+                        <div class="stat-subtitle">Materias activas</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secciones principales -->
+        <div class="main-sections">
+            <!-- Compañeros de clase -->
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-header-content">
+                        <h3 class="section-title">
+                            <i class="fas fa-user-friends me-2"></i>
+                            Mis Compañeros
+                        </h3>
+                        <div class="section-count">
+                            {{ classmates_count|default:0 }} estudiante{{ classmates_count|default:0|pluralize:"s" }}
+                        </div>
+                    </div>
+                </div>
+                <div class="section-body">
+                    {% if classmates %}
+                        <!-- Búsqueda -->
+                        <div class="search-container mb-3">
+                            <div class="position-relative">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="search-input" id="classmates-search" 
+                                       placeholder="Buscar compañeros...">
+                            </div>
+                        </div>
+                        
+                        <div class="person-grid" id="classmates-list">
+                            {% for classmate in classmates %}
+                                <div class="person-item classmate-item" data-name="{{ classmate.user.get_full_name|lower }}">
+                                    <div class="person-content">
+                                        <div class="person-avatar">
+                                            {{ classmate.user.first_name|slice:":1" }}{{ classmate.user.last_name|slice:":1" }}
+                                        </div>
+                                        <div class="person-info">
+                                            <div class="person-name">{{ classmate.user.get_full_name }}</div>
+                                            <div class="person-email">{{ classmate.user.email }}</div>
+                                            <div class="person-role">Compañero de clase</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                            <h4 class="empty-title">Sin compañeros aún</h4>
+                            <p class="empty-subtitle">Parece que eres el único estudiante en esta sección por ahora.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Profesores -->
+            <div class="content-section">
+                <div class="section-header">
+                    <div class="section-header-content">
+                        <h3 class="section-title">
+                            <i class="fas fa-chalkboard-teacher me-2"></i>
+                            Mis Profesores
+                        </h3>
+                        <div class="section-count">
+                            {{ section.course_assignments.count|default:0 }} profesor{{ section.course_assignments.count|default:0|pluralize:"es" }}
+                        </div>
+                    </div>
+                </div>
+                <div class="section-body">
+                    {% if section.course_assignments.all %}
+                        <!-- Búsqueda -->
+                        <div class="search-container mb-3">
+                            <div class="position-relative">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="search-input" id="teachers-search" 
+                                       placeholder="Buscar profesores...">
+                            </div>
+                        </div>
+                        
+                        <div class="person-grid" id="teachers-list">
+                            {% for assignment in section.course_assignments.all %}
+                                <div class="person-item teacher-item" data-name="{{ assignment.teacher.user.get_full_name|lower }}" data-course="{{ assignment.course.name|lower }}">
+                                    <div class="person-content">
+                                        <div class="person-avatar teacher-avatar">
+                                            {{ assignment.teacher.user.first_name|slice:":1" }}{{ assignment.teacher.user.last_name|slice:":1" }}
+                                        </div>
+                                        <div class="person-info">
+                                            <div class="person-name">{{ assignment.teacher.user.get_full_name }}</div>
+                                            <div class="person-email">{{ assignment.teacher.user.email }}</div>
+                                            <div class="person-role">Profesor(a)</div>
+                                        </div>
+                                        <div class="teacher-actions">
+                                            <div class="course-badge">
+                                                {{ assignment.course.name }}
+                                            </div>
+                                            <a href="{% url 'dashboard:teacher_info' assignment.teacher.id %}" class="btn-teacher-info">
+                                                <i class="fas fa-info-circle"></i>
+                                                Ver información
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon" style="background: var(--teacher-gradient);">
+                                <i class="fas fa-chalkboard-teacher"></i>
+                            </div>
+                            <h4 class="empty-title">Sin profesores asignados</h4>
+                            <p class="empty-subtitle">Aún no hay profesores asignados a tu sección.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Estado sin sección -->
+        <div class="no-section-card">
+            <div class="no-section-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="no-section-title">¡Ups! No encontramos tu sección</h3>
+            <p class="no-section-text">
+                Parece que aún no tienes una sección asignada. <br>
+                Contacta con tu coordinador académico para más información.
+            </p>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Scripts para funcionalidad -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animación de contadores
+    const statValues = document.querySelectorAll('.stat-value');
+    statValues.forEach(stat => {
+        const finalValue = parseInt(stat.textContent);
+        let currentValue = 0;
+        const increment = finalValue / 30;
+        
+        const counter = setInterval(() => {
+            currentValue += increment;
+            if (currentValue >= finalValue) {
+                currentValue = finalValue;
+                clearInterval(counter);
+            }
+            stat.textContent = Math.floor(currentValue);
+        }, 100);
+    });
+
+    // Funcionalidad de búsqueda para compañeros
+    const classmatesSearch = document.getElementById('classmates-search');
+    if (classmatesSearch) {
+        classmatesSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const classmates = document.querySelectorAll('.classmate-item');
+            
+            classmates.forEach(item => {
+                const name = item.getAttribute('data-name');
+                if (name.includes(searchTerm)) {
+                    item.style.display = '';
+                    item.style.animation = 'slideInScale 0.3s ease-out';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // Funcionalidad de búsqueda para profesores
+    const teachersSearch = document.getElementById('teachers-search');
+    if (teachersSearch) {
+        teachersSearch.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const teachers = document.querySelectorAll('.teacher-item');
+            
+            teachers.forEach(item => {
+                const name = item.getAttribute('data-name');
+                const course = item.getAttribute('data-course');
+                if (name.includes(searchTerm) || course.includes(searchTerm)) {
+                    item.style.display = '';
+                    item.style.animation = 'slideInScale 0.3s ease-out';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    }
+
+    // Efectos hover para person items
+    const personItems = document.querySelectorAll('.person-item');
+    personItems.forEach(item => {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(8px) scale(1.02)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0) scale(1)';
+        });
+    });
+
+    // Animación de entrada escalonada
+    const cards = document.querySelectorAll('.content-section');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.2}s`;
+    });
+});
+</script>
+{% endblock %} 

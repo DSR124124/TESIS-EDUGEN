@@ -1,0 +1,153 @@
+<!-- Formulario para generar material con IA -->
+<form id="aiGeneratorForm" class="needs-validation" action="{% url 'dashboard:generate_ai_material' topic_id=topic.id %}" method="post" novalidate>
+  {% csrf_token %}
+  <input type="hidden" name="topic_id" value="{{ topic.id }}">
+  
+  <div class="modal-header ai-material-header">
+    <h5 class="modal-title">
+      <i class="fas fa-robot me-2"></i>
+      Generar contenido con IA
+      <span class="badge bg-light text-primary ms-2">{{ topic.title }}</span>
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  </div>
+  
+  <div class="modal-body">
+    <div class="mb-3">
+      <label for="theme" class="form-label">Tema específico <span class="text-danger">*</span></label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-book"></i></span>
+        <input type="text" class="form-control" id="theme" name="theme" value="{{ topic.title }}" required>
+        <div class="invalid-feedback">
+          Por favor ingrese un tema.
+        </div>
+      </div>
+      <div class="form-text">El tema específico para el cual desea generar material.</div>
+    </div>
+    
+    <div class="mb-3">
+      <label for="material_type" class="form-label">Tipo de material <span class="text-danger">*</span></label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-file-alt"></i></span>
+        <select class="form-select" id="material_type" name="material_type" required>
+          <option value="" selected disabled>Seleccione un tipo</option>
+          <option value="study_guide">Guía de estudio</option>
+          <option value="exercises">Ejercicios</option>
+          <option value="assessment">Evaluación</option>
+          <option value="project">Proyecto</option>
+          <option value="other">Otro</option>
+        </select>
+        <div class="invalid-feedback">
+          Por favor seleccione un tipo de material.
+        </div>
+      </div>
+      <div class="form-text">El tipo de material educativo que desea generar.</div>
+    </div>
+    
+    <div class="mb-3">
+      <label for="additional_instructions" class="form-label">Instrucciones adicionales</label>
+      <div class="input-group">
+        <span class="input-group-text"><i class="fas fa-comment"></i></span>
+        <textarea class="form-control" id="additional_instructions" name="additional_instructions" rows="3" placeholder="Detalles específicos, nivel de dificultad, enfoque, etc."></textarea>
+      </div>
+      <div class="form-text">Información adicional para personalizar el contenido generado.</div>
+    </div>
+    
+    <div class="mb-3">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" id="add_to_portfolio" name="add_to_portfolio">
+        <label class="form-check-label" for="add_to_portfolio">
+          <i class="fas fa-folder-plus me-2 text-primary"></i> Agregar automáticamente al portafolio
+        </label>
+        <div class="form-text">
+          Si esta opción está desactivada, el material se generará pero no se agregará automáticamente al portafolio.
+        </div>
+      </div>
+    </div>
+    
+    <div class="mb-3">
+      <h6 class="mb-2">Opciones adicionales</h6>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="include_images" name="include_images">
+        <label class="form-check-label" for="include_images">Incluir imágenes</label>
+      </div>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="include_examples" name="include_examples" checked>
+        <label class="form-check-label" for="include_examples">Incluir ejemplos</label>
+      </div>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="include_exercises" name="include_exercises" checked>
+        <label class="form-check-label" for="include_exercises">Incluir ejercicios</label>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal-footer">
+    <div class="form-feedback d-none" id="formFeedback">
+      <div class="d-flex align-items-center">
+        <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+          <span class="visually-hidden">Generando...</span>
+        </div>
+        <span>Generando material educativo...</span>
+      </div>
+    </div>
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+    <button type="submit" class="btn btn-ai">
+      <i class="fas fa-robot me-2"></i>Generar contenido
+    </button>
+  </div>
+</form>
+
+<!-- Script para manejar el envío del formulario -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('aiGeneratorForm');
+    const feedback = document.getElementById('formFeedback');
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      
+      if (!form.checkValidity()) {
+        event.stopPropagation();
+        form.classList.add('was-validated');
+        return;
+      }
+      
+      // Mostrar feedback
+      feedback.classList.remove('d-none');
+      submitButton.disabled = true;
+      
+      // Enviar formulario mediante AJAX
+      const formData = new FormData(form);
+      
+      fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Redirigir a la página del portafolio después de generar el material
+          window.location.href = data.redirect_url;
+        } else {
+          // Mostrar mensaje de error
+          feedback.innerHTML = `<div class="alert alert-danger">${data.message}</div>`;
+          feedback.classList.remove('d-none');
+          submitButton.disabled = false;
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        feedback.innerHTML = '<div class="alert alert-danger">Ha ocurrido un error al procesar la solicitud.</div>';
+        feedback.classList.remove('d-none');
+        submitButton.disabled = false;
+      });
+      
+      form.classList.add('was-validated');
+    });
+  });
+</script> 

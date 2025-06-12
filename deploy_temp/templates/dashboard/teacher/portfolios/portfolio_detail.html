@@ -1,0 +1,1581 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Portafolio de {{ portfolio.student.user.get_full_name }}{% endblock %}
+
+{% block extra_styles %}
+<style>
+  /* Variables y valores base */
+
+  /* Variables y valores base */
+  :root {
+    --primary-color: #4361ee;
+    --primary-light: #4895ef;
+    --primary-dark: #3f37c9;
+    --secondary-color: #6571ff;
+    --accent-color: #f72585;
+    --success-color: #4cc9f0;
+    --warning-color: #f8961e;
+    --danger-color: #ef476f;
+    --light-gray: #f8f9fa;
+    --border-color: #e9ecef;
+    --card-bg: #ffffff;
+    --body-bg: #f3f4f6;
+    --text-primary: #2b2d42;
+    --text-secondary: #6c757d;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --border-radius: 0.375rem;
+    --transition-normal: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --card-shadow: var(--shadow-sm);
+    --card-shadow-hover: var(--shadow-md);
+    --transition: var(--transition-normal);
+    --light-color: var(--light-gray);
+  }
+  
+  /* Estilos base compartidos */
+  .card-base {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+  }
+  
+  .card-base:hover {
+    box-shadow: var(--card-shadow-hover);
+  }
+  
+  .circle-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+  }
+  
+  /* Componentes específicos */
+  .portfolio-header {
+    background: var(--primary-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    color: white;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+    position: relative;
+  }
+  
+  .portfolio-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    z-index: 1;
+  }
+  
+  .portfolio-header > * {
+    position: relative;
+    z-index: 2;
+  }
+  
+  .student-sidebar {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+  }
+  
+  .student-info img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--primary-color);
+    transition: var(--transition);
+  }
+  
+  .course-section {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--card-shadow);
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+  }
+  
+  .topic-card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+  }
+  
+  .topic-card:hover {
+    box-shadow: var(--card-shadow-hover);
+    transform: translateY(-3px);
+  }
+  
+  /* Navegación */
+  .course-pills {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+  
+  .course-pill {
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    cursor: pointer;
+    background-color: var(--light-color);
+    transition: var(--transition);
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  
+  .course-pill:hover {
+    background-color: var(--border-color);
+    transform: translateY(-2px);
+  }
+  
+  .course-pill.active {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  /* Etiquetas de estado */
+  .topic-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: var(--transition);
+  }
+  
+  .topic-complete {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--success-color);
+  }
+  
+  .topic-incomplete {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--danger-color);
+  }
+  
+  /* Formularios */
+  .form-container {
+    background-color: var(--light-color);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-top: 1.5rem;
+    border: 1px solid var(--border-color);
+  }
+  
+  .add-topic-form, .add-material-form {
+    composes: .form-container;
+  }
+  
+  .add-material-form {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  /* Estado vacío */
+  .empty-topics {
+    text-align: center;
+    padding: 3rem;
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+  }
+  
+  .empty-topics i {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Botones y controles */
+  .btn {
+    transition: var(--transition);
+  }
+  
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+  
+  .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+  }
+  
+  .btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+  
+  .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: white;
+  }
+  
+  .btn-danger, .btn-outline-danger:hover {
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+  }
+  
+  .btn-outline-danger {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+  }
+  
+  /* Toggle materiales */
+  .toggle-materials {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background-color: var(--light-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+    border: 1px solid var(--border-color);
+  }
+  
+  .toggle-materials:hover {
+    background-color: var(--border-color);
+  }
+  
+  /* Topic materials */
+  .topic-materials {
+    padding: 1rem;
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    margin-top: 1rem;
+    display: none;
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+  }
+  
+  .topic-materials.show {
+    display: block;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* Mejoras para la tarjeta de tema */
+  .topic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(var(--primary-color-rgb, 67, 97, 238), 0.15);
+  }
+  
+  .topic-title {
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    transition: var(--transition);
+  }
+  
+  .topic-card:hover .topic-title {
+    color: var(--primary-color);
+    transform: translateX(3px);
+  }
+  
+  .topic-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .topic-actions button, .topic-actions a {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+    background-color: var(--card-bg);
+    color: var(--secondary-color);
+    border: 1px solid var(--border-color);
+    padding: 0;
+  }
+  
+  .topic-actions button:hover, .topic-actions a:hover {
+    transform: translateY(-3px) scale(1.15);
+    box-shadow: var(--shadow-md);
+  }
+  
+  .topic-actions a:hover {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+  
+  .topic-actions button.delete-topic-btn:hover {
+    background-color: var(--danger-color);
+    color: white;
+    border-color: var(--danger-color);
+  }
+  
+  /* Toggle materiales mejorado */
+  .toggle-materials {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background-color: var(--card-bg);
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+  }
+  
+  .toggle-materials:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(var(--primary-color-rgb, 67, 97, 238), 0.2);
+  }
+  
+  .toggle-materials i {
+    transition: transform 0.3s ease;
+  }
+  
+  .toggle-materials:hover i {
+    transform: rotate(180deg);
+  }
+  
+  /* Topic materials */
+  .topic-materials {
+    padding: 15px;
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    margin-top: 15px;
+    display: none;
+    animation: fadeIn 0.5s ease;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+  }
+  
+  /* Botones en tema */
+  .topic-materials .btn {
+    border-radius: 30px;
+    padding: 8px 18px;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .topic-materials .btn:hover {
+    box-shadow: var(--shadow-md);
+  }
+  
+  .topic-materials .btn i {
+    transition: transform 0.3s ease;
+  }
+  
+  .topic-materials .btn:hover i {
+    transform: translateX(3px);
+  }
+  
+  /* Formulario de generación con IA */
+  .ai-material-form {
+    background-color: var(--primary-light);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-top: 15px;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .ai-material-form.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .ai-material-header {
+    color: var(--primary-color);
+    position: relative;
+    padding-bottom: 8px;
+  }
+  
+  .ai-material-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--primary-color);
+    border-radius: 3px;
+  }
+  
+  .btn-ai {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 6px rgba(var(--primary-dark-rgb, 63, 55, 201), 0.2);
+  }
+  
+  .btn-ai:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    color: white;
+    box-shadow: 0 4px 8px rgba(var(--primary-dark-rgb, 63, 55, 201), 0.3);
+    transform: translateY(-2px);
+  }
+  
+  .btn-outline-ai {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: var(--transition);
+  }
+  
+  .btn-outline-ai:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+  }
+  
+  /* Badges y etiquetas */
+  .badge {
+    transition: var(--transition);
+  }
+  
+  .badge:hover {
+    transform: translateY(-2px) rotate(2deg);
+  }
+  
+  .badge.bg-primary {
+    background-color: var(--primary-color) !important;
+  }
+  
+  .badge.bg-secondary {
+    background-color: var(--secondary-color) !important;
+  }
+  
+  .badge.bg-success {
+    background-color: var(--success-color) !important;
+  }
+  
+  .badge.bg-danger {
+    background-color: var(--danger-color) !important;
+  }
+  
+  .badge.bg-warning {
+    background-color: var(--warning-color) !important;
+  }
+  
+  /* Efectos para cards */
+  .card-hover-effect {
+    transition: var(--transition);
+  }
+  
+  .card-hover-effect:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow-hover);
+  }
+  
+  /* Estilos para la lista de materiales */
+  .material-info h6 {
+    transition: var(--transition);
+    color: var(--text-primary);
+  }
+  
+  .material-item:hover .material-info h6 {
+    color: var(--primary-color);
+  }
+  
+  .material-type-badge {
+    transition: var(--transition);
+  }
+  
+  .material-item:hover .material-type-badge {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+  }
+  
+  .material-actions .btn {
+    opacity: 0.8;
+    transition: var(--transition);
+  }
+  
+  .material-item:hover .material-actions .btn {
+    opacity: 1;
+  }
+  
+  /* Curso seleccionado */
+  .course-header {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .course-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, transparent 100%);
+  }
+  
+  /* Estilos para los inputs del formulario */
+  .form-control, .form-select {
+    border: 1px solid var(--border-color);
+    transition: var(--transition);
+    padding: 0.6rem 1rem;
+  }
+  
+  .form-control:hover, .form-select:hover {
+    border-color: var(--primary-light);
+  }
+  
+  .form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb, 67, 97, 238), 0.25);
+  }
+  
+  .form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    transition: var(--transition);
+    position: relative;
+  }
+  
+  .form-label span.text-danger {
+    font-size: 1.2em;
+    position: relative;
+    top: 2px;
+    color: var(--danger-color);
+  }
+  
+  .col-md-6:hover .form-label,
+  .col-12:hover .form-label {
+    color: var(--primary-color);
+    transform: translateX(3px);
+  }
+  
+  .input-group {
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+  }
+  
+  .input-group:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+  }
+  
+  .input-group:focus-within {
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb, 67, 97, 238), 0.25);
+  }
+  
+  .input-group-text {
+    background-color: var(--light-gray);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    transition: var(--transition);
+    padding: 0.6rem 1rem;
+  }
+  
+  .input-group:hover .input-group-text {
+    border-color: var(--primary-light);
+  }
+  
+  /* Botón de añadir tema */
+  .form-container .btn-primary {
+    padding: 10px 20px;
+    font-weight: 600;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+  
+  .form-container .btn-primary:hover {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(var(--primary-color-rgb, 67, 97, 238), 0.3);
+  }
+  
+  /* Mejorar estilos de alertas */
+  .alert {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+  }
+  
+  .alert-info {
+    background-color: rgba(var(--primary-color-rgb, 67, 97, 238), 0.1);
+    color: var(--primary-color);
+    border-left: 3px solid var(--primary-color);
+  }
+  
+  .alert-success {
+    background-color: rgba(var(--success-color-rgb, 76, 201, 240), 0.1);
+    color: var(--success-color);
+    border-left: 3px solid var(--success-color);
+  }
+  
+  .alert-danger {
+    background-color: rgba(var(--danger-color-rgb, 239, 71, 111), 0.1);
+    color: var(--danger-color);
+    border-left: 3px solid var(--danger-color);
+  }
+  
+  .alert-warning {
+    background-color: rgba(var(--warning-color-rgb, 248, 150, 30), 0.1);
+    color: var(--warning-color);
+    border-left: 3px solid var(--warning-color);
+  }
+  
+  .form-feedback {
+    padding: 12px;
+    border-radius: var(--border-radius);
+    margin-top: 15px;
+    transition: var(--transition);
+  }
+  
+  /* Notificaciones y toasts */
+  .notification {
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    animation: slideIn 0.3s ease;
+  }
+  
+  @keyframes slideIn {
+    from { transform: translateX(50px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  .notification-success {
+    background-color: rgba(var(--success-color-rgb, 76, 201, 240), 0.9);
+    color: white;
+  }
+  
+  .notification-error {
+    background-color: rgba(var(--danger-color-rgb, 239, 71, 111), 0.9);
+    color: white;
+  }
+  
+  .notification-info {
+    background-color: rgba(var(--primary-color-rgb, 67, 97, 238), 0.9);
+    color: white;
+  }
+  
+  /* Toast container */
+  .toast-container {
+    z-index: 1050;
+  }
+  
+  .toast {
+    box-shadow: var(--shadow-md);
+    border: none;
+  }
+  
+  .toast.bg-success {
+    background-color: var(--success-color) !important;
+  }
+  
+  .toast.bg-danger {
+    background-color: var(--danger-color) !important;
+  }
+  
+  .toast.bg-primary {
+    background-color: var(--primary-color) !important;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .student-sidebar {
+      margin-bottom: 1.5rem;
+    }
+    
+    .portfolio-header, .course-section {
+      padding: 1.25rem;
+    }
+    
+    .course-pill {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
+    }
+    
+    .topic-actions {
+      flex-wrap: wrap;
+    }
+    
+    .toggle-materials {
+      padding: 8px 12px;
+    }
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .student-sidebar {
+      margin-bottom: 1.5rem;
+    }
+    
+    .portfolio-header, .course-section {
+      padding: 1.25rem;
+    }
+    
+    .course-pill {
+      padding: 0.375rem 0.75rem;
+      font-size: 0.875rem;
+    }
+  }
+  
+  /* Formulario de generación con IA */
+  .ai-material-form {
+    background-color: var(--primary-light);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-top: 15px;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    border-left: 4px solid var(--primary-color);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+  }
+  
+  .ai-material-form.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .ai-material-header {
+    color: var(--primary-color);
+    position: relative;
+    padding-bottom: 8px;
+  }
+  
+  .ai-material-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background-color: var(--primary-color);
+    border-radius: 3px;
+  }
+  
+  .btn-ai {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+    color: white;
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 6px rgba(111, 66, 193, 0.2);
+  }
+  
+  .btn-ai:hover {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+    color: white;
+    box-shadow: 0 4px 8px rgba(111, 66, 193, 0.3);
+  }
+  
+  .btn-outline-ai {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    transition: var(--transition);
+  }
+  
+  .btn-outline-ai:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+  }
+  
+  /* Efectos para badges */
+  .badge {
+    transition: var(--transition);
+  }
+  
+  .badge:hover {
+    transform: translateY(-2px) rotate(2deg);
+  }
+  
+  /* Efecto de tarjeta */
+  .card-hover-effect {
+    transition: var(--transition);
+  }
+  
+  .card-hover-effect:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--card-shadow-hover);
+  }
+  
+  /* Estilos para la lista de materiales */
+  .material-info h6 {
+    transition: var(--transition);
+  }
+  
+  .material-item:hover .material-info h6 {
+    color: var(--primary-color);
+  }
+  
+  .material-type-badge {
+    transition: var(--transition);
+  }
+  
+  .material-item:hover .material-type-badge {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+  }
+  
+  .material-actions .btn {
+    opacity: 0.8;
+    transition: var(--transition);
+  }
+  
+  .material-item:hover .material-actions .btn {
+    opacity: 1;
+  }
+  
+  /* Curso seleccionado */
+  .course-header {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .course-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, var(--primary-color) 0%, transparent 100%);
+  }
+  
+  /* Estilos para los inputs del formulario */
+  .form-control, .form-select {
+    border: 1px solid #e2e8f0;
+    transition: var(--transition);
+  }
+  
+  .form-control:hover, .form-select:hover {
+    border-color: #cbd5e0;
+  }
+  
+  .form-label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #4a5568;
+    transition: var(--transition);
+    position: relative;
+  }
+  
+  .form-label span.text-danger {
+    font-size: 1.2em;
+    position: relative;
+    top: 2px;
+  }
+  
+  .col-md-6:hover .form-label,
+  .col-12:hover .form-label {
+    color: var(--primary-color);
+    transform: translateX(3px);
+  }
+  
+  .input-group {
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+  }
+  
+  .input-group:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.07);
+    transform: translateY(-2px);
+  }
+  
+  .input-group-text {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    color: #718096;
+    transition: var(--transition);
+    padding: 0.6rem 1rem;
+  }
+  
+  .form-control, .form-select {
+    padding: 0.6rem 1rem;
+    border: 1px solid #e2e8f0;
+    font-size: 1rem;
+  }
+  
+  /* Botón de añadir tema */
+  .form-container .btn-primary {
+    padding: 10px 20px;
+    font-weight: 600;
+  }
+  
+  /* Mejorar estilos de alertas */
+  .alert {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: var(--transition);
+  }
+  
+  .alert-info {
+    background-color: rgba(63, 122, 209, 0.1);
+    color: var(--primary-color);
+    border-left: 3px solid var(--primary-color);
+  }
+  
+  .form-feedback {
+    padding: 12px;
+    border-radius: var(--border-radius);
+    margin-top: 15px;
+    transition: var(--transition);
+  }
+  
+  /* Mejoras para la tarjeta de tema */
+  .topic-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(63, 122, 209, 0.15);
+  }
+
+  .topic-title {
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 5px;
+    font-size: 1.2rem;
+    transition: var(--transition);
+  }
+
+  .topic-card:hover .topic-title {
+    color: var(--primary-color);
+    transform: translateX(3px);
+  }
+
+  .topic-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .topic-actions button, .topic-actions a {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition);
+    background-color: white;
+    color: var(--secondary-color);
+    border: 1px solid #eee;
+    padding: 0;
+  }
+
+  .topic-actions button:hover, .topic-actions a:hover {
+    transform: translateY(-3px) scale(1.15);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .topic-actions a:hover {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
+  .topic-actions button.delete-topic-btn:hover {
+    background-color: var(--danger-color);
+    color: white;
+    border-color: var(--danger-color);
+  }
+
+  /* Toggle materiales */
+  .toggle-materials {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    background-color: white;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    border: 1px solid #f0f0f0;
+  }
+
+  .toggle-materials:hover {
+    background-color: var(--primary-color);
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(63, 122, 209, 0.2);
+  }
+
+  .toggle-materials i {
+    transition: transform 0.3s ease;
+  }
+
+  .toggle-materials:hover i {
+    transform: rotate(180deg);
+  }
+
+  /* Topic materials */
+  .topic-materials {
+    padding: 15px;
+    background-color: white;
+    border-radius: var(--border-radius);
+    margin-top: 15px;
+    display: none;
+    animation: fadeIn 0.5s ease;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  }
+
+  .topic-materials.show {
+    display: block;
+  }
+
+  /* Botones en tema */
+  .topic-materials .btn {
+    border-radius: 30px;
+    padding: 8px 18px;
+    font-weight: 500;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+  }
+
+  .topic-materials .btn:hover {
+    box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+  }
+
+  .topic-materials .btn i {
+    transition: transform 0.3s ease;
+  }
+
+  .topic-materials .btn:hover i {
+    transform: translateX(3px);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Notification Container -->
+  <div id="notificationContainer" class="notification-container"></div>
+  
+  <!-- Breadcrumb -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard:teacher' %}">Dashboard</a></li>
+      <li class="breadcrumb-item"><a href="{% url 'dashboard:teacher_portfolios' %}">Portafolios</a></li>
+      <li class="breadcrumb-item active">{{ portfolio.student.user.get_full_name }}</li>
+    </ol>
+  </nav>
+
+  {% include "dashboard/teacher/portfolios/partials/portfolio_header.html" %}
+
+  <div class="row">
+    <!-- Sidebar con información del estudiante -->
+    <div class="col-md-3">
+      {% include "dashboard/teacher/portfolios/partials/student_sidebar.html" %}
+    </div>
+    
+    <!-- Contenido principal -->
+    <div class="col-md-9">
+      <!-- Navegación por cursos -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="card-title"><i class="fas fa-filter me-2"></i>Filtrar por curso</h5>
+          <div class="course-pills">
+            <div class="course-pill active" data-course-id="all">
+              <i class="fas fa-th-large me-2"></i>Todos los cursos
+            </div>
+            {% for course in all_courses %}
+              <div class="course-pill" data-course-id="{{ course.id }}">
+                <i class="fas fa-book me-2"></i>{{ course.name }}
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Formulario para añadir nuevo tema -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title"><i class="fas fa-plus-circle me-2"></i>Añadir nuevo tema</h5>
+            <div>
+              <span class="badge bg-primary"><i class="fas fa-info-circle me-1"></i>Organice el portafolio por temas</span>
+            </div>
+          </div>
+          <form id="newTopicForm" class="row g-3 needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="col-md-6">
+              <label for="id_title" class="form-label">Título del tema <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-heading"></i></span>
+                <input type="text" class="form-control" id="id_title" name="title" required>
+                <div class="invalid-feedback">
+                  Por favor ingrese un título para el tema.
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="id_course" class="form-label">Curso <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-book"></i></span>
+                <select class="form-select" id="id_course" name="course" required>
+                  <option value="">Seleccionar curso</option>
+                  {% for course in all_courses %}
+                    <option value="{{ course.id }}">{{ course.name }}</option>
+                  {% endfor %}
+                </select>
+                <div class="invalid-feedback">
+                  Por favor seleccione un curso.
+                </div>
+              </div>
+            </div>
+            <div class="col-12">
+              <label for="id_description" class="form-label">Descripción</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-align-left"></i></span>
+                <textarea class="form-control" id="id_description" name="description" rows="3" placeholder="Breve descripción del tema y objetivos..."></textarea>
+              </div>
+            </div>
+            <div class="col-12 d-flex justify-content-between align-items-center mt-3">
+              <div class="form-text"><i class="fas fa-info-circle me-1"></i> Los campos marcados con <span class="text-danger">*</span> son obligatorios</div>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-plus-circle me-2"></i>Añadir tema
+              </button>
+            </div>
+            <div class="col-12 mt-3">
+              <div class="alert d-none" id="topicFormFeedback" role="alert">
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+        
+      <!-- Segmentación por cursos -->
+      {% if courses_with_topics %}
+        <div id="all-courses">
+          {% for course_data in courses_with_topics %}
+            <div class="card shadow-sm mb-4 course-content" data-course-id="{{ course_data.course.id }}">
+              <div class="card-body">
+                <div class="course-header d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                  <h5 class="card-title">
+                    <i class="fas fa-book me-2"></i>{{ course_data.course.name }}
+                  </h5>
+                  <div>
+                    <span class="badge bg-primary">{{ course_data.topics|length }} temas</span>
+                    <button class="btn btn-sm btn-outline-primary ms-2 toggle-course-topics" data-course-id="{{ course_data.course.id }}">
+                      <i class="fas fa-chevron-down"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="course-topics" id="course-topics-{{ course_data.course.id }}">
+                  {% for topic in course_data.topics %}
+                    <div class="card mb-3 shadow-sm topic-card" id="topic-{{ topic.id }}" data-course-id="{{ topic.course.id }}">
+                      <div class="card-body">
+                        <div class="topic-header">
+                          <div>
+                            <h6 class="topic-title">{{ topic.title }}</h6>
+                            <span class="topic-status {% if topic.is_complete %}topic-complete{% else %}topic-incomplete{% endif %}">
+                              {% if topic.is_complete %}
+                                <i class="fas fa-check-circle"></i> Completado
+                              {% else %}
+                                <i class="fas fa-clock"></i> En progreso
+                              {% endif %}
+                            </span>
+                          </div>
+                          <div class="topic-actions">
+                            <a href="{% url 'dashboard:update_topic' topic.id %}" class="btn btn-sm btn-outline-primary" title="Editar tema">
+                              <i class="fas fa-edit"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger delete-topic-btn" data-topic-id="{{ topic.id }}" title="Eliminar tema">
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <p class="text-muted small mt-2">{{ topic.description|default:"Sin descripción" }}</p>
+                        
+                        <!-- Cabecera de materiales -->
+                        <div class="d-grid mt-3">
+                          <button class="btn btn-sm btn-light toggle-materials" data-topic-id="{{ topic.id }}">
+                            <div class="d-flex justify-content-between w-100">
+                              <span>
+                                <i class="fas fa-folder me-2"></i>
+                                Acciones
+                              </span>
+                              <i class="fas fa-chevron-down"></i>
+                            </div>
+                          </button>
+                        </div>
+                              
+                        <!-- Acciones del tema (inicialmente colapsadas) -->
+                        <div class="topic-materials collapse" id="materials-{{ topic.id }}">
+                          <div class="d-grid mt-3">
+                            <a href="{% url 'portfolios:topic_detail' topic.id %}" class="btn btn-primary">
+                              <i class="fas fa-eye me-1"></i> Ver detalles del tema
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="card shadow-sm">
+          <div class="card-body text-center py-5">
+            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+            <h5>No hay temas creados</h5>
+            <p class="text-muted">Este portafolio aún no tiene temas. Agrega un nuevo tema para comenzar.</p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal para generación de material con IA -->
+{% for topic in topics %}
+<div class="modal fade" id="aiGeneratorModal-{{ topic.id }}" tabindex="-1" aria-labelledby="aiGeneratorModalLabel-{{ topic.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      {% include "dashboard/teacher/portfolios/partials/ai_material_generator.html" with topic=topic %}
+    </div>
+  </div>
+</div>
+{% endfor %}
+<!-- End of modal -->
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Crear contenedor de toasts si no existe
+    let toastContainer = document.getElementById('toastContainer');
+    if (!toastContainer) {
+      toastContainer = document.createElement('div');
+      toastContainer.id = 'toastContainer';
+      toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
+      document.body.appendChild(toastContainer);
+    }
+    
+    // Función de notificaciones usando el sistema unificado
+    function showNotification(message, type = 'success', duration = 5000) {
+        // Usar el sistema unificado
+        if (typeof showUnifiedNotification === 'function') {
+            const titles = {
+                success: 'Éxito',
+                danger: 'Error',
+                warning: 'Advertencia',
+                info: 'Información'
+            };
+            const notificationType = type === 'danger' ? 'error' : type;
+            showUnifiedNotification(notificationType, titles[type] || 'Notificación', message, duration);
+        } else {
+            // Fallback en caso de que el sistema unificado no esté disponible
+            console.warn('Sistema unificado de notificaciones no disponible, usando fallback');
+            alert(message);
+        }
+    }
+    
+    // Inicializar validación de formularios
+    const forms = document.querySelectorAll('.needs-validation');
+    
+    // Validación para el formulario de tema
+    const newTopicForm = document.getElementById('newTopicForm');
+    if (newTopicForm) {
+      newTopicForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        if (!this.checkValidity()) {
+          event.stopPropagation();
+          this.classList.add('was-validated');
+          return;
+        }
+        
+        // Mostrar spinner en el feedback
+        const feedbackElement = document.getElementById('topicFormFeedback');
+        feedbackElement.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Procesando...';
+        feedbackElement.classList.remove('d-none', 'alert-success', 'alert-danger');
+        feedbackElement.classList.add('alert-info');
+        
+        // Deshabilitar botón submit
+        const submitButton = this.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Procesando...';
+        
+        // Preparar datos para enviar
+        const formData = new FormData(this);
+        
+        // Enviar solicitud AJAX
+        fetch('{% url "dashboard:create_topic" portfolio.id %}', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+          }
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Error en la solicitud');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            // Mostrar mensaje de éxito
+            feedbackElement.innerHTML = '<i class="fas fa-check-circle me-2"></i> ' + data.message;
+            feedbackElement.classList.remove('alert-info', 'alert-danger');
+            feedbackElement.classList.add('alert-success');
+            
+            // Mostrar notificación con toast
+            showNotification(data.message, 'success');
+            
+            // Limpiar formulario
+            newTopicForm.reset();
+            newTopicForm.classList.remove('was-validated');
+            
+            // Recargar la página después de un breve retraso para mostrar el nuevo tema
+            setTimeout(() => {
+              window.location.reload();
+            }, 1500);
+          } else {
+            // Mostrar mensaje de error
+            feedbackElement.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> ' + data.message;
+            feedbackElement.classList.remove('alert-info', 'alert-success');
+            feedbackElement.classList.add('alert-danger');
+            
+            // Mostrar notificación de error con toast
+            showNotification(data.message, 'danger');
+            
+            // Habilitar botón submit nuevamente
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Añadir tema';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          // Mostrar mensaje de error
+          feedbackElement.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> Ha ocurrido un error al procesar la solicitud.';
+          feedbackElement.classList.remove('alert-info', 'alert-success');
+          feedbackElement.classList.add('alert-danger');
+          
+          // Mostrar notificación de error con toast
+          showNotification('Ha ocurrido un error al procesar la solicitud.', 'danger');
+          
+          // Habilitar botón submit nuevamente
+          submitButton.disabled = false;
+          submitButton.innerHTML = '<i class="fas fa-plus-circle me-2"></i>Añadir tema';
+        });
+        
+        this.classList.add('was-validated');
+      });
+    }
+    
+    // Navegación por pestañas de cursos
+    const coursePills = document.querySelectorAll('.course-pill');
+    const courseSections = document.querySelectorAll('.course-content');
+    
+    coursePills.forEach(pill => {
+      pill.addEventListener('click', function() {
+        // Cambiar estado activo
+        coursePills.forEach(p => p.classList.remove('active'));
+        this.classList.add('active');
+        
+        const courseId = this.getAttribute('data-course-id');
+        
+        if (courseId === 'all') {
+          // Mostrar todos los cursos
+          courseSections.forEach(section => {
+            section.style.display = 'block';
+          });
+        } else {
+          // Mostrar solo el curso seleccionado
+          courseSections.forEach(section => {
+            if (section.getAttribute('data-course-id') === courseId) {
+              section.style.display = 'block';
+            } else {
+              section.style.display = 'none';
+            }
+          });
+        }
+      });
+    });
+    
+    // Toggle materiales
+    const toggleButtons = document.querySelectorAll('.toggle-materials');
+    toggleButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const topicId = this.getAttribute('data-topic-id');
+        const materialsContainer = document.getElementById('materials-' + topicId);
+        
+        // Usar Bootstrap 5 collapse
+        if (materialsContainer.classList.contains('show')) {
+          materialsContainer.classList.remove('show');
+        } else {
+          materialsContainer.classList.add('show');
+        }
+        
+        // Cambiar el icono
+        const icon = this.querySelector('.fa-chevron-down, .fa-chevron-up');
+        icon.classList.toggle('fa-chevron-down');
+        icon.classList.toggle('fa-chevron-up');
+      });
+    });
+    
+    // Expandir/Colapsar temas de curso
+    const toggleCourseButtons = document.querySelectorAll('.toggle-course-topics');
+    toggleCourseButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const courseId = this.getAttribute('data-course-id');
+        const topicsContainer = document.getElementById('course-topics-' + courseId);
+        
+        if (topicsContainer.style.display === 'none') {
+          topicsContainer.style.display = 'block';
+          this.querySelector('i').classList.remove('fa-chevron-down');
+          this.querySelector('i').classList.add('fa-chevron-up');
+        } else {
+          topicsContainer.style.display = 'none';
+          this.querySelector('i').classList.remove('fa-chevron-up');
+          this.querySelector('i').classList.add('fa-chevron-down');
+        }
+      });
+    });
+    
+    // Eliminar tema con AJAX
+    const deleteTopicBtns = document.querySelectorAll('.delete-topic-btn');
+    deleteTopicBtns.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const topicId = this.getAttribute('data-topic-id');
+        const topicCard = document.getElementById('topic-' + topicId);
+        
+        if (confirm('¿Estás seguro de que deseas eliminar este tema? Esta acción no se puede deshacer.')) {
+          // Mostrar indicador visual de procesamiento
+          this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+          this.disabled = true;
+          
+          // URL de eliminación
+          const deleteUrl = '{% url "dashboard:delete_topic" 0 %}'.replace('0', topicId);
+          
+          // Enviar solicitud AJAX para eliminar tema
+          fetch(deleteUrl, {
+            method: 'POST',
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Error en la solicitud: ' + response.status);
+            }
+            return response.json();
+          })
+          .then(data => {
+            if (data.success) {
+              // Mostrar notificación de éxito
+              showNotification(data.message, 'success');
+              
+              // Efecto visual de eliminación del tema
+              topicCard.style.transition = 'all 0.3s ease';
+              topicCard.style.opacity = '0';
+              topicCard.style.transform = 'translateY(10px)';
+              
+              // Eliminar el elemento después de la animación
+              setTimeout(() => {
+                topicCard.remove();
+                
+                // Actualizar contadores y estadísticas
+                updatePortfolioStats();
+              }, 300);
+            } else {
+              // Mostrar error
+              showNotification(data.message || 'Error al eliminar el tema', 'danger');
+              this.innerHTML = '<i class="fas fa-trash"></i>';
+              this.disabled = false;
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            showNotification('Ha ocurrido un error al eliminar el tema.', 'danger');
+            this.innerHTML = '<i class="fas fa-trash"></i>';
+            this.disabled = false;
+          });
+        }
+      });
+    });
+
+    // Inicializar los tooltips de Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+  });
+
+  // Función para actualizar estadísticas del portafolio
+  function updatePortfolioStats() {
+    // Recalcular número de temas
+    const topicCount = document.querySelectorAll('.topic-card').length;
+    
+    // Actualizar contador de temas por curso
+    document.querySelectorAll('.course-content').forEach(section => {
+      const courseId = section.getAttribute('data-course-id');
+      const courseTopics = document.querySelectorAll(`.topic-card[data-course-id="${courseId}"]`).length;
+      const courseBadge = section.querySelector('.badge');
+      if (courseBadge) {
+        courseBadge.textContent = courseTopics + ' temas';
+      }
+    });
+  }
+</script>
+{% endblock %}
+{% endblock %} 

@@ -1,0 +1,363 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panel Director - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-container {
+        max-width: 90%;
+        margin: 0 auto;
+        padding: 1.5rem;
+    }
+    
+    .welcome-card {
+        background: linear-gradient(135deg, #005CFF, #A142F5);
+        color: white;
+        border-radius: 12px;
+        padding: 1.8rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 6px 20px rgba(0, 92, 255, 0.18);
+    }
+    
+    .stats-card {
+        background: white;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        height: 100%;
+        transition: all 0.3s ease;
+        padding: 1.25rem;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 18px rgba(0, 92, 255, 0.1);
+    }
+    
+    .stats-icon {
+        font-size: 1.8rem;
+        height: 55px;
+        width: 55px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 0.8rem;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .bg-blue {
+        background: linear-gradient(135deg, #005CFF, #0045C0);
+    }
+    
+    .bg-purple {
+        background: linear-gradient(135deg, #A142F5, #7A32BE);
+    }
+    
+    .bg-cyan {
+        background: linear-gradient(135deg, #00CFFF, #00A5CC);
+    }
+    
+    .bg-orange {
+        background: linear-gradient(135deg, #FF9500, #FF7800);
+    }
+    
+    .section-title {
+        position: relative;
+        padding-left: 15px;
+        margin-bottom: 1.2rem;
+        font-weight: 600;
+        color: #333;
+    }
+    
+    .section-title:before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: linear-gradient(to bottom, #005CFF, #A142F5);
+        border-radius: 20px;
+    }
+    
+    .institution-card {
+        background: white;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+    
+    .institution-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .institution-logo {
+        max-width: 120px;
+        max-height: 80px;
+        border-radius: 8px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        object-fit: contain;
+        border: 2px solid #f8f9fa;
+    }
+    
+    .logo-placeholder {
+        width: 120px;
+        height: 80px;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 0.85rem;
+        border: 2px dashed #dee2e6;
+    }
+    
+    .recent-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+        padding: 1rem 1.25rem;
+    }
+    
+    .recent-item:hover {
+        background-color: rgba(0, 92, 255, 0.05);
+        border-left-color: #A142F5;
+    }
+    
+    .badge {
+        padding: 0.4rem 0.6rem;
+        font-weight: 500;
+    }
+    
+    .btn-outline-primary {
+        border-color: #e0e0e0;
+        color: #005CFF;
+    }
+    
+    .btn-outline-primary:hover {
+        background-color: #005CFF;
+        border-color: #005CFF;
+        color: white;
+    }
+    
+    /* Sobrescribir estilos que puedan estar en conflicto */
+    .text-muted {
+        color: #6c757d !important;
+    }
+    
+    .fw-bold {
+        font-weight: 600 !important;
+    }
+    
+    @media (max-width: 992px) {
+        .dashboard-container {
+            max-width: 90%;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .dashboard-container {
+            max-width: 100%;
+            padding: 1rem;
+        }
+        
+        .welcome-card {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Welcome Card -->
+    <div class="welcome-card">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-1 fw-bold">Bienvenido, {{ request.user.first_name }}</h2>
+                <p class="mb-0 opacity-75">Panel de administración del sistema educativo</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="d-inline-block p-2 bg-white bg-opacity-25 rounded">
+                    <i class="fas fa-calendar-alt me-1"></i> {% now "l, j F Y" %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats -->
+    <h5 class="section-title mb-3">Estadísticas</h5>
+    <div class="row g-3">
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-icon bg-blue">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="fs-4 mb-1">{{ students_count|default:"0" }}</h3>
+                <p class="text-muted mb-0">Estudiantes</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-icon bg-purple">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <h3 class="fs-4 mb-1">{{ teachers.count|default:"0" }}</h3>
+                <p class="text-muted mb-0">Docentes</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-icon bg-cyan">
+                    <i class="fas fa-book"></i>
+                </div>
+                <h3 class="fs-4 mb-1">{{ grades.count|default:"0" }}</h3>
+                <p class="text-muted mb-0">Grados</p>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="stats-card">
+                <div class="stats-icon bg-orange">
+                    <i class="fas fa-door-open"></i>
+                </div>
+                <h3 class="fs-4 mb-1">{{ sections.count|default:"0" }}</h3>
+                <p class="text-muted mb-0">Secciones</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Institution Info -->
+    <h5 class="section-title mb-3">Información Institucional</h5>
+    <div class="institution-card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <!-- Logo de la institución -->
+                    <div class="mb-3">
+                        <div class="text-muted small">Logo Institucional</div>
+                        <div class="mt-2">
+                            {% if institution and institution.logo %}
+                                <img src="{{ institution.logo.url }}" alt="Logo de {{ institution.name }}" class="institution-logo">
+                            {% else %}
+                                <div class="logo-placeholder">
+                                    <div class="text-center">
+                                        <i class="fas fa-university mb-1 d-block"></i>
+                                        <small>Sin logo</small>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="text-muted small">Nombre de la Institución</div>
+                        <div class="fw-bold">
+                            {% if institution %}
+                                {{ institution.name }}
+                            {% else %}
+                                {{ institution_name }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted small">Dirección</div>
+                        <div>
+                            {% if institution %}
+                                {{ institution.address }}
+                            {% else %}
+                                {{ institution_address }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <div class="text-muted small">Tipo</div>
+                        <div>
+                            {% if institution %}
+                                {{ institution.type }}
+                            {% else %}
+                                {{ institution_type }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="text-muted small">Email</div>
+                        <div>
+                            {% if institution %}
+                                {{ institution.email }}
+                            {% else %}
+                                info@edugen.edu
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Botones de acción rápida -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{% url 'director:institution_info' %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-eye me-1"></i> Ver Detalles
+                        </a>
+                        <a href="{% url 'director:institution_edit' %}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i> Editar Información
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent Enrollments -->
+    <h5 class="section-title mb-3">Matrículas Recientes</h5>
+    <div class="card border-0 shadow-sm institution-card">
+        <div class="card-body p-0">
+            {% if recent_enrollments %}
+                <div class="list-group list-group-flush">
+                    {% for enrollment in recent_enrollments|slice:":3" %}
+                        <div class="list-group-item recent-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-bold">{{ enrollment.student.user.get_full_name }}</h6>
+                                    <small class="text-muted">
+                                        <i class="fas fa-calendar-alt me-1"></i> {{ enrollment.enrollment_date|date:"d/m/Y" }}
+                                        <span class="badge bg-primary ms-2">{{ enrollment.section }}</span>
+                                    </small>
+                                </div>
+                                <a href="{% url 'director:student_detail' enrollment.student.id %}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center p-4">
+                    <p class="text-muted">No hay matrículas recientes</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Asegurar que los estilos se apliquen correctamente -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Forzar actualización del DOM para asegurar que los estilos se apliquen
+    const dashboardContainer = document.querySelector('.dashboard-container');
+    if (dashboardContainer) {
+        dashboardContainer.style.display = 'none';
+        setTimeout(() => {
+            dashboardContainer.style.display = 'block';
+        }, 10);
+    }
+});
+</script>
+{% endblock %}

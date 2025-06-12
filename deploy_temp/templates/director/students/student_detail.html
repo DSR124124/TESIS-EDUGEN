@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Detalle de Estudiante{% endblock %}
+
+{% block extra_css %}
+<style>
+    .student-profile-card {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+    .profile-header {
+        background: linear-gradient(to right, #4e73df, #224abe);
+        color: white;
+        padding: 20px;
+    }
+    .student-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #f8f9fc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        border: 5px solid rgba(255,255,255,0.2);
+        color: #4e73df;
+        font-size: 50px;
+    }
+    .info-card {
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }
+    .info-card .card-header {
+        border-radius: 10px 10px 0 0;
+        font-weight: 600;
+    }
+    .enrollment-card {
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 15px;
+    }
+    .enrollment-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    .enrollment-header {
+        padding: 12px 15px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .active-enrollment {
+        border-left: 4px solid #1cc88a;
+    }
+    .withdrawn-enrollment {
+        border-left: 4px solid #e74a3b;
+    }
+    .action-btn {
+        border-radius: 50px;
+        padding: 8px 15px;
+    }
+    .action-btn i {
+        margin-right: 5px;
+    }
+    .badge-section {
+        font-weight: normal;
+        font-size: 0.85rem;
+        padding: 5px 12px;
+        border-radius: 50px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'director:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'director:student_list' %}">Estudiantes</a></li>
+            <li class="breadcrumb-item active">{{ student.user.get_full_name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Profile Header -->
+    <div class="card student-profile-card mb-4">
+        <div class="profile-header">
+            <div class="row">
+                <div class="col-md-3 text-center">
+                    <div class="student-avatar">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h5 class="mt-2 mb-0">{{ student.user.get_full_name }}</h5>
+                    <p class="mb-0">
+                        <span class="badge bg-light text-dark">DNI: {{ student.dni }}</span>
+                    </p>
+                </div>
+                <div class="col-md-6 d-flex flex-column justify-content-center">
+                    <div class="mb-2">
+                        <i class="fas fa-envelope me-2"></i> {{ student.user.email|default:"Sin correo" }}
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-calendar-alt me-2"></i> Fecha de Nacimiento: {{ student.birth_date|date:"d/m/Y" }}
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-user-shield me-2"></i> Apoderado: {{ student.guardian_name }}
+                    </div>
+                    <div>
+                        <i class="fas fa-phone me-2"></i> Teléfono: {{ student.guardian_phone }}
+                    </div>
+                </div>
+                <div class="col-md-3 d-flex flex-column justify-content-center align-items-end">
+                    <div class="mb-3">
+                        <span class="badge {% if student.is_active %}bg-success{% else %}bg-danger{% endif %} p-2">
+                            <i class="fas fa-{% if student.is_active %}check{% else %}times{% endif %}-circle me-1"></i>
+                            {% if student.is_active %}Activo{% else %}Inactivo{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <a href="{% url 'director:student_update' student.pk %}" class="btn btn-sm btn-outline-light">
+                            <i class="fas fa-edit me-1"></i> Editar
+                        </a>
+                        <a href="{% url 'director:enrollment_create_for_student' student.pk %}" class="btn btn-sm btn-outline-light">
+                            <i class="fas fa-graduation-cap me-1"></i> Matricular
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Profile Tabs -->
+        <div class="card-body">
+            <ul class="nav nav-tabs" id="studentProfileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="info-tab" data-bs-toggle="tab" data-bs-target="#info-tab-pane" type="button" role="tab">
+                        <i class="fas fa-info-circle me-2"></i>Información
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="enrollments-tab" data-bs-toggle="tab" data-bs-target="#enrollments-tab-pane" type="button" role="tab">
+                        <i class="fas fa-graduation-cap me-2"></i>Matrículas
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content p-3" id="studentProfileTabsContent">
+                <!-- Info Tab -->
+                <div class="tab-pane fade show active" id="info-tab-pane" role="tabpanel" aria-labelledby="info-tab" tabindex="0">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="card info-card">
+                                <div class="card-header bg-light">
+                                    <i class="fas fa-user me-2"></i>Información Personal
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-borderless">
+                                        <tbody>
+                                            <tr>
+                                                <th scope="row" width="35%">Nombres:</th>
+                                                <td>{{ student.user.first_name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">Apellidos:</th>
+                                                <td>{{ student.user.last_name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">DNI:</th>
+                                                <td>{{ student.dni }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">Fecha de Nacimiento:</th>
+                                                <td>{{ student.birth_date|date:"d/m/Y" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">Correo Electrónico:</th>
+                                                <td>{{ student.user.email|default:"Sin correo" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">Dirección:</th>
+                                                <td>{{ student.address|default:"No especificada" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">Nombre de Usuario:</th>
+                                                <td>{{ student.user.username }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-6">
+                            <div class="card info-card">
+                                <div class="card-header bg-light">
+                                    <i class="fas fa-user-shield me-2"></i>Información del Apoderado
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-borderless">
+                                        <tbody>
+                                            <tr>
+                                                <th scope="row" width="35%">Nombre Completo:</th>
+                                                <td>{{ student.guardian_name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th scope="row">Teléfono:</th>
+                                                <td>{{ student.guardian_phone }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div class="card info-card">
+                                <div class="card-header bg-light">
+                                    <i class="fas fa-graduation-cap me-2"></i>Matrícula Actual
+                                </div>
+                                <div class="card-body">
+                                    {% if current_enrollment %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-0">{{ current_enrollment.section.grade.name }} - Sección {{ current_enrollment.section.name }}</h5>
+                                            <small class="text-muted">Año Académico: {{ current_enrollment.academic_year }}</small>
+                                        </div>
+                                        <span class="badge bg-success">Matriculado</span>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        El estudiante no tiene una matrícula activa.
+                                        <a href="{% url 'director:enrollment_create_for_student' student.pk %}" class="alert-link">Matricular ahora</a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enrollments Tab -->
+                <div class="tab-pane fade" id="enrollments-tab-pane" role="tabpanel" aria-labelledby="enrollments-tab" tabindex="0">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Historial de Matrículas</h5>
+                        <a href="{% url 'director:enrollment_create_for_student' student.pk %}" class="btn btn-primary action-btn">
+                            <i class="fas fa-plus-circle"></i>Nueva Matrícula
+                        </a>
+                    </div>
+                    
+                    <div class="row">
+                        {% for enrollment in enrollments %}
+                        <div class="col-lg-6">
+                            <div class="card enrollment-card {% if enrollment.status == 'ACTIVE' %}active-enrollment{% elif enrollment.status == 'WITHDRAWN' %}withdrawn-enrollment{% endif %}">
+                                <div class="enrollment-header d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0">
+                                            <span class="badge bg-light text-dark badge-section">
+                                                {{ enrollment.section.grade.name }} - {{ enrollment.section.name }}
+                                            </span>
+                                        </h6>
+                                    </div>
+                                    <span class="badge {% if enrollment.status == 'ACTIVE' %}bg-success{% elif enrollment.status == 'WITHDRAWN' %}bg-danger{% elif enrollment.status == 'SUSPENDED' %}bg-warning{% else %}bg-info{% endif %}">
+                                        {{ enrollment.get_status_display }}
+                                    </span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <p class="mb-1"><strong>Año Académico:</strong> {{ enrollment.academic_year }}</p>
+                                            <p class="mb-1"><strong>Fecha de Matrícula:</strong> {{ enrollment.enrollment_date|date:"d/m/Y" }}</p>
+                                            {% if enrollment.withdrawal_date %}
+                                            <p class="mb-1"><strong>Fecha de Retiro:</strong> {{ enrollment.withdrawal_date|date:"d/m/Y" }}</p>
+                                            {% endif %}
+                                            {% if enrollment.notes %}
+                                            <p class="mb-0"><strong>Observaciones:</strong> {{ enrollment.notes }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-5 d-flex flex-column justify-content-center">
+                                            <div class="btn-group btn-group-sm d-flex">
+                                                <a href="{% url 'director:enrollment_update' enrollment.pk %}" class="btn btn-outline-primary">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                {% if enrollment.status == 'ACTIVE' %}
+                                                <a href="{% url 'director:enrollment_delete' enrollment.pk %}" class="btn btn-outline-danger">
+                                                    <i class="fas fa-times-circle"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Este estudiante no tiene historial de matrículas.
+                                <a href="{% url 'director:enrollment_create_for_student' student.pk %}" class="alert-link">Matricular ahora</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Para futuras funcionalidades con JavaScript
+    });
+</script>
+{% endblock %} 

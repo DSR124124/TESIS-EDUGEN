@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Secciones - {{ block.super }}{% endblock %}
+
+{% block page_title %}Gestión de Secciones y Aulas{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Selector de Grado -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <select class="form-select" id="gradeSelector">
+                                <option value="1">Primer Año</option>
+                                <option value="2">Segundo Año</option>
+                                <option value="3">Tercer Año</option>
+                                <option value="4">Cuarto Año</option>
+                                <option value="5">Quinto Año</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newSectionModal">
+                                <i class="fas fa-plus"></i> Nueva Sección
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secciones por Grado -->
+    <div class="row">
+        {% for section in sections %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Sección {{ section.name }}</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" 
+                                data-bs-toggle="dropdown">
+                            Acciones
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{% url 'academic:section_students' section.id %}">
+                                    <i class="fas fa-users"></i> Gestionar Alumnos
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'academic:section_schedule' section.id %}">
+                                    <i class="fas fa-clock"></i> Horario
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'academic:section_attendance' section.id %}">
+                                    <i class="fas fa-clipboard-check"></i> Asistencia
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" 
+                                   data-bs-target="#deleteSectionModal{{ section.id }}">
+                                    <i class="fas fa-trash"></i> Eliminar
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Tutor</h6>
+                        <p class="mb-0">{{ section.tutor.get_full_name }}</p>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="text-muted">Estudiantes</h6>
+                        <p class="mb-0">{{ section.students.count }} / {{ section.capacity }}</p>
+                        <div class="progress mt-2">
+                            <div class="progress-bar" role="progressbar" 
+                                 style="width: {{ section.occupancy_percentage }}%">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <h6 class="text-muted">Aula Asignada</h6>
+                        <p class="mb-0">{{ section.classroom }}</p>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="row text-center">
+                        <div class="col">
+                            <small class="text-muted">Asistencia Promedio</small>
+                            <h6 class="mb-0">{{ section.average_attendance }}%</h6>
+                        </div>
+                        <div class="col">
+                            <small class="text-muted">Promedio General</small>
+                            <h6 class="mb-0">{{ section.average_grade }}</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal Nueva Sección -->
+<div class="modal fade" id="newSectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva Sección</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{% url 'academic:section_create' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="sectionName" class="form-label">Nombre de la Sección</label>
+                        <input type="text" class="form-control" id="sectionName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sectionGrade" class="form-label">Grado</label>
+                        <select class="form-select" id="sectionGrade" name="grade" required>
+                            <option value="1">Primer Año</option>
+                            <option value="2">Segundo Año</option>
+                            <option value="3">Tercer Año</option>
+                            <option value="4">Cuarto Año</option>
+                            <option value="5">Quinto Año</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sectionTutor" class="form-label">Tutor</label>
+                        <select class="form-select" id="sectionTutor" name="tutor" required>
+                            {% for teacher in available_tutors %}
+                            <option value="{{ teacher.id }}">{{ teacher.get_full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sectionCapacity" class="form-label">Capacidad</label>
+                        <input type="number" class="form-control" id="sectionCapacity" 
+                               name="capacity" min="1" max="40" value="30" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Sección</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

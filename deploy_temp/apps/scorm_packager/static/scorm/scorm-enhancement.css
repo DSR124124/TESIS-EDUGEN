@@ -1,0 +1,437 @@
+/**
+ * SCORM Enhancement CSS
+ * Estilos para mejorar la presentación de contenido SCORM y corregir problemas comunes
+ */
+
+/* ===== RESET Y BASE ===== */
+* {
+    box-sizing: border-box !important;
+}
+
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    overflow-x: hidden !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+    line-height: 1.6 !important;
+    color: #333 !important;
+    background-color: #fff !important;
+}
+
+/* ===== CONTENEDORES PRINCIPALES ===== */
+.scorm-content,
+.content-wrapper,
+main,
+.main-content {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+    padding: 20px !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+/* ===== CORRECCIÓN DE ENCABEZADOS DUPLICADOS ===== */
+.header-institucional + .header-institucional,
+.institucional-header + .institucional-header,
+h1 + h1:contains("INSTITUCIÓN"),
+h2 + h2:contains("INSTITUCIÓN"),
+[data-scorm-hidden="duplicate-header"] {
+    display: none !important;
+}
+
+/* Mejorar espaciado de encabezados principales */
+h1, h2, h3, h4, h5, h6 {
+    margin: 1.5em 0 1em 0 !important;
+    line-height: 1.3 !important;
+    word-wrap: break-word !important;
+}
+
+h1:first-child,
+h2:first-child,
+h3:first-child {
+    margin-top: 0 !important;
+}
+
+/* ===== PRESERVACIÓN DE ESTILOS NATIVOS ===== */
+[data-scorm-preserved="true"] {
+    position: relative !important;
+}
+
+/* Preservar gradientes y backgrounds personalizados */
+[style*="gradient"],
+[style*="background-image"],
+.gradient-bg,
+.custom-bg {
+    background-attachment: local !important;
+    background-size: cover !important;
+    background-position: center !important;
+}
+
+/* Preservar animaciones */
+[style*="animation"],
+.animated,
+[class*="animate"] {
+    animation-fill-mode: both !important;
+    animation-play-state: running !important;
+}
+
+/* Preservar transformaciones */
+[style*="transform"] {
+    transform-origin: center !important;
+}
+
+/* ===== RESPONSIVIDAD ===== */
+img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 10px auto !important;
+}
+
+/* Videos y medios embebidos */
+video,
+iframe,
+embed,
+object {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+iframe[src*="youtube"],
+iframe[src*="vimeo"],
+iframe[src*="dailymotion"] {
+    aspect-ratio: 16/9 !important;
+    width: 100% !important;
+    height: auto !important;
+}
+
+/* ===== TABLAS RESPONSIVAS ===== */
+table {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: collapse !important;
+    margin: 20px 0 !important;
+    font-size: 14px !important;
+    overflow-x: auto !important;
+    display: block !important;
+    white-space: nowrap !important;
+}
+
+.table-responsive {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    margin: 20px 0 !important;
+}
+
+.table-responsive table {
+    display: table !important;
+    width: auto !important;
+    min-width: 100% !important;
+}
+
+th, td {
+    padding: 8px 12px !important;
+    text-align: left !important;
+    border: 1px solid #ddd !important;
+    word-wrap: break-word !important;
+    max-width: 200px !important;
+}
+
+th {
+    background-color: #f8f9fa !important;
+    font-weight: 600 !important;
+    color: #495057 !important;
+}
+
+/* ===== LISTAS Y TEXTO ===== */
+ul, ol {
+    margin: 15px 0 !important;
+    padding-left: 30px !important;
+}
+
+li {
+    margin: 5px 0 !important;
+    line-height: 1.6 !important;
+}
+
+p {
+    margin: 15px 0 !important;
+    line-height: 1.7 !important;
+    text-align: justify !important;
+}
+
+/* ===== CÓDIGO Y PREFORMATEADO ===== */
+pre,
+code {
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    white-space: pre-wrap !important;
+    word-wrap: break-word !important;
+    font-family: 'Courier New', Consolas, Monaco, monospace !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+}
+
+pre {
+    background-color: #f8f9fa !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 4px !important;
+    padding: 15px !important;
+    margin: 20px 0 !important;
+}
+
+code {
+    background-color: #f1f3f4 !important;
+    padding: 2px 6px !important;
+    border-radius: 3px !important;
+}
+
+/* ===== MEJORAS DE ACCESIBILIDAD ===== */
+[data-scorm-enhanced="alt-added"] {
+    border: 2px solid transparent !important;
+    transition: border-color 0.3s ease !important;
+}
+
+[data-scorm-enhanced="alt-added"]:hover {
+    border-color: #007bff !important;
+}
+
+[data-scorm-enhanced="font-size-improved"] {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    color: #333 !important;
+}
+
+/* ===== BOTONES Y ELEMENTOS INTERACTIVOS ===== */
+button,
+.btn,
+input[type="button"],
+input[type="submit"],
+a.button {
+    touch-action: manipulation !important;
+    -webkit-tap-highlight-color: transparent !important;
+    cursor: pointer !important;
+    padding: 10px 20px !important;
+    border-radius: 4px !important;
+    border: none !important;
+    font-size: 14px !important;
+    transition: all 0.3s ease !important;
+    display: inline-block !important;
+    text-decoration: none !important;
+    text-align: center !important;
+    min-height: 44px !important; /* Accesibilidad táctil */
+}
+
+button:hover,
+.btn:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+}
+
+/* ===== FORMULARIOS ===== */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 12px !important;
+    border: 1px solid #ced4da !important;
+    border-radius: 4px !important;
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    transition: border-color 0.3s ease !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none !important;
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 2px rgba(0,123,255,0.25) !important;
+}
+
+/* ===== CONTENIDO FLOTANTE Y POSICIONADO ===== */
+.float-left,
+.pull-left {
+    float: none !important;
+    margin: 0 0 15px 0 !important;
+}
+
+.float-right,
+.pull-right {
+    float: none !important;
+    margin: 15px 0 0 0 !important;
+}
+
+/* ===== ALERTAS Y NOTIFICACIONES ===== */
+.alert,
+.notice,
+.notification {
+    padding: 15px !important;
+    margin: 20px 0 !important;
+    border-radius: 4px !important;
+    border-left: 4px solid #007bff !important;
+    background-color: #f8f9fa !important;
+}
+
+/* ===== CONTENIDO ESPECÍFICO EDUCATIVO ===== */
+.lesson-content,
+.module-content,
+.chapter-content {
+    max-width: 800px !important;
+    margin: 0 auto !important;
+    padding: 30px 20px !important;
+}
+
+.exercise,
+.activity,
+.question {
+    background-color: #f8f9fa !important;
+    border-left: 4px solid #28a745 !important;
+    padding: 20px !important;
+    margin: 25px 0 !important;
+    border-radius: 4px !important;
+}
+
+/* ===== NAVEGACIÓN Y BREADCRUMBS ===== */
+.breadcrumb,
+.nav-path {
+    background-color: #e9ecef !important;
+    padding: 10px 15px !important;
+    border-radius: 4px !important;
+    margin: 0 0 20px 0 !important;
+    font-size: 14px !important;
+}
+
+/* ===== HIDE/SHOW ESPECÍFICOS ===== */
+.scorm-hidden {
+    display: none !important;
+}
+
+.scorm-visible {
+    display: block !important;
+}
+
+/* ===== MEJORAS PARA PANTALLAS PEQUEÑAS ===== */
+@media (max-width: 768px) {
+    body {
+        font-size: 16px !important; /* Evitar zoom en iOS */
+    }
+    
+    .scorm-content,
+    .content-wrapper {
+        padding: 15px !important;
+    }
+    
+    h1 { font-size: 1.8em !important; }
+    h2 { font-size: 1.5em !important; }
+    h3 { font-size: 1.3em !important; }
+    
+    table {
+        font-size: 12px !important;
+    }
+    
+    th, td {
+        padding: 6px 8px !important;
+        max-width: 120px !important;
+    }
+    
+    pre, code {
+        font-size: 12px !important;
+    }
+    
+    button, .btn {
+        width: 100% !important;
+        margin: 5px 0 !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .scorm-content,
+    .content-wrapper {
+        padding: 10px !important;
+    }
+    
+    h1 { font-size: 1.6em !important; }
+    h2 { font-size: 1.4em !important; }
+    
+    img {
+        margin: 10px 0 !important;
+    }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+    .scorm-content,
+    .content-wrapper {
+        max-width: none !important;
+        padding: 0 !important;
+    }
+    
+    [data-scorm-hidden="duplicate-header"] {
+        display: none !important;
+    }
+    
+    button, .btn {
+        display: none !important;
+    }
+    
+    a::after {
+        content: " (" attr(href) ")" !important;
+        font-size: 12px !important;
+        color: #666 !important;
+    }
+}
+
+/* ===== DEBUG Y DESARROLLO ===== */
+.scorm-debug {
+    position: fixed !important;
+    top: 10px !important;
+    right: 10px !important;
+    background: rgba(0,0,0,0.8) !important;
+    color: white !important;
+    padding: 5px 10px !important;
+    border-radius: 4px !important;
+    font-size: 12px !important;
+    z-index: 9999 !important;
+    font-family: monospace !important;
+}
+
+/* ===== ANIMACIONES SUAVES ===== */
+.scorm-content * {
+    transition: opacity 0.3s ease !important;
+}
+
+[data-scorm-enhanced] {
+    position: relative !important;
+}
+
+[data-scorm-enhanced]::before {
+    content: "✓" !important;
+    position: absolute !important;
+    top: -5px !important;
+    right: -5px !important;
+    background: #28a745 !important;
+    color: white !important;
+    width: 16px !important;
+    height: 16px !important;
+    border-radius: 50% !important;
+    font-size: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    opacity: 0 !important;
+    z-index: 1000 !important;
+}
+
+[data-scorm-enhanced]:hover::before {
+    opacity: 1 !important;
+    transition: opacity 0.3s ease !important;
+} 

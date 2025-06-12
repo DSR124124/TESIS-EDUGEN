@@ -1,0 +1,962 @@
+{% extends "dashboard/teacher/base.html" %}
+{% load static %}
+{% load portfolio_tags %}
+
+{% block title %}Portafolios de Estudiantes{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --primary-color: #005CFF;
+    --primary-light: rgba(0, 92, 255, 0.1);
+    --secondary-color: #A142F5;
+    --accent-color: #8B5CF6;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    --light-gray: #f8f9fa;
+    --medium-gray: #e9ecef;
+    --dark-gray: #495057;
+    --border-radius: 12px;
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --transition-fast: all 0.2s ease;
+    --transition-normal: all 0.3s ease;
+    --text-secondary: #6B7280;
+  }
+
+  /* Content Container */
+  .content-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  @media (max-width: 768px) {
+    .content-container {
+      padding: 15px;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .content-container {
+      padding: 10px;
+    }
+  }
+
+  /* Breadcrumb Navigation */
+  .dashboard-breadcrumb {
+    margin-bottom: 20px;
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .breadcrumb {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 12px 20px;
+    margin-bottom: 0;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(10px);
+  }
+
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+
+  .breadcrumb-item + .breadcrumb-item::before {
+    content: '›';
+    color: var(--text-secondary);
+    margin: 0 12px;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .breadcrumb-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary-color);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: var(--transition-fast);
+    font-weight: 500;
+  }
+
+  .breadcrumb-link:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    transform: translateX(2px);
+  }
+
+  .breadcrumb-link i {
+    font-size: 0.85rem;
+  }
+
+  .breadcrumb-item.active {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .breadcrumb-item.active i {
+    font-size: 0.85rem;
+    color: var(--primary-color);
+  }
+
+  /* Animaciones */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .dashboard-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: var(--border-radius);
+    padding: 25px;
+    color: white;
+    box-shadow: 0 5px 15px rgba(0, 92, 255, 0.2);
+    margin-bottom: 25px;
+    position: relative;
+    overflow: hidden;
+    transition: var(--transition-normal);
+    transform: translateY(0);
+    animation: headerFadeIn 0.5s ease-out;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .dashboard-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 250px;
+    height: 100%;
+    background: url('{% static "img/pattern-dots.png" %}') no-repeat;
+    background-size: cover;
+    opacity: 0.15;
+  }
+  
+  @keyframes headerFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .dashboard-header:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+  }
+
+  /* Botones de acción */
+  .action-buttons .btn {
+    border-radius: 50px;
+    font-weight: 500;
+    padding: 8px 20px;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 92, 255, 0.2);
+    margin-left: 0.5rem;
+  }
+  
+  .action-buttons .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0, 92, 255, 0.3);
+  }
+  
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  }
+    
+  .back-btn {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-radius: 50px;
+    padding: 8px 15px;
+    transition: all 0.3s ease;
+  }
+    
+  .back-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: white;
+  }
+
+  .filter-section {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    padding: 20px;
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+  }
+  
+  .filter-section:hover {
+    box-shadow: 0 8px 20px rgba(0, 92, 255, 0.1);
+  }
+
+  .custom-btn-primary {
+    background: linear-gradient(to right, #005CFF, #A142F5);
+    border: none;
+    color: white;
+    box-shadow: 0 3px 8px rgba(0, 92, 255, 0.25);
+    transition: all 0.3s ease;
+  }
+    
+  .custom-btn-primary:hover {
+    background: linear-gradient(to right, #A142F5, #005CFF);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0, 92, 255, 0.3);
+    color: white;
+  }
+  
+  .form-select, .form-control {
+    border-radius: 8px;
+    border: 1px solid rgba(0, 92, 255, 0.2);
+    padding: 10px 15px;
+    transition: all 0.3s ease;
+  }
+  
+  .form-select:focus, .form-control:focus {
+    border-color: #005CFF;
+    box-shadow: 0 0 0 0.25rem rgba(0, 92, 255, 0.25);
+  }
+  
+  .input-group-text {
+    border-radius: 8px 0 0 8px;
+    border: 1px solid rgba(0, 92, 255, 0.2);
+    border-right: none;
+  }
+  
+  .input-group .form-control {
+    border-radius: 0 8px 8px 0;
+  }
+  
+  .form-label {
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 8px;
+  }
+  
+  #activeFilters .badge {
+    padding: 8px 15px;
+    border-radius: 50px;
+    font-weight: 400;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+  }
+  
+  #activeFilters .badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  
+  .student-result {
+    transition: all 0.2s ease;
+  }
+  
+  .student-result:hover {
+    background-color: rgba(0, 92, 255, 0.05);
+  }
+  
+  #studentResults {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgba(0, 92, 255, 0.2);
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+
+  .alert-info {
+    background-color: rgba(0, 92, 255, 0.1);
+    border-color: rgba(0, 92, 255, 0.2);
+    color: #005CFF;
+  }
+
+  .btn-outline-secondary {
+    color: #005CFF;
+    border-color: #005CFF;
+  }
+
+  .btn-outline-secondary:hover {
+    background-color: rgba(0, 92, 255, 0.1);
+    color: #A142F5;
+    border-color: #A142F5;
+  }
+
+  /* Tabla compacta para portafolios */
+  .portfolios-table {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    overflow: hidden;
+  }
+
+  .table {
+    margin-bottom: 0;
+  }
+
+  .table thead th {
+    background: linear-gradient(135deg, #005CFF, #A142F5);
+    color: white;
+    border: none;
+    font-weight: 600;
+    padding: 15px;
+  }
+
+  .table tbody tr {
+    transition: all 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background-color: rgba(0, 92, 255, 0.05);
+    transform: translateX(3px);
+  }
+
+  .table tbody td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-top: 1px solid rgba(0, 92, 255, 0.1);
+  }
+
+  .student-avatar-sm {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    margin-right: 10px;
+  }
+
+  .btn-action {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-action:hover {
+    transform: translateY(-2px);
+  }
+
+  .pagination-info {
+    background: var(--light-gray);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 20px;
+    text-align: center;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 40px;
+    color: var(--medium-gray);
+  }
+
+  .empty-state i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    opacity: 0.3;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .table-responsive {
+      border-radius: 15px;
+    }
+    
+    .table thead th {
+      padding: 10px 8px;
+      font-size: 0.875rem;
+    }
+    
+    .table tbody td {
+      padding: 8px;
+      font-size: 0.875rem;
+    }
+    
+    .btn-action {
+      padding: 4px 8px;
+      font-size: 0.75rem;
+    }
+    
+    .student-avatar-sm {
+      width: 35px;
+      height: 35px;
+      font-size: 0.875rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block teacher_content %}
+<div class="content-container">
+    <!-- Mensajes flotantes -->
+    {% include 'partials/_messages.html' %}
+
+    <!-- Breadcrumb Navigation -->
+    <nav class="dashboard-breadcrumb" aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'dashboard:teacher' %}" class="breadcrumb-link">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-folder-open"></i>
+                <span>Portafolios de Estudiantes</span>
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">Portafolios de Estudiantes</h2>
+                <p class="mb-0">Gestiona los portafolios de tus estudiantes de manera eficiente</p>
+            </div>
+            <div class="action-buttons">
+                <span class="badge bg-white text-primary fw-bold me-2" style="padding: 8px 12px; font-size: 0.9rem;">
+                    <i class="fas fa-users me-1"></i> {{ portfolios.count }} Estudiantes
+                </span>
+                <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#filterCollapse">
+                    <i class="fas fa-filter me-2"></i>Filtros
+                </button>
+            </div>
+        </div>
+    </div>
+
+  <!-- Filtros -->
+  <div class="collapse mb-4" id="filterCollapse">
+    <div class="filter-section">
+      <form id="portfolioFilterForm" method="get" action="{% url 'portfolios:teacher_portfolio_list' %}">
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <label class="form-label">
+              <i class="fas fa-calendar me-1"></i> Mes
+            </label>
+            <select name="month" class="form-select" id="monthSelect">
+              {% for month_num, month_name in months %}
+              <option value="{{ month_num }}" {% if month_num == request.GET.month|add:"0" %}selected{% endif %}>
+                {{ month_name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">
+              <i class="fas fa-calendar-alt me-1"></i> Año
+            </label>
+            <select name="year" class="form-select" id="yearSelect">
+              {% for year_option in "2021,2022,2023,2024,2025"|split:"," %}
+              <option value="{{ year_option }}" {% if year_option == year|stringformat:"i" %}selected{% endif %}>
+                {{ year_option }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">
+              <i class="fas fa-book me-1"></i> Curso
+            </label>
+            <select name="course_id" class="form-select" id="courseSelect">
+              <option value="">Todos los cursos</option>
+              {% for course in courses %}
+              <option value="{{ course.id }}" {% if course.id|stringformat:"i" == request.GET.course_id %}selected{% endif %}>
+                {{ course.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label class="form-label">
+              <i class="fas fa-chalkboard me-1"></i> Sección
+            </label>
+            <select name="section_id" class="form-select" id="sectionSelect">
+              <option value="">Todas las secciones</option>
+              {% for section in sections %}
+              <option 
+                value="{{ section.id }}" 
+                data-course-id="{{ section.course.id }}"
+                {% if section.id|stringformat:"i" == request.GET.section_id %}selected{% endif %}
+              >
+                {{ section.grade.name }} - Sección {{ section.name }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">
+              <i class="fas fa-search me-1"></i> Buscar estudiante
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light">
+                <i class="fas fa-user-graduate"></i>
+              </span>
+              <input 
+                type="text" 
+                name="student_query" 
+                id="studentSearch"
+                class="form-control" 
+                placeholder="Nombre, apellido o DNI" 
+                value="{{ request.GET.student_query|default:'' }}"
+                autocomplete="off"
+              >
+              <button type="button" class="btn btn-outline-secondary" id="clearStudentSearch">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div id="studentResults" class="position-absolute bg-white shadow-sm rounded mt-1 d-none" style="z-index: 1000; width: 95%;"></div>
+          </div>
+          <div class="col-md-6 mt-4 text-end">
+            <button type="submit" class="btn custom-btn-primary me-2">
+              <i class="fas fa-filter me-2"></i> Aplicar filtros
+            </button>
+            <button type="button" id="liveFilterBtn" class="btn btn-outline-primary me-2">
+              <i class="fas fa-sync-alt me-2"></i> Filtrar en vivo
+            </button>
+            <a href="{% url 'portfolios:teacher_portfolio_list' %}" class="btn btn-outline-secondary">
+              <i class="fas fa-redo me-2"></i> Limpiar
+            </a>
+          </div>
+          <div class="col-12">
+            <div class="d-flex flex-wrap mt-2" id="activeFilters">
+              <!-- Los filtros activos se mostrarán aquí -->
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Período actual -->
+  <div class="alert alert-info mb-4">
+    <div class="row align-items-center">
+      <div class="col">
+        <i class="fas fa-calendar-alt me-2"></i> Mostrando portafolios de <strong>{{ month_name }} {{ year }}</strong>
+      </div>
+      <div class="col-auto">
+        <small>Total: <strong>{{ portfolios.count }}</strong> estudiantes</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de portafolios en tabla compacta -->
+  {% if portfolios %}
+    <div class="portfolios-table">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th width="5%">#</th>
+              <th width="35%">Estudiante</th>
+              <th width="20%">DNI</th>
+              <th width="25%">Sección</th>
+              <th width="15%" class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for portfolio in portfolios %}
+            <tr>
+              <td>
+                <div class="student-avatar-sm">
+                  {{ portfolio.student.user.first_name|first|upper }}{{ portfolio.student.user.last_name|first|upper }}
+                </div>
+              </td>
+              <td>
+                <div>
+                  <strong>{{ portfolio.student.user.get_full_name }}</strong>
+                  <br>
+                  <small class="text-muted">
+                    <i class="fas fa-envelope me-1"></i>{{ portfolio.student.user.email|truncatechars:25 }}
+                  </small>
+                </div>
+              </td>
+              <td>
+                <span class="badge bg-light text-dark">
+                  {{ portfolio.student.dni|default:"Sin DNI" }}
+                </span>
+              </td>
+              <td>
+                {% with enrollment=portfolio.student.enrollments.first %}
+                  {% if enrollment %}
+                    <div>
+                      <strong>{{ enrollment.section.grade.name }}</strong>
+                      <br>
+                      <small class="text-muted">Sección {{ enrollment.section.name }}</small>
+                    </div>
+                  {% else %}
+                    <span class="text-muted">Sin sección</span>
+                  {% endif %}
+                {% endwith %}
+              </td>
+              <td class="text-center">
+                <a href="{% url 'portfolios:teacher_portfolio_detail' portfolio.id %}" 
+                   class="btn btn-primary btn-action">
+                  <i class="fas fa-eye me-1"></i> Ver
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Información de paginación -->
+    <div class="pagination-info">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <i class="fas fa-info-circle me-2"></i>
+          Mostrando <strong>{{ portfolios.count }}</strong> portafolios
+        </div>
+        <div class="col-md-6 text-md-end">
+          <small class="text-muted">
+            <i class="fas fa-clock me-1"></i>
+            Última actualización: {{ "now"|date:"d/m/Y H:i" }}
+          </small>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="portfolios-table">
+      <div class="empty-state">
+        <i class="fas fa-folder-open"></i>
+        <h4 class="fw-bold">No se encontraron portafolios</h4>
+        <p class="text-muted">No hay portafolios disponibles para los criterios de búsqueda seleccionados.</p>
+        <div class="mt-3">
+          <a href="{% url 'portfolios:teacher_portfolio_list' %}" class="btn custom-btn-primary">
+            <i class="fas fa-redo me-2"></i> Limpiar filtros
+          </a>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Activar tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+      return new bootstrap.Tooltip(tooltipTriggerEl)
+    });
+    
+    // Mostrar filtros si hay algún filtro activo
+    if (window.location.search && window.location.search !== '?') {
+      var filterCollapse = new bootstrap.Collapse(document.getElementById('filterCollapse'), {
+        toggle: true
+      });
+      
+      // Mostrar los filtros activos
+      updateActiveFilters();
+    }
+    
+    // Función para actualizar las secciones basadas en el curso seleccionado
+    function updateSections() {
+      const courseSelect = document.getElementById('courseSelect');
+      const sectionSelect = document.getElementById('sectionSelect');
+      const courseId = courseSelect.value;
+      
+      // Guardar la selección actual si existe
+      const currentSelection = sectionSelect.value;
+      
+      // Mostrar todas las opciones primero
+      Array.from(sectionSelect.options).forEach(option => {
+        if (option.value === '') {
+          // Siempre mostrar la opción "Todas las secciones"
+          option.style.display = '';
+        } else {
+          const optionCourseId = option.getAttribute('data-course-id');
+          
+          if (!courseId || courseId === optionCourseId) {
+            option.style.display = '';
+          } else {
+            option.style.display = 'none';
+          }
+        }
+      });
+      
+      // Verificar si la selección actual todavía es válida
+      let selectionValid = false;
+      Array.from(sectionSelect.options).forEach(option => {
+        if (option.value === currentSelection && option.style.display !== 'none') {
+          selectionValid = true;
+        }
+      });
+      
+      // Si la selección actual no es válida, seleccionar "Todas las secciones"
+      if (!selectionValid && currentSelection !== '') {
+        sectionSelect.value = '';
+      }
+    }
+    
+    // Manejar el cambio en el select de cursos
+    document.getElementById('courseSelect').addEventListener('change', function() {
+      updateSections();
+      
+      // Si está habilitado el filtro en vivo, enviar el formulario
+      if (document.getElementById('liveFilterBtn').classList.contains('active')) {
+        document.getElementById('portfolioFilterForm').submit();
+      }
+    });
+    
+    // Inicializar el filtro de secciones
+    updateSections();
+    
+    // Manejar los filtros en vivo
+    document.getElementById('liveFilterBtn').addEventListener('click', function() {
+      this.classList.toggle('active');
+      
+      if (this.classList.contains('active')) {
+        this.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Filtrado en vivo activado';
+        this.classList.remove('btn-outline-primary');
+        this.classList.add('btn-primary');
+        
+        // Agregar event listeners para cambios en selects
+        ['monthSelect', 'yearSelect', 'courseSelect', 'sectionSelect'].forEach(selectId => {
+          document.getElementById(selectId).addEventListener('change', function() {
+            document.getElementById('portfolioFilterForm').submit();
+          });
+        });
+      } else {
+        this.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Filtrar en vivo';
+        this.classList.remove('btn-primary');
+        this.classList.add('btn-outline-primary');
+        
+        // Quitar event listeners
+        ['monthSelect', 'yearSelect', 'courseSelect', 'sectionSelect'].forEach(selectId => {
+          const element = document.getElementById(selectId);
+          const newElement = element.cloneNode(true);
+          element.parentNode.replaceChild(newElement, element);
+        });
+        
+        // Reinicializar el event listener para courseSelect
+        document.getElementById('courseSelect').addEventListener('change', updateSections);
+      }
+    });
+    
+    // Manejar la búsqueda de estudiantes
+    const studentSearch = document.getElementById('studentSearch');
+    const studentResults = document.getElementById('studentResults');
+    
+    // Simple debounce function
+    function debounce(func, wait) {
+      let timeout;
+      return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+    
+    // Función para buscar estudiantes (usando AJAX)
+    const searchStudents = debounce(function(query) {
+      if (query.length < 2) {
+        studentResults.classList.add('d-none');
+        return;
+      }
+      
+      // Obtener parámetros adicionales para filtrar la búsqueda
+      const courseId = document.getElementById('courseSelect').value;
+      const sectionId = document.getElementById('sectionSelect').value;
+      
+      // Construir la URL con los parámetros
+      let url = `{% url 'portfolios:search_students_ajax' %}?q=${encodeURIComponent(query)}`;
+      if (courseId) url += `&course_id=${courseId}`;
+      if (sectionId) url += `&section_id=${sectionId}`;
+      
+      // Realizar la petición AJAX
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            studentResults.innerHTML = `
+              <div class="p-2 text-danger">
+                <i class="fas fa-exclamation-circle me-2"></i> ${data.error}
+              </div>
+            `;
+          } else if (data.results.length === 0) {
+            studentResults.innerHTML = `
+              <div class="p-2 text-muted">
+                <i class="fas fa-info-circle me-2"></i> No se encontraron estudiantes
+              </div>
+            `;
+          } else {
+            // Mostrar los resultados
+            let html = '';
+            data.results.forEach(student => {
+              html += `
+                <div class="student-result p-2 border-bottom" 
+                     style="cursor: pointer" 
+                     data-student-name="${student.name}">
+                  <div class="d-flex align-items-center">
+                    <div class="me-2">
+                      <i class="fas fa-user-graduate text-primary"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                      <div><strong>${student.name}</strong> (${student.dni})</div>
+                      <div><small class="text-muted">${student.sections.join(' • ')}</small></div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            });
+            studentResults.innerHTML = html;
+            
+            // Agregar event listeners a los resultados
+            document.querySelectorAll('.student-result').forEach(item => {
+              item.addEventListener('click', function() {
+                studentSearch.value = this.getAttribute('data-student-name');
+                studentResults.classList.add('d-none');
+                
+                if (document.getElementById('liveFilterBtn').classList.contains('active')) {
+                  document.getElementById('portfolioFilterForm').submit();
+                }
+              });
+            });
+          }
+          studentResults.classList.remove('d-none');
+        })
+        .catch(error => {
+          studentResults.innerHTML = `
+            <div class="p-2 text-danger">
+              <i class="fas fa-exclamation-circle me-2"></i> Error al buscar estudiantes
+            </div>
+          `;
+          studentResults.classList.remove('d-none');
+          console.error('Error:', error);
+        });
+    }, 300);
+    
+    studentSearch.addEventListener('input', function() {
+      searchStudents(this.value);
+    });
+    
+    studentSearch.addEventListener('focus', function() {
+      if (this.value.length >= 2) {
+        studentResults.classList.remove('d-none');
+      }
+    });
+    
+    document.addEventListener('click', function(e) {
+      if (!studentSearch.contains(e.target) && !studentResults.contains(e.target)) {
+        studentResults.classList.add('d-none');
+      }
+    });
+    
+    // Limpiar la búsqueda de estudiantes
+    document.getElementById('clearStudentSearch').addEventListener('click', function() {
+      studentSearch.value = '';
+      studentResults.classList.add('d-none');
+      
+      if (document.getElementById('liveFilterBtn').classList.contains('active')) {
+        document.getElementById('portfolioFilterForm').submit();
+      }
+    });
+    
+    // Función para mostrar los filtros activos
+    function updateActiveFilters() {
+      const activeFiltersContainer = document.getElementById('activeFilters');
+      activeFiltersContainer.innerHTML = '';
+      
+      // Mes y Año
+      const monthSelect = document.getElementById('monthSelect');
+      const yearSelect = document.getElementById('yearSelect');
+      if (monthSelect.value && yearSelect.value) {
+        const monthText = monthSelect.options[monthSelect.selectedIndex].text;
+        const yearText = yearSelect.value;
+        
+        const filter = document.createElement('span');
+        filter.className = 'badge bg-primary me-2 mb-1';
+        filter.innerHTML = `
+          <i class="fas fa-calendar me-1"></i> ${monthText} ${yearText}
+        `;
+        activeFiltersContainer.appendChild(filter);
+      }
+      
+      // Curso
+      const courseSelect = document.getElementById('courseSelect');
+      if (courseSelect.value) {
+        const courseText = courseSelect.options[courseSelect.selectedIndex].text;
+        
+        const filter = document.createElement('span');
+        filter.className = 'badge bg-info me-2 mb-1';
+        filter.innerHTML = `
+          <i class="fas fa-book me-1"></i> ${courseText}
+        `;
+        activeFiltersContainer.appendChild(filter);
+      }
+      
+      // Sección
+      const sectionSelect = document.getElementById('sectionSelect');
+      if (sectionSelect.value) {
+        const sectionText = sectionSelect.options[sectionSelect.selectedIndex].text;
+        
+        const filter = document.createElement('span');
+        filter.className = 'badge bg-secondary me-2 mb-1';
+        filter.innerHTML = `
+          <i class="fas fa-chalkboard me-1"></i> ${sectionText}
+        `;
+        activeFiltersContainer.appendChild(filter);
+      }
+      
+      // Estudiante
+      const studentSearch = document.getElementById('studentSearch');
+      if (studentSearch.value) {
+        const filter = document.createElement('span');
+        filter.className = 'badge bg-success me-2 mb-1';
+        filter.innerHTML = `
+          <i class="fas fa-user-graduate me-1"></i> "${studentSearch.value}"
+        `;
+        activeFiltersContainer.appendChild(filter);
+      }
+    }
+    
+    // Actualizar filtros activos cuando se aplican
+    document.getElementById('portfolioFilterForm').addEventListener('submit', function() {
+      updateActiveFilters();
+    });
+    
+    // Inicializar filtros activos
+    updateActiveFilters();
+
+    // Efecto de animación para las filas de la tabla
+    const tableRows = document.querySelectorAll('tbody tr');
+    tableRows.forEach((row, index) => {
+      row.style.opacity = '0';
+      row.style.transform = 'translateY(20px)';
+      setTimeout(() => {
+        row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        row.style.opacity = '1';
+        row.style.transform = 'translateY(0)';
+      }, 50 * index);
+    });
+  });
+</script>
+{% endblock %} 
