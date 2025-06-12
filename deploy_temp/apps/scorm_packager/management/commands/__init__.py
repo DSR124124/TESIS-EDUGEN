@@ -1,1 +1,0 @@
-# Management commands for SCORM packager 

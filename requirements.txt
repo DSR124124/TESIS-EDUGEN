@@ -16,4 +16,10 @@ social-auth-app-django==5.4.0
 beautifulsoup4==4.12.3
 celery>=5.3.1
 django-extensions==3.2.3
-PyPDF2==3.0.1 
+PyPDF2==3.0.1
+psycopg2-binary>=2.9.5
+whitenoise>=6.4.0
+gunicorn>=21.0.0
+python-decouple>=3.8
+django-storages>=1.13.2
+pytz>=2023.3 
