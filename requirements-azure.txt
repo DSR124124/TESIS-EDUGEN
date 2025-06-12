@@ -17,4 +17,11 @@ tqdm>=4.65.0
 django-tinymce==3.7.1
 beautifulsoup4==4.12.3
 PyPDF2==3.0.1
-django-extensions==3.2.3 
+django-extensions==3.2.3
+# Dependencias adicionales para Azure
+django-redis>=5.2.0
+redis>=4.5.0
+azure-storage-blob>=12.14.0
+azure-identity>=1.12.0
+celery>=5.2.0
+kombu>=5.2.0 

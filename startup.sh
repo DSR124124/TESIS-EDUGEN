@@ -2,49 +2,53 @@
 
 echo "🚀 Iniciando EduGen en Azure App Service"
 
-# Activar entorno virtual si existe (opcional en Azure, normalmente no se usa virtualenv aquí)
-if [ -f "venv/bin/activate" ]; then
-  echo "🐍 Activando entorno virtual..."
-  source venv/bin/activate
-else
-  echo "⚠️ Entorno virtual 'venv' no encontrado (normal en contenedores Azure). Continuando..."
-fi
+# Configurar variables de entorno
+export DJANGO_SETTINGS_MODULE="config.settings.azure_production"
+export PYTHONPATH="/home/site/wwwroot"
+export PYTHONUNBUFFERED=1
 
-# Establecer variable de entorno de settings de Django
-export DJANGO_SETTINGS_MODULE=config.settings.azure_production
-
-# Verificar puerto asignado por Azure (usar siempre $PORT, no valor fijo)
+# Obtener puerto de Azure
 PORT=${PORT:-8000}
-echo "🌐 Puerto asignado por Azure: $PORT"
+echo "🌐 Puerto: $PORT"
+
+# Verificar que estamos en el directorio correcto
+cd /home/site/wwwroot
+echo "📁 Directorio de trabajo: $(pwd)"
+
+# Verificar que manage.py existe
+if [ ! -f "manage.py" ]; then
+    echo "❌ manage.py no encontrado"
+    exit 1
+fi
 
 # Instalar dependencias
 echo "📦 Instalando dependencias..."
 pip install --upgrade pip
-pip install --no-cache-dir -r requirements.txt
-if [ $? -ne 0 ]; then
-  echo "❌ Error al instalar dependencias"
-  exit 1
-fi
+pip install --no-cache-dir -r requirements-azure.txt
 
-# Ejecutar migraciones
-echo "🔄 Ejecutando migraciones..."
-python manage.py migrate --noinput
-if [ $? -ne 0 ]; then
-  echo "❌ Error al ejecutar migraciones"
-  exit 1
-fi
+# Verificar que Django está instalado
+python -c "import django; print(f'Django version: {django.get_version()}')"
 
-# Recopilar archivos estáticos
+# Verificar la configuración de Django
+echo "🔧 Verificando configuración de Django..."
+python manage.py check --deploy --settings=config.settings.azure_production
+
+# Recopilar archivos estáticos (opcional)
 echo "📁 Recopilando archivos estáticos..."
-python manage.py collectstatic --noinput --clear
-if [ $? -ne 0 ]; then
-  echo "❌ Error al recopilar archivos estáticos"
-  exit 1
-fi
+python manage.py collectstatic --noinput --clear --settings=config.settings.azure_production || echo "⚠️ Error en collectstatic (continuando)"
 
-# Iniciar Gunicorn en modo producción
-echo "🌐 Iniciando servidor Gunicorn..."
-exec gunicorn config.wsgi:application \
-  --bind=0.0.0.0:$PORT \
-  --workers=3 \
-  --timeout=600
+# Mostrar información del sistema
+echo "🔍 Información del sistema:"
+python --version
+echo "DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE"
+echo "PYTHONPATH: $PYTHONPATH"
+echo "Archivos en directorio:"
+ls -la
+
+# Ejecutar migraciones (opcional)
+echo "🔄 Migraciones..."
+python manage.py migrate --noinput --settings=config.settings.azure_production || echo "⚠️ Error en migraciones (continuando)"
+
+# Iniciar aplicación
+echo "🌐 Iniciando aplicación..."
+exec python manage.py runserver 0.0.0.0:$PORT --settings=config.settings.azure_production
