@@ -1,48 +1,20 @@
-# Dependencias Azure optimizadas para EduGen - VERSION COMPLETA
-# Django framework
 Django>=4.2.0,<4.3.0
-
-# Django REST Framework (REQUERIDO)
 djangorestframework>=3.14.0
-
-# Base de datos PostgreSQL
 psycopg2-binary>=2.9.5
-
-# Manejo de imágenes
 Pillow>=9.5.0
-
-# Archivos estáticos
 whitenoise>=6.4.0
-
-# HTTP requests
 requests>=2.30.0
-
-# Formularios mejorados
 django-crispy-forms>=2.0
 crispy-bootstrap5>=0.7
-
-# CORS headers
 django-cors-headers>=4.3.1
-
-# Autenticación social
 django-allauth==0.57.0
 social-auth-app-django>=5.4.0
-
-# WSGI server para Azure
 gunicorn>=21.0.0
-
-# Variables de entorno
 python-decouple>=3.8
-
-# Azure dependencies básicas
 django-storages>=1.13.2
-
-# Dependencias adicionales necesarias
 pytz>=2023.3
 tqdm>=4.65.0
 django-tinymce==3.7.1
 beautifulsoup4==4.12.3
 PyPDF2==3.0.1
-
-# Extensiones de Django
 django-extensions==3.2.3 

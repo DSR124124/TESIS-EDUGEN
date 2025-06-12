@@ -43,6 +43,9 @@ jobs:
         echo ""
         echo "📦 REST framework packages:"
         pip list | grep -i rest || echo "No REST packages found"
+        echo ""
+        echo "🔍 Specific check for djangorestframework:"
+        pip show djangorestframework || echo "❌ djangorestframework NOT installed"
         
     - name: 🧪 Test ONLY imports (NO Django setup)
       run: |
