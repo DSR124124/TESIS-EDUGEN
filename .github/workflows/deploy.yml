@@ -1,65 +1,106 @@
-name: Deploy to Azure App Service
+name: 🚀 Deploy EduGen to Azure
 
 on:
   push:
-    branches: [ master ]
-  workflow_dispatch:  # Permite ejecutar manualmente
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  AZURE_WEBAPP_NAME: edugen-app
+  AZURE_WEBAPP_PACKAGE_PATH: '.'
+  PYTHON_VERSION: '3.11'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Python version
+    - name: 📦 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🐍 Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.11'
-
-    - name: Create and start virtual environment
+        python-version: ${{ env.PYTHON_VERSION }}
+        
+    - name: 📁 Create artifact directory
       run: |
-        python -m venv venv
-        source venv/bin/activate
-
-    - name: Install dependencies
+        mkdir -p artifact
+        
+    - name: 📋 Install dependencies
       run: |
-        source venv/bin/activate
-        pip install --upgrade pip
-        pip install -r requirements-azure.txt
-
-    - name: Run tests (optional)
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        
+    - name: 🧪 Run tests
       run: |
-        source venv/bin/activate
-        # python manage.py test --settings=config.settings.test  # Comentado temporalmente
-        echo "Tests ejecutados correctamente"
-
-    - name: Upload artifact for deployment jobs
+        python manage.py check --deploy --settings=config.settings.azure_production
+        
+    - name: 🗂️ Collect static files
+      run: |
+        python manage.py collectstatic --noinput --settings=config.settings.azure_production
+        
+    - name: 📦 Create deployment package
+      run: |
+        # Copiar todos los archivos necesarios
+        cp -r . artifact/
+        
+        # Limpiar archivos innecesarios
+        rm -rf artifact/.git
+        rm -rf artifact/.github
+        rm -rf artifact/.venv
+        rm -rf artifact/db/sistema_educativo_db.sqlite3
+        rm -rf artifact/__pycache__
+        find artifact/ -name "*.pyc" -delete
+        find artifact/ -name "__pycache__" -type d -exec rm -rf {} +
+        
+        # Crear requirements simplificado para Azure
+        echo "Django>=4.2.0,<4.3.0" > artifact/requirements-azure.txt
+        echo "psycopg2>=2.9.5" >> artifact/requirements-azure.txt
+        echo "Pillow>=9.5.0" >> artifact/requirements-azure.txt
+        echo "whitenoise>=6.4.0" >> artifact/requirements-azure.txt
+        echo "requests>=2.30.0" >> artifact/requirements-azure.txt
+        echo "tqdm>=4.65.0" >> artifact/requirements-azure.txt
+        echo "django-tinymce==3.7.1" >> artifact/requirements-azure.txt
+        echo "django-allauth==0.61.1" >> artifact/requirements-azure.txt
+        echo "social-auth-app-django==5.4.0" >> artifact/requirements-azure.txt
+        echo "beautifulsoup4==4.12.3" >> artifact/requirements-azure.txt
+        echo "celery>=5.3.1" >> artifact/requirements-azure.txt
+        echo "django-extensions==3.2.3" >> artifact/requirements-azure.txt
+        echo "PyPDF2==3.0.1" >> artifact/requirements-azure.txt
+        
+    - name: 📤 Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: python-app
-        path: |
-          . 
-          !venv/
+        path: artifact/
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'Production'
+      name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-    - name: Download artifact from build job
+    - name: 📥 Download artifact
       uses: actions/download-artifact@v3
       with:
         name: python-app
         path: .
 
-    - name: 'Deploy to Azure Web App'
-      uses: azure/webapps-deploy@v2
+    - name: 🚀 Deploy to Azure Web App
       id: deploy-to-webapp
+      uses: azure/webapps-deploy@v2
       with:
-        app-name: 'edugen-app'
-        slot-name: 'Production'
-        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_EDUGEN }} 
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+
+    - name: 🎯 Post-deployment setup
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo "🌐 App URL: https://edugen-app.azurewebsites.net"
+        echo "🔍 Check the app status and logs in Azure Portal" 

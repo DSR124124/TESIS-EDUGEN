@@ -31,10 +31,10 @@ USE_X_FORWARDED_PORT = True
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE', 'postgres'),
-        'USER': os.getenv('PGUSER', 'EDUGEN'),
-        'PASSWORD': os.environ['PGPASSWORD'],  # Requerido
-        'HOST': os.getenv('PGHOST', 'edugenbd.postgres.database.azure.com'),
+        'NAME': os.getenv('PGDATABASE', 'edugen'),
+        'USER': os.getenv('PGUSER', 'postgres'),
+        'PASSWORD': os.environ.get('PGPASSWORD', 'EduGen123!'),  # Requerido
+        'HOST': os.getenv('PGHOST', 'edugen-db-2024-01.postgres.database.azure.com'),
         'PORT': os.getenv('PGPORT', '5432'),
         'OPTIONS': {
             'sslmode': 'require',
