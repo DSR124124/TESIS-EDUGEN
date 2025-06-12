@@ -1,6 +1,0 @@
-[config]
-SCM_DO_BUILD_DURING_DEPLOYMENT=true
-ENABLE_ORYX_BUILD=true
-PRE_BUILD_COMMAND="pip install -r requirements.txt"
-POST_BUILD_COMMAND="python manage.py collectstatic --noinput"
-PROJECT_DEFAULT_BUILD_SCRIPT_PATH= 
