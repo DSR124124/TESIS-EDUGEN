@@ -145,11 +145,29 @@ else:
     }
     print("🔧 Usando cache local como fallback")
 
-# Cache para sesiones
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+# Cache para sesiones - CAMBIAR A DATABASE para persistencia
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Cambiar de cache a database
 SESSION_CACHE_ALIAS = 'default'
-SESSION_COOKIE_AGE = 86400
+SESSION_COOKIE_AGE = 86400  # 24 horas
 SESSION_SAVE_EVERY_REQUEST = False
+
+# Configuración adicional de cookies para Azure
+SESSION_COOKIE_SECURE = True  # Usar HTTPS
+SESSION_COOKIE_HTTPONLY = True  # Prevenir acceso via JavaScript
+SESSION_COOKIE_SAMESITE = 'Lax'  # Permitir navegación normal
+SESSION_COOKIE_NAME = 'edugen_sessionid'  # Nombre personalizado
+
+# Configuración CSRF mejorada para Azure
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_TRUSTED_ORIGINS = [
+    'https://edugen-app.azurewebsites.net',
+]
+
+# Configuración adicional para Azure App Service
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # ==========================================
 # LOGGING OPTIMIZADO
@@ -218,17 +236,24 @@ if 'WEBSITE_HOSTNAME' in os.environ:
     ]
 
 AZURE_DEPLOYMENT = True
-WEBSITE_HOSTNAME = os.environ.get('WEBSITE_HOSTNAME', '')
+WEBSITE_HOSTNAME = os.environ.get('WEBSITE_HOSTNAME', 'edugen-app.azurewebsites.net')
 
 # ==========================================
 # CONFIGURACIÓN DE GOOGLE OAUTH
 # ==========================================
 
+# URI de redirección para OAuth - debe coincidir exactamente con Google Cloud Console
+OAUTH_REDIRECT_URI = f"https://{WEBSITE_HOSTNAME}/auth/complete/google-oauth2/"
+
 SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = os.environ.get(
     "SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI", 
-    f"https://{WEBSITE_HOSTNAME}/auth/complete/google-oauth2/" if WEBSITE_HOSTNAME 
-    else "https://sistema-educativo-app.azurewebsites.net/auth/complete/google-oauth2/"
+    OAUTH_REDIRECT_URI
 )
+
+# Debug info para OAuth
+print(f"🔧 OAuth Redirect URI configurado: {SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI}")
+print(f"🔧 Website Hostname: {WEBSITE_HOSTNAME}")
+print(f"🔧 Client ID: {getattr(base_settings, 'SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', 'No configurado')}")
 
 # ==========================================
 # CONFIGURACIÓN DE CONTENIDO IA

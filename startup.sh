@@ -48,6 +48,14 @@ fi
 echo "🔄 Ejecutando migraciones..."
 python manage.py migrate
 
+# Crear tablas de sesiones específicamente
+echo "🔄 Asegurando tablas de sesiones..."
+python manage.py migrate sessions
+
+# Limpiar sesiones expiradas
+echo "🧹 Limpiando sesiones expiradas..."
+python manage.py clearsessions || echo "⚠️ No se pudieron limpiar sesiones (normal en primera ejecución)"
+
 # Crear superusuario
 echo "👤 Configurando superusuario..."
 python manage.py shell -c "
