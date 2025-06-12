@@ -1,0 +1,17 @@
+# Importar requerimientos base
+-r base.txt
+
+# Herramientas de desarrollo
+ipython>=8.15.0  # Shell mejorada
+black>=23.7.0    # Formateador de código
+flake8>=6.1.0    # Linter
+isort>=5.12.0    # Ordenador de imports
+
+# Debugging
+django-debug-toolbar>=4.1.0
+django-extensions>=3.2.3
+
+# Testing
+pytest-cov>=4.1.0      # Cobertura de código
+pytest-sugar>=0.9.7    # Mejor visualización de tests
+coverage>=7.3.0        # Análisis de cobertura

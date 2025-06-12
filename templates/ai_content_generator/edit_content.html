@@ -1,0 +1,2821 @@
+{% extends 'dashboard/teacher/base.html' %}
+{% load static %}
+
+{% block title %}Editar Contenido{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Estilos específicos para el editor manteniendo la navegación */
+    .main-content {
+        padding: 0 !important;
+        height: 100vh !important;
+
+    }
+    
+    .content-wrapper {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* RESET COMPLETO - ELIMINAR TODOS LOS PADDINGS Y MARGINS */
+    * {
+        box-sizing: border-box;
+    }
+    
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100vh !important;
+        width: 100% !important;
+        overflow-x: hidden;
+    }
+    
+
+    .teacher-content {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: 100vh !important;
+    }
+    
+    /* CONTAINER PRINCIPAL - AJUSTADO PARA NAVEGACIÓN */
+    .fullscreen-editor {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 120px); /* Ajustar para dar espacio a navbar y footer */
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin: 20px;
+        overflow: hidden;
+    }
+    
+    /* HEADER FIJO */
+    .editor-top-bar {
+        background: #005CFF;
+        color: white;
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    /* ÁREA PRINCIPAL DEL EDITOR CON SIDEBAR */
+    .editor-main-area {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+        height: 1000vh;
+    }
+    
+    /* SIDEBAR IZQUIERDO */
+    .editor-sidebar {
+        width: 450px;
+        background: #f8f9fa;
+        border-right: 1px solid #e9ecef;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        padding: 20px;
+        height: 100vh !important;
+
+    }
+    
+    /* ÁREA DE CONTENIDO EDITABLE (IFRAME) */
+    .editor-content-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+    }
+    
+    /* TOOLBAR DE HERRAMIENTAS */
+    .editor-toolbar {
+        background: #f8f9fa;
+        padding: 10px 20px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+    }
+    
+    .toolbar-group {
+        display: flex;
+        gap: 5px;
+        border-right: 1px solid #dee2e6;
+        padding-right: 15px;
+    }
+    
+    .toolbar-group:last-child {
+        border-right: none;
+        padding-right: 0;
+    }
+    
+    .toolbar-btn {
+        background: white;
+        border: 1px solid #dee2e6;
+        padding: 8px 10px;
+        border-radius: 4px;
+        cursor: pointer !important;
+        transition: all 0.2s;
+        font-size: 14px;
+        color: #495057;
+        user-select: none !important;
+    }
+    
+    .toolbar-btn:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+    }
+    
+    .toolbar-btn.active {
+        background: #005CFF;
+        color: white;
+        border-color: #005CFF;
+    }
+    
+    .format-select {
+        padding: 6px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background: white;
+        font-size: 14px;
+    }
+    
+    /* IFRAME DE CONTENIDO */
+    .content-iframe {
+        flex: 1;
+        border: none;
+        width: 100%;
+        background: white;
+    }
+    
+    /* FOOTER FIJO */
+    .editor-bottom-bar {
+        background: #f8f9fa;
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-shrink: 0;
+        border-top: 1px solid #e9ecef;
+        min-height: 50px;
+    }
+    
+    /* BOTONES */
+    .btn-editor {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        cursor: pointer !important;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        user-select: none;
+    }
+    
+    .btn-primary {
+        background: #005CFF;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #0046CC;
+    }
+    
+    .btn-secondary {
+        background: rgba(255,255,255,0.2);
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: rgba(255,255,255,0.3);
+    }
+    
+    .btn-outline {
+        background: transparent;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+    }
+    
+    .btn-outline:hover {
+        background: #e9ecef;
+        color: #495057;
+    }
+    
+    /* CONTADOR DE PALABRAS */
+    .word-counter {
+        color: #6b7280;
+        font-size: 14px;
+    }
+    
+    /* HERRAMIENTAS DE TRABAJO EN 3 COLUMNAS */
+    .tools-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        height: auto;
+        min-height: 600px;
+        padding: 20px; /* Padding uniforme sin espacio para navegación lateral */
+        scroll-behavior: smooth;
+        overflow-y: auto; /* Scroll vertical suave */
+    }
+    
+    .tools-header {
+        text-align: center;
+        color: #005CFF;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #005CFF;
+        padding-bottom: 10px;
+        background: linear-gradient(135deg, #005CFF 0%, #0046CC 100%);
+        color: white;
+        border-radius: 8px 8px 0 0;
+        padding: 15px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 10px rgba(0, 92, 255, 0.2);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .tools-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+        flex: 1;
+        align-items: start;
+        min-height: auto;
+    }
+    
+    .tool-column {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: white;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        min-height: 450px;
+        height: auto;
+    }
+    
+    .tool-column-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #005CFF;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 12px;
+        text-align: center;
+        padding: 8px 0;
+        border-bottom: 2px solid #e9ecef;
+        position: relative;
+    }
+    
+    .tool-column-title:after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 30px;
+        height: 2px;
+        background: #005CFF;
+    }
+    
+    .tool-btn {
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        padding: 12px 8px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+        color: #495057;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        min-height: 70px;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        font-weight: 600;
+    }
+    
+    .tool-btn:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 92, 255, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .tool-btn:hover {
+        background: linear-gradient(135deg, #005CFF 0%, #0046CC 100%);
+        border-color: #005CFF;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 92, 255, 0.3);
+    }
+    
+    .tool-btn:hover:before {
+        left: 100%;
+    }
+    
+    .tool-btn.active {
+        background: linear-gradient(135deg, #005CFF 0%, #0046CC 100%);
+        color: white;
+        border-color: #005CFF;
+        box-shadow: 0 4px 15px rgba(0, 92, 255, 0.4);
+    }
+    
+    .tool-btn i {
+        font-size: 18px;
+        margin-bottom: 4px;
+        transition: transform 0.3s ease;
+    }
+    
+    .tool-btn:hover i {
+        transform: scale(1.1);
+    }
+    
+    .tool-btn span {
+        font-size: 10px;
+        line-height: 1.2;
+        font-weight: 600;
+    }
+    
+    /* File upload styling */
+    .file-upload-btn {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .file-upload-btn input[type=file] {
+        position: absolute;
+        left: -9999px;
+        opacity: 0;
+    }
+    
+    .upload-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 3px;
+        background: #28a745;
+        width: 0%;
+        transition: width 0.3s ease;
+        border-radius: 0 0 8px 8px;
+    }
+    
+    /* Column specific colors */
+    .tool-column:nth-child(1) .tool-column-title:after {
+        background: #ff6b35; /* Formato - Naranja */
+    }
+    
+    .tool-column:nth-child(1) .tool-btn:hover {
+        background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+        border-color: #ff6b35;
+        box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+    }
+    
+    .tool-column:nth-child(2) .tool-column-title:after {
+        background: #28a745; /* Contenido - Verde */
+    }
+    
+    .tool-column:nth-child(2) .tool-btn:hover {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        border-color: #28a745;
+        box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+    
+    .tool-column:nth-child(3) .tool-column-title:after {
+        background: #6f42c1; /* Educativo - Púrpura */
+    }
+    
+    .tool-column:nth-child(3) .tool-btn:hover {
+        background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+        border-color: #6f42c1;
+        box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+    }
+    
+    /* Loading overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(5px);
+    }
+    
+    .loading-content {
+        text-align: center;
+        background-color: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 90%;
+    }
+    
+    .spinner {
+        color: #005CFF;
+        width: 3rem;
+        height: 3rem;
+        margin: 0 auto 1rem;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #005CFF;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .editor-container {
+            gap: 15px;
+        }
+        
+        .sidebar {
+            width: 300px;
+            min-width: 300px;
+            max-width: 300px;
+        }
+        
+        .tools-container {
+            padding: 15px;
+            min-height: 500px;
+        }
+        
+        .tool-column {
+            min-height: 400px;
+            padding: 12px;
+        }
+        
+        .tool-btn {
+            min-height: 65px;
+            padding: 10px 6px;
+        }
+    }
+    
+    @media (max-width: 992px) {
+        .editor-container {
+            flex-direction: column;
+            gap: 15px;
+            min-height: auto;
+        }
+        
+        .sidebar {
+            max-width: none;
+            width: 100%;
+            max-height: none;
+            order: 2;
+        }
+        
+        .editor-content {
+            order: 1;
+            min-height: 500px;
+            max-height: 500px;
+        }
+        
+        .tools-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .tool-column {
+            padding: 12px;
+            min-height: 350px;
+        }
+        
+        .tool-btn {
+            min-height: 60px;
+            padding: 8px 6px;
+            font-size: 10px;
+        }
+        
+        .tool-btn i {
+            font-size: 16px;
+        }
+        
+        .tool-btn span {
+            font-size: 9px;
+        }
+        
+        .tools-header {
+            padding: 12px;
+            font-size: 16px;
+            position: static;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .tools-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .tool-column {
+            min-height: 300px;
+            padding: 10px;
+        }
+        
+        .tool-btn {
+            min-height: 55px;
+            padding: 8px 4px;
+        }
+        
+        .tool-btn i {
+            font-size: 14px;
+        }
+        
+        .tool-btn span {
+            font-size: 8px;
+        }
+        
+        .editor-content {
+            min-height: 400px;
+            max-height: 400px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .tools-container {
+            padding: 10px;
+            min-height: 400px;
+        }
+        
+        .tools-grid {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        
+        .tool-column {
+            min-height: 250px;
+            padding: 8px;
+        }
+        
+        .tool-btn {
+            min-height: 50px;
+            padding: 6px 4px;
+        }
+        
+        .tool-btn i {
+            font-size: 12px;
+        }
+        
+        .tool-btn span {
+            font-size: 7px;
+        }
+        
+        .editor-content {
+            min-height: 350px;
+            max-height: 350px;
+        }
+        
+        .editor-frame-container {
+            padding: 10px;
+        }
+    }
+    
+    /* Scroll personalizado para sidebar */
+    .sidebar::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .sidebar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb {
+        background: #005CFF;
+        border-radius: 4px;
+    }
+    
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background: #0046CC;
+    }
+    
+    /* Animation for file upload progress */
+    @keyframes pulse {
+        0% { background-color: #28a745; }
+        50% { background-color: #20c997; }
+        100% { background-color: #28a745; }
+    }
+    
+    .upload-progress.active {
+        animation: pulse 1s infinite;
+    }
+    
+    /* Drag and drop styling for future enhancement */
+    .editor-content.drag-over {
+        border: 2px dashed #005CFF;
+        background-color: rgba(0, 92, 255, 0.05);
+    }
+    
+    /* Enhanced file upload button styling */
+    .file-upload-btn:hover .upload-progress {
+        background: #20c997;
+    }
+    
+    /* File type specific colors */
+    .tool-btn[title*="Imagen"]:hover {
+        background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);
+        border-color: #fd7e14;
+        box-shadow: 0 4px 15px rgba(253, 126, 20, 0.3);
+    }
+    
+    .tool-btn[title*="Video"]:hover {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); 
+        border-color: #dc3545;
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    }
+    
+    .tool-btn[title*="Documento"]:hover {
+        background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+        border-color: #6f42c1;
+        box-shadow: 0 4px 15px rgba(111, 66, 193, 0.3);
+    }
+    
+    /* CONTENEDOR PRINCIPAL */
+    .editor-container {
+        display: flex;
+        gap: 20px;
+        width: 100%;
+        min-height: calc(100vh - 200px);
+        max-height: none;
+        overflow: visible;
+    }
+    
+    /* SIDEBAR - HERRAMIENTAS */
+    .sidebar {
+        width: 450px;
+        min-width: 450px;
+        max-width: 450px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 1px solid #e9ecef;
+        overflow-y: auto;
+        max-height: calc(100vh - 200px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        position: relative;
+    }
+    
+
+    
+    /* CONTENIDO DEL EDITOR */
+    .editor-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+        min-height: calc(100vh - 200px);
+        max-height: calc(100vh - 200px);
+        overflow: hidden;
+    }
+    
+    .editor-header {
+        background: linear-gradient(135deg, #005CFF 0%, #0046CC 100%);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 12px 12px 0 0;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        box-shadow: 0 2px 10px rgba(0, 92, 255, 0.2);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+    
+    .editor-title {
+        font-size: 18px;
+        font-weight: 600;
+        flex: 1;
+    }
+    
+    .editor-frame-container {
+        flex: 1;
+        padding: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .editor-frame {
+        width: 100%;
+        flex: 1;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background: white;
+        min-height: 400px;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .editor-footer {
+        background: #f8f9fa;
+        padding: 15px 20px;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 0 0 12px 12px;
+    }
+    
+    .word-counter {
+        color: #6c757d;
+        font-size: 14px;
+    }
+    
+    .editor-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    /* Image resizing functionality */
+    .resizable-image {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+        max-width: 100%;
+        margin: 10px 0;
+    }
+    
+    .resizable-image.selected {
+        outline: 2px solid #005CFF;
+        outline-offset: 2px;
+    }
+    
+    .resize-handles {
+        position: absolute;
+        display: none;
+        pointer-events: none;
+    }
+    
+    .resizable-image.selected .resize-handles {
+        display: block;
+        pointer-events: all;
+    }
+    
+    .resize-handle {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: #005CFF;
+        border: 1px solid white;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    
+    .resize-handle.nw { top: -4px; left: -4px; cursor: nw-resize; }
+    .resize-handle.ne { top: -4px; right: -4px; cursor: ne-resize; }
+    .resize-handle.sw { bottom: -4px; left: -4px; cursor: sw-resize; }
+    .resize-handle.se { bottom: -4px; right: -4px; cursor: se-resize; }
+    .resize-handle.n { top: -4px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+    .resize-handle.s { bottom: -4px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+    .resize-handle.w { top: 50%; left: -4px; transform: translateY(-50%); cursor: w-resize; }
+    .resize-handle.e { top: 50%; right: -4px; transform: translateY(-50%); cursor: e-resize; }
+    
+    /* Image control panel */
+    .image-controls {
+        position: fixed;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        display: none;
+        min-width: 200px;
+    }
+    
+    .image-controls.show {
+        display: block;
+    }
+    
+    .image-controls h4 {
+        margin: 0 0 15px 0;
+        color: #005CFF;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    
+    .control-group {
+        margin-bottom: 12px;
+    }
+    
+    .control-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 4px;
+    }
+    
+    .control-input {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 12px;
+    }
+    
+    .control-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 15px;
+    }
+    
+    .control-btn {
+        flex: 1;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .control-btn-primary {
+        background: #005CFF;
+        color: white;
+    }
+    
+    .control-btn-primary:hover {
+        background: #0046CC;
+    }
+    
+    .control-btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    
+    .control-btn-secondary:hover {
+        background: #545b62;
+    }
+    
+    .control-btn-danger {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .control-btn-danger:hover {
+        background: #c82333;
+}
+</style>
+{% endblock %}
+
+{% block teacher_content %}
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <h5 style="margin-top: 1rem; font-size: 1.2rem; color: #333;">Guardando cambios...</h5>
+        <p style="color: #666; margin-bottom: 0;">Por favor espera mientras guardamos tu contenido.</p>
+    </div>
+</div>
+
+<!-- Editor completamente fullscreen -->
+<div class="fullscreen-editor">
+    <!-- Header fijo superior -->
+    <div class="editor-top-bar">
+        <h6 style="margin: 0; font-weight: 600;">Editar: {{ content.title }}</h6>
+        <div>
+            <a href="{% url 'ai:content_detail' pk=content.id %}" class="btn-editor btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+            <button id="btnSaveContent" class="btn-editor btn-primary">
+                <i class="fas fa-save"></i> Guardar
+            </button>
+        </div>
+    </div>
+    
+    <!-- Área principal del editor con sidebar -->
+    <div class="editor-main-area">
+        <!-- Sidebar con herramientas en 3 columnas -->
+        <div class="editor-sidebar">
+
+            
+            <div class="tools-container" id="toolsContainer">
+                <div class="tools-header">
+                    <i class="fas fa-tools"></i> Herramientas de Trabajo
+        </div>
+                
+                <div class="tools-grid">
+                    <!-- Columna 1: Formato -->
+                    <div class="tool-column" data-section="formato">
+                        <div class="tool-column-title">Formato</div>
+                        <button class="tool-btn" onclick="formatText('bold')" title="Negrita">
+                            <i class="fas fa-bold"></i>
+                            <span>Negrita</span>
+                        </button>
+                        <button class="tool-btn" onclick="formatText('italic')" title="Cursiva">
+                            <i class="fas fa-italic"></i>
+                            <span>Cursiva</span>
+                        </button>
+                        <button class="tool-btn" onclick="formatText('underline')" title="Subrayado">
+                            <i class="fas fa-underline"></i>
+                            <span>Subrayado</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertHeading()" title="Encabezado">
+                            <i class="fas fa-heading"></i>
+                            <span>Título</span>
+                        </button>
+                        <button class="tool-btn" onclick="formatText('strikeThrough')" title="Tachado">
+                            <i class="fas fa-strikethrough"></i>
+                            <span>Tachado</span>
+                        </button>
+                        <button class="tool-btn" onclick="formatText('justifyLeft')" title="Alinear izquierda">
+                            <i class="fas fa-align-left"></i>
+                            <span>Izquierda</span>
+                        </button>
+                        <button class="tool-btn" onclick="formatText('justifyCenter')" title="Centrar">
+                            <i class="fas fa-align-center"></i>
+                            <span>Centrar</span>
+                        </button>
+                        <button class="tool-btn" onclick="formatText('justifyRight')" title="Alinear derecha">
+                            <i class="fas fa-align-right"></i>
+                            <span>Derecha</span>
+                        </button>
+    </div>
+    
+                    <!-- Columna 2: Contenido -->
+                    <div class="tool-column" data-section="contenido">
+                        <div class="tool-column-title">Contenido</div>
+                        <button class="tool-btn" onclick="formatText('insertUnorderedList')" title="Lista">
+                            <i class="fas fa-list-ul"></i>
+                            <span>Lista</span>
+                        </button>
+                        <button class="tool-btn" onclick="formatText('insertOrderedList')" title="Numerada">
+                            <i class="fas fa-list-ol"></i>
+                            <span>Numerada</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertTable()" title="Tabla">
+                            <i class="fas fa-table"></i>
+                            <span>Tabla</span>
+                        </button>
+                        <button class="tool-btn file-upload-btn" onclick="triggerImageUpload()" title="Subir Imagen">
+                            <i class="fas fa-image"></i>
+                            <span>Subir Imagen</span>
+                            <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(this)">
+                            <div class="upload-progress" id="imageProgress"></div>
+                        </button>
+                        <button class="tool-btn" onclick="insertLink()" title="Enlace">
+                            <i class="fas fa-link"></i>
+                            <span>Enlace</span>
+                        </button>
+                        <button class="tool-btn" onclick="formatText('undo')" title="Deshacer">
+                            <i class="fas fa-undo"></i>
+                            <span>Deshacer</span>
+                        </button>
+                        <button class="tool-btn" onclick="formatText('redo')" title="Rehacer">
+                            <i class="fas fa-redo"></i>
+                            <span>Rehacer</span>
+                        </button>
+                        <button class="tool-btn" onclick="clearFormatting()" title="Limpiar formato">
+                            <i class="fas fa-eraser"></i>
+                            <span>Limpiar</span>
+            </button>
+        </div>
+
+                    <!-- Columna 3: Educativo -->
+                    <div class="tool-column" data-section="educativo">
+                        <div class="tool-column-title">Educativo</div>
+                        <button class="tool-btn" onclick="insertEducationalContent('objectives')" title="Objetivos">
+                            <i class="fas fa-bullseye"></i>
+                            <span>Objetivos</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertEducationalContent('activities')" title="Actividades">
+                            <i class="fas fa-tasks"></i>
+                            <span>Actividades</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertEducationalContent('evaluations')" title="Evaluaciones">
+                            <i class="fas fa-clipboard-check"></i>
+                            <span>Evaluaciones</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertEducationalContent('examples')" title="Ejemplos">
+                            <i class="fas fa-lightbulb"></i>
+                            <span>Ejemplos</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertEducationalContent('notes')" title="Notas">
+                            <i class="fas fa-sticky-note"></i>
+                            <span>Notas</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertEducationalContent('summary')" title="Resumen">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Resumen</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertEducationalContent('quiz')" title="Quiz">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Quiz</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertEducationalContent('references')" title="Referencias">
+                            <i class="fas fa-book"></i>
+                            <span>Referencias</span>
+                        </button>
+    </div>
+                </div>
+                
+                <!-- Sección Multimedia -->
+                <div class="tools-grid" data-section="multimedia" style="margin-top: 30px;">
+                    <div style="grid-column: 1 / -1; text-align: center; margin-bottom: 15px;">
+                        <h4 style="color: #005CFF; margin: 0;"><i class="fas fa-photo-video"></i> Multimedia</h4>
+                    </div>
+                    
+                    <div class="tool-column">
+                        <div class="tool-column-title">Videos</div>
+                        <button class="tool-btn file-upload-btn" onclick="triggerVideoUpload()" title="Subir Video">
+                            <i class="fas fa-video"></i>
+                            <span>Subir Video</span>
+                            <input type="file" id="videoUpload" accept="video/*" onchange="handleVideoUpload(this)">
+                            <div class="upload-progress" id="videoProgress"></div>
+                        </button>
+                        <button class="tool-btn" onclick="insertYouTubeVideo()" title="Video YouTube">
+                            <i class="fab fa-youtube"></i>
+                            <span>YouTube</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertVideoEmbed()" title="Video Embed">
+                            <i class="fas fa-code"></i>
+                            <span>Embed</span>
+                        </button>
+                    </div>
+                    
+                    <div class="tool-column">
+                        <div class="tool-column-title">Archivos</div>
+                        <button class="tool-btn file-upload-btn" onclick="triggerDocumentUpload()" title="Subir Documento">
+                            <i class="fas fa-file-pdf"></i>
+                            <span>Documento</span>
+                            <input type="file" id="documentUpload" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" onchange="handleDocumentUpload(this)">
+                            <div class="upload-progress" id="documentProgress"></div>
+                        </button>
+                        <button class="tool-btn file-upload-btn" onclick="triggerAudioUpload()" title="Subir Audio">
+                            <i class="fas fa-music"></i>
+                            <span>Audio</span>
+                            <input type="file" id="audioUpload" accept="audio/*" onchange="handleAudioUpload(this)">
+                            <div class="upload-progress" id="audioProgress"></div>
+                        </button>
+                        <button class="tool-btn" onclick="insertGoogleDrive()" title="Google Drive">
+                            <i class="fab fa-google-drive"></i>
+                            <span>Drive</span>
+                        </button>
+                    </div>
+                    
+                    <div class="tool-column">
+                        <div class="tool-column-title">Interactivo</div>
+                        <button class="tool-btn" onclick="insertInteractiveContent('iframe')" title="Marco Web">
+                            <i class="fas fa-window-maximize"></i>
+                            <span>IFrame</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertInteractiveContent('simulation')" title="Simulación">
+                            <i class="fas fa-play-circle"></i>
+                            <span>Simulación</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertInteractiveContent('map')" title="Mapa">
+                            <i class="fas fa-map"></i>
+                            <span>Mapa</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Sección Avanzadas -->
+                <div class="tools-grid" data-section="avanzadas" style="margin-top: 30px;">
+                    <div style="grid-column: 1 / -1; text-align: center; margin-bottom: 15px;">
+                        <h4 style="color: #005CFF; margin: 0;"><i class="fas fa-magic"></i> Herramientas Avanzadas</h4>
+                    </div>
+                    
+                    <div class="tool-column">
+                        <div class="tool-column-title">Estructura</div>
+                        <button class="tool-btn" onclick="insertAdvancedContent('columns')" title="Columnas">
+                            <i class="fas fa-columns"></i>
+                            <span>Columnas</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertAdvancedContent('tabs')" title="Pestañas">
+                            <i class="fas fa-folder-open"></i>
+                            <span>Pestañas</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertAdvancedContent('accordion')" title="Acordeón">
+                            <i class="fas fa-bars"></i>
+                            <span>Acordeón</span>
+                        </button>
+                    </div>
+                    
+                    <div class="tool-column">
+                        <div class="tool-column-title">Visual</div>
+                        <button class="tool-btn" onclick="insertAdvancedContent('callout')" title="Destacado">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <span>Destacado</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertAdvancedContent('timeline')" title="Línea de Tiempo">
+                            <i class="fas fa-timeline"></i>
+                            <span>Timeline</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertAdvancedContent('chart')" title="Gráfico">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Gráfico</span>
+                        </button>
+                    </div>
+                    
+                    <div class="tool-column">
+                        <div class="tool-column-title">Código</div>
+                        <button class="tool-btn" onclick="insertAdvancedContent('code')" title="Código">
+                            <i class="fas fa-code"></i>
+                            <span>Código</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertAdvancedContent('formula')" title="Fórmula">
+                            <i class="fas fa-square-root-alt"></i>
+                            <span>Fórmula</span>
+                        </button>
+                        <button class="tool-btn" onclick="insertAdvancedContent('html')" title="HTML">
+                            <i class="fab fa-html5"></i>
+                            <span>HTML</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Área de contenido editable -->
+        <div class="editor-content-area">
+            <!-- Iframe de contenido -->
+            <iframe id="contentEditor" class="content-iframe"></iframe>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Formulario oculto para enviar el contenido -->
+<form id="contentForm" method="post" action="{% url 'ai:edit_content' pk=content.id %}" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" name="content_html" id="contentInput">
+    <input type="hidden" name="formatted_content" id="contentFormatted">
+</form>
+
+<!-- Panel de Control de Imágenes -->
+<div id="imageControls" class="image-controls">
+    <h4><i class="fas fa-image"></i> Control de Imagen</h4>
+    
+    <div class="control-group">
+        <label>Ancho (px)</label>
+        <input type="number" id="imageWidth" class="control-input" min="20" max="2000" step="1" placeholder="Ej: 500">
+    </div>
+    
+    <div class="control-group">
+        <label>Alto (px)</label>
+        <input type="number" id="imageHeight" class="control-input" min="20" max="1500" step="1" placeholder="Ej: 300">
+    </div>
+    
+    <div class="control-group">
+        <label>
+            <input type="checkbox" id="maintainAspectRatio" checked style="margin-right: 6px;">
+            Mantener proporción
+        </label>
+    </div>
+    
+    <div class="control-group">
+        <label>Alineación</label>
+        <select id="imageAlignment" class="control-input">
+            <option value="left">Izquierda</option>
+            <option value="center">Centro</option>
+            <option value="right">Derecha</option>
+        </select>
+    </div>
+    
+    <div class="control-group">
+        <label>Borde (px)</label>
+        <input type="number" id="imageBorder" class="control-input" min="0" max="10" value="0">
+    </div>
+    
+    <div class="control-buttons">
+        <button class="control-btn control-btn-primary" onclick="applyImageChanges()">
+            <i class="fas fa-check"></i> Aplicar
+        </button>
+        <button class="control-btn control-btn-secondary" onclick="resetImageSize()">
+            <i class="fas fa-undo"></i> Reset
+        </button>
+        <button class="control-btn control-btn-danger" onclick="deleteSelectedImage()">
+            <i class="fas fa-trash"></i> Eliminar
+        </button>
+    </div>
+    
+    <div style="text-align: center; margin-top: 10px;">
+        <button class="control-btn control-btn-secondary" onclick="closeImageControls()" style="width: 100%;">
+            <i class="fas fa-times"></i> Cerrar
+        </button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Inicializando editor con herramientas de trabajo...');
+    
+    const iframe = document.getElementById('contentEditor');
+    const btnSaveContent = document.getElementById('btnSaveContent');
+    const btnSaveContent2 = document.getElementById('btnSaveContent2');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const wordCount = document.getElementById('wordCount');
+    
+    let iframeDoc = null;
+    let originalContent = '';
+    let isInitialized = false;
+    
+    // Initialize iframe content
+    function initializeIframe() {
+        if (isInitialized) return; // Prevent multiple initializations
+        
+        originalContent = `{{ content.formatted_content|safe|escapejs }}`;
+        
+        // Create complete HTML document for iframe
+        const iframeHTML = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Contenido</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 24px;
+            background: #fff;
+            color: #333;
+            outline: none;
+            min-height: calc(100vh - 48px);
+        }
+        
+        /* Preserve generated content styles */
+        h1, h2, h3, h4, h5, h6 {
+            color: #005CFF;
+            margin: 1.2em 0 0.5em 0;
+            font-weight: bold;
+            line-height: 1.2;
+        }
+        
+        h1 { font-size: 2.2em; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.5em; }
+        h4 { font-size: 1.3em; }
+        h5 { font-size: 1.1em; }
+        h6 { font-size: 1em; }
+        
+        p {
+            margin: 0.5em 0 1em 0;
+            text-align: justify;
+        }
+        
+        ul, ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+        
+        li {
+            margin: 0.5em 0;
+        }
+        
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            margin: 1em 0;
+        }
+        
+        code {
+            background: #f3f3f3;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.95em;
+            font-family: 'Courier New', monospace;
+        }
+        
+        pre {
+            background: #f8f9fa;
+            padding: 1em;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 4px solid #005CFF;
+        }
+        
+        blockquote {
+            border-left: 4px solid #005CFF;
+            margin: 1em 0;
+            padding: 0.5em 1em;
+            background: #f8f9fa;
+            font-style: italic;
+        }
+        
+        a {
+            color: #005CFF;
+            text-decoration: underline;
+        }
+        
+        /* Focus styles */
+        body:focus {
+            outline: none;
+        }
+        
+        /* Selection styles */
+        ::selection {
+            background: rgba(0, 92, 255, 0.2);
+        }
+        
+        /* Educational content specific styles */
+        .objetivo-section {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .actividad-section {
+            background: #f3e5f5;
+            border-left: 4px solid #9c27b0;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .evaluacion-section {
+            background: #e8f5e8;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .ejemplo-section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .nota-section {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body contenteditable="true" spellcheck="false">
+${originalContent}
+</body>
+</html>`;
+        
+        try {
+            // Get iframe document
+            iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            
+            // Write content to iframe
+            iframeDoc.open();
+            iframeDoc.write(iframeHTML);
+            iframeDoc.close();
+            
+            // Wait for document to be ready
+            setTimeout(() => {
+                if (iframeDoc && iframeDoc.body) {
+                    // Ensure content is editable
+                    iframeDoc.body.contentEditable = true;
+                    iframeDoc.designMode = 'on'; // Alternative approach
+                    
+                    // Set up event listeners
+                    setupIframeEventListeners();
+                    
+                    // Fix broken images to prevent network errors
+                    fixBrokenImages();
+                    
+                    // Mark as initialized
+                    isInitialized = true;
+                    
+                    console.log('Iframe inicializado correctamente');
+                    updateWordCount();
+                }
+            }, 200);
+            
+        } catch (error) {
+            console.error('Error al inicializar iframe:', error);
+        }
+    }
+    
+    // Set up event listeners for iframe content (simplified)
+    function setupIframeEventListeners() {
+        if (!iframeDoc || !iframeDoc.body) return;
+        
+        const body = iframeDoc.body;
+        
+        // Simple input event for word count
+        body.addEventListener('input', function() {
+            updateWordCount();
+        });
+        
+        // Keyboard shortcuts only
+        body.addEventListener('keydown', function(e) {
+            // Save with Ctrl+S
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveContent();
+                return;
+            }
+            
+            // Bold with Ctrl+B
+            if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+                e.preventDefault();
+                formatText('bold');
+                return;
+            }
+            
+            // Italic with Ctrl+I
+            if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+                e.preventDefault();
+                formatText('italic');
+                return;
+            }
+            
+            // Underline with Ctrl+U
+            if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+                e.preventDefault();
+                formatText('underline');
+                return;
+            }
+        });
+        
+        console.log('Event listeners configurados');
+    }
+    
+    // Replace broken placeholder images with local alternatives
+    function fixBrokenImages() {
+        if (iframeDoc) {
+            const images = iframeDoc.querySelectorAll('img');
+            images.forEach(img => {
+                img.onerror = function() {
+                    // Replace broken external images with a simple colored div
+                    const placeholder = iframeDoc.createElement('div');
+                    placeholder.style.cssText = `
+                        width: ${img.width || 400}px;
+                        height: ${img.height || 300}px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: white;
+                        font-family: Arial, sans-serif;
+                        font-size: 16px;
+                        border-radius: 8px;
+                        margin: 10px 0;
+                    `;
+                    placeholder.textContent = 'Imagen no disponible';
+                    if (img.parentNode) {
+                        img.parentNode.replaceChild(placeholder, img);
+                    }
+                };
+            });
+        }
+    }
+    
+    // Update word count
+    function updateWordCount() {
+        if (!iframeDoc || !iframeDoc.body) return;
+        
+        try {
+            const text = iframeDoc.body.innerText || '';
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+            const wordCountValue = words.length;
+            
+            if (wordCount) {
+                wordCount.textContent = wordCountValue + ' palabras';
+            }
+        } catch (error) {
+            console.error('Error updating word count:', error);
+        }
+    }
+    
+    // Format text in iframe
+    window.formatText = function(command, value = null) {
+        if (!iframeDoc || !isInitialized) {
+            console.warn('Iframe not ready for formatting');
+            return;
+        }
+        
+        try {
+            // Focus iframe window and execute command
+            iframe.contentWindow.focus();
+            
+            // Execute the formatting command
+            const success = iframeDoc.execCommand(command, false, value);
+            
+            if (success) {
+                console.log('Format command executed:', command, value);
+                updateWordCount();
+            } else {
+                console.warn('Format command failed:', command);
+            }
+        } catch (error) {
+            console.error('Error executing format command:', error);
+        }
+    };
+    
+    // Insert heading
+    window.insertHeading = function() {
+        const level = prompt('Nivel de título (1-6):', '2');
+        if (level && level >= 1 && level <= 6) {
+            formatText('formatBlock', '<h' + level + '>');
+        }
+    };
+    
+    // Insert table
+    window.insertTable = function() {
+        if (!iframeDoc || !isInitialized) return;
+        
+        const rows = prompt('Número de filas:', '3');
+        const cols = prompt('Número de columnas:', '3');
+        
+        if (rows && cols && rows > 0 && cols > 0) {
+            let tableHTML = '<table>';
+            
+            // Header row
+            tableHTML += '<thead><tr>';
+            for (let j = 0; j < cols; j++) {
+                tableHTML += '<th>Encabezado ' + (j + 1) + '</th>';
+            }
+            tableHTML += '</tr></thead>';
+            
+            // Body rows
+            tableHTML += '<tbody>';
+            for (let i = 0; i < rows; i++) {
+                tableHTML += '<tr>';
+                for (let j = 0; j < cols; j++) {
+                    tableHTML += '<td>Celda ' + (i + 1) + ',' + (j + 1) + '</td>';
+                }
+                tableHTML += '</tr>';
+            }
+            tableHTML += '</tbody></table>';
+            
+            formatText('insertHTML', tableHTML);
+        }
+    };
+    
+    // Insert image
+    window.insertImage = function() {
+        if (!iframeDoc || !isInitialized) return;
+        
+        const url = prompt('URL de la imagen:');
+        if (url) {
+            const alt = prompt('Texto alternativo:', 'Imagen');
+            formatText('insertHTML', '<img src="' + url + '" alt="' + alt + '" style="max-width: 100%; height: auto;">');
+        }
+    };
+    
+    // Insert link
+    window.insertLink = function() {
+        if (!iframeDoc || !isInitialized) return;
+        
+        const url = prompt('URL del enlace:');
+        if (url) {
+            const text = prompt('Texto del enlace:', url);
+            formatText('insertHTML', '<a href="' + url + '" target="_blank">' + text + '</a>');
+        }
+    };
+    
+    // Clear formatting
+    window.clearFormatting = function() {
+        formatText('removeFormat');
+    };
+    
+    // Insert quick educational content
+    window.insertQuickContent = function(type) {
+        if (!iframeDoc || !isInitialized) return;
+        
+        let content = '';
+        
+        switch(type) {
+            case 'objetivo':
+                content = '<div class="objetivo-section"><h4><i class="fas fa-bullseye"></i> Objetivo de Aprendizaje</h4><p>Escriba aquí el objetivo de aprendizaje...</p></div>';
+                break;
+            case 'actividad':
+                content = '<div class="actividad-section"><h4><i class="fas fa-tasks"></i> Actividad</h4><p>Describa la actividad a realizar:</p><ol><li>Paso 1...</li><li>Paso 2...</li><li>Paso 3...</li></ol></div>';
+                break;
+            case 'evaluacion':
+                content = '<div class="evaluacion-section"><h4><i class="fas fa-check-circle"></i> Evaluación</h4><p>Criterios de evaluación:</p><ul><li>Criterio 1</li><li>Criterio 2</li><li>Criterio 3</li></ul></div>';
+                break;
+            case 'ejemplo':
+                content = '<div class="ejemplo-section"><h4><i class="fas fa-lightbulb"></i> Ejemplo</h4><p>Escriba aquí un ejemplo práctico...</p></div>';
+                break;
+            case 'nota':
+                content = '<div class="nota-section"><h4><i class="fas fa-sticky-note"></i> Nota Importante</h4><p>Escriba aquí una nota o recordatorio importante...</p></div>';
+                break;
+        }
+        
+        formatText('insertHTML', content);
+    };
+    
+    // Reset content to original
+    window.resetContent = function() {
+        if (confirm('¿Estás seguro de que deseas restaurar el contenido original? Se perderán todos los cambios realizados.')) {
+            if (iframeDoc && isInitialized) {
+                iframeDoc.body.innerHTML = originalContent;
+                updateWordCount();
+            }
+        }
+    };
+    
+    // Save content
+    function saveContent() {
+        console.log('Iniciando proceso de guardado...');
+        
+        if (!iframeDoc || !isInitialized) {
+            console.error('Iframe not ready for saving');
+                return;
+            }
+            
+        try {
+            // Show loading overlay
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'flex';
+            }
+            
+            // Get content from iframe
+            const contentToSave = iframeDoc.body.innerHTML;
+            console.log('Contenido a guardar:', contentToSave.substring(0, 100) + '...');
+            
+            // Update form fields
+            const contentInput = document.getElementById('contentInput');
+            const contentFormatted = document.getElementById('contentFormatted');
+            
+            if (contentInput && contentFormatted) {
+            contentInput.value = contentToSave;
+            contentFormatted.value = contentToSave;
+            
+                // Submit form
+                const form = document.getElementById('contentForm');
+            if (form) {
+                    console.log('Enviando formulario...');
+                form.submit();
+            } else {
+                    console.error('Formulario no encontrado');
+                    if (loadingOverlay) loadingOverlay.style.display = 'none';
+                }
+            } else {
+                console.error('Campos del formulario no encontrados');
+                if (loadingOverlay) loadingOverlay.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error al guardar:', error);
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+            alert('Error al guardar el contenido. Por favor, inténtalo de nuevo.');
+        }
+    }
+    
+    // Attach save handlers
+    if (btnSaveContent) {
+        btnSaveContent.addEventListener('click', saveContent);
+    }
+    
+    if (btnSaveContent2) {
+        btnSaveContent2.addEventListener('click', saveContent);
+    }
+    
+    // Initialize iframe when ready
+    iframe.onload = function() {
+        console.log('Iframe loaded, initializing...');
+        setTimeout(initializeIframe, 100);
+    };
+    
+    // Fallback initialization
+    setTimeout(() => {
+        if (!isInitialized) {
+            console.log('Fallback initialization...');
+            initializeIframe();
+        }
+    }, 500);
+    
+    console.log('Editor configurado');
+});
+
+// File upload functions
+window.triggerImageUpload = function() {
+    document.getElementById('imageUpload').click();
+};
+
+window.triggerVideoUpload = function() {
+    document.getElementById('videoUpload').click();
+};
+
+// Handle video upload
+window.handleVideoUpload = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('video/')) {
+        alert('Por favor selecciona un archivo de video válido.');
+        return;
+    }
+    
+    // Validate file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+        alert('El archivo de video es demasiado grande. Máximo 50MB permitido.');
+        return;
+    }
+    
+    const progressBar = document.getElementById('videoProgress');
+    if (progressBar) {
+        progressBar.style.width = '0%';
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Data = e.target.result;
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 5; // Slower progress for larger files
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                
+                const videoHTML = `
+                    <div style="margin: 20px 0; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <video controls style="width: 100%; max-width: 600px; border-radius: 8px;">
+                            <source src="${base64Data}" type="${file.type}">
+                            Tu navegador no soporta el elemento video.
+                        </video>
+                        <p style="font-size: 12px; color: #6c757d; margin-top: 8px;">${file.name}</p>
+                    </div>
+                `;
+                formatText('insertHTML', videoHTML);
+                
+                setTimeout(() => {
+                    if (progressBar) progressBar.style.width = '0%';
+                }, 1000);
+                console.log('Video insertado:', file.name);
+            }
+        }, 200);
+    };
+    
+    reader.onerror = function() {
+        console.error('Error reading video file');
+        alert('Error al procesar el archivo de video.');
+    };
+    
+    reader.readAsDataURL(file);
+    input.value = '';
+};
+
+// Handle image upload
+window.handleImageUpload = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        alert('Por favor selecciona un archivo de imagen válido.');
+        return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        alert('El archivo es demasiado grande. Máximo 5MB permitido.');
+        return;
+    }
+    
+    const progressBar = document.getElementById('imageProgress');
+    progressBar.style.width = '0%';
+    
+    // Create FileReader to convert to base64
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Data = e.target.result;
+        
+        // Simulate progress
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 10;
+            progressBar.style.width = progress + '%';
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                
+                // Create unique ID for the image
+                const imageId = 'img_' + Date.now();
+                
+                                    // Insert resizable image into editor
+                    const imgHTML = `
+                        <div class="resizable-image" id="${imageId}" onclick="parent.selectImage('${imageId}')">
+                            <img src="${base64Data}" alt="${file.name}" style="max-width: 100%; height: auto; border-radius: 4px; display: block;">
+                            <div class="resize-handles">
+                                <div class="resize-handle nw" onmousedown="parent.startResize(event, '${imageId}', 'nw')"></div>
+                                <div class="resize-handle ne" onmousedown="parent.startResize(event, '${imageId}', 'ne')"></div>
+                                <div class="resize-handle sw" onmousedown="parent.startResize(event, '${imageId}', 'sw')"></div>
+                                <div class="resize-handle se" onmousedown="parent.startResize(event, '${imageId}', 'se')"></div>
+                                <div class="resize-handle n" onmousedown="parent.startResize(event, '${imageId}', 'n')"></div>
+                                <div class="resize-handle s" onmousedown="parent.startResize(event, '${imageId}', 's')"></div>
+                                <div class="resize-handle w" onmousedown="parent.startResize(event, '${imageId}', 'w')"></div>
+                                <div class="resize-handle e" onmousedown="parent.startResize(event, '${imageId}', 'e')"></div>
+                            </div>
+                        </div>
+                    `;
+                formatText('insertHTML', imgHTML);
+                
+                // Reset progress bar
+                setTimeout(() => {
+                    progressBar.style.width = '0%';
+                }, 1000);
+                
+                console.log('Imagen insertada:', file.name);
+            }
+        }, 100);
+    };
+    
+    reader.onerror = function() {
+        alert('Error al leer el archivo de imagen.');
+        progressBar.style.width = '0%';
+    };
+    
+    reader.readAsDataURL(file);
+    
+    // Reset input
+    input.value = '';
+};
+
+// Image resizing and control functions
+let selectedImage = null;
+let isResizing = false;
+let resizeStartData = {};
+
+// Select image function
+window.selectImage = function(imageId) {
+    try {
+        // Remove selection from all images
+        const allImages = iframeDoc.querySelectorAll('.resizable-image');
+        allImages.forEach(img => img.classList.remove('selected'));
+        
+        // Select clicked image
+        const image = iframeDoc.getElementById(imageId);
+        if (image) {
+            image.classList.add('selected');
+            selectedImage = image;
+            showImageControls(image);
+            
+            // Add click event to iframe to handle clicks within iframe
+            const iframeWindow = iframe.contentWindow;
+            if (iframeWindow) {
+                iframeWindow.addEventListener('click', function(e) {
+                    if (!e.target.closest('.resizable-image')) {
+                        closeImageControls();
+                    }
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error selecting image:', error);
+    }
+};
+
+// Show image controls panel
+function showImageControls(image) {
+    const controls = document.getElementById('imageControls');
+    const img = image.querySelector('img');
+    
+    if (img) {
+        // Get current dimensions
+        const rect = img.getBoundingClientRect();
+        document.getElementById('imageWidth').value = Math.round(img.offsetWidth);
+        document.getElementById('imageHeight').value = Math.round(img.offsetHeight);
+        
+        // Get current alignment
+        const parentStyle = image.style.textAlign || 'left';
+        document.getElementById('imageAlignment').value = parentStyle;
+        
+        // Get current border
+        const borderWidth = parseInt(img.style.borderWidth) || 0;
+        document.getElementById('imageBorder').value = borderWidth;
+        
+        controls.classList.add('show');
+    }
+}
+
+// Close image controls
+window.closeImageControls = function() {
+    const controls = document.getElementById('imageControls');
+    controls.classList.remove('show');
+    
+    // Remove selection from all images
+    if (iframeDoc) {
+        const allImages = iframeDoc.querySelectorAll('.resizable-image');
+        allImages.forEach(img => img.classList.remove('selected'));
+    }
+    selectedImage = null;
+};
+
+// Apply image changes
+window.applyImageChanges = function() {
+    if (!selectedImage) {
+        console.log('No image selected for changes');
+        return;
+    }
+    
+    const img = selectedImage.querySelector('img');
+    const width = parseInt(document.getElementById('imageWidth').value);
+    const height = parseInt(document.getElementById('imageHeight').value);
+    const alignment = document.getElementById('imageAlignment').value;
+    const border = parseInt(document.getElementById('imageBorder').value) || 0;
+    const maintainRatio = document.getElementById('maintainAspectRatio').checked;
+    
+    console.log(`Applying changes: ${width}x${height}, align: ${alignment}, border: ${border}, ratio: ${maintainRatio}`);
+    
+    if (img) {
+        // Apply dimensions with flexible constraints
+        if (maintainRatio && width && height) {
+            const aspectRatio = img.naturalWidth / img.naturalHeight;
+            if (width / height > aspectRatio) {
+                const newHeight = Math.max(20, Math.min(1500, height));
+                const newWidth = Math.max(20, Math.min(2000, newHeight * aspectRatio));
+                img.style.width = newWidth + 'px';
+                img.style.height = newHeight + 'px';
+    } else {
+                const newWidth = Math.max(20, Math.min(2000, width));
+                const newHeight = Math.max(20, Math.min(1500, newWidth / aspectRatio));
+                img.style.width = newWidth + 'px';
+                img.style.height = newHeight + 'px';
+            }
+        } else {
+            // Apply dimensions without strict aspect ratio
+            if (width && width > 0) {
+                const newWidth = Math.max(20, Math.min(2000, width));
+                img.style.width = newWidth + 'px';
+            }
+            if (height && height > 0) {
+                const newHeight = Math.max(20, Math.min(1500, height));
+                img.style.height = newHeight + 'px';
+            }
+        }
+        
+        // Apply alignment
+        selectedImage.style.textAlign = alignment;
+        if (alignment === 'center') {
+            selectedImage.style.display = 'block';
+            selectedImage.style.margin = '10px auto';
+        } else if (alignment === 'right') {
+            selectedImage.style.display = 'block';
+            selectedImage.style.marginLeft = 'auto';
+            selectedImage.style.marginRight = '0';
+        } else {
+            selectedImage.style.display = 'inline-block';
+            selectedImage.style.margin = '10px 0';
+        }
+        
+        // Apply border
+        if (border > 0) {
+            img.style.border = border + 'px solid #dee2e6';
+    } else {
+            img.style.border = 'none';
+        }
+    }
+};
+
+// Reset image size
+window.resetImageSize = function() {
+    if (!selectedImage) return;
+    
+    const img = selectedImage.querySelector('img');
+    if (img) {
+        // Reset to natural dimensions
+        img.style.width = img.naturalWidth + 'px';
+        img.style.height = img.naturalHeight + 'px';
+        img.style.border = 'none';
+        selectedImage.style.textAlign = 'left';
+        selectedImage.style.display = 'inline-block';
+        selectedImage.style.margin = '10px 0';
+        
+        // Update controls with natural dimensions
+        document.getElementById('imageWidth').value = img.naturalWidth;
+        document.getElementById('imageHeight').value = img.naturalHeight;
+        document.getElementById('imageAlignment').value = 'left';
+        document.getElementById('imageBorder').value = 0;
+        
+        console.log(`Image reset to natural size: ${img.naturalWidth}x${img.naturalHeight}`);
+    }
+};
+
+// Delete selected image
+window.deleteSelectedImage = function() {
+    if (!selectedImage) return;
+    
+    if (confirm('¿Estás seguro de que quieres eliminar esta imagen?')) {
+        selectedImage.remove();
+        closeImageControls();
+    }
+};
+
+// Enhanced image controls initialization
+function initializeImageControls() {
+    const imageWidth = document.getElementById('imageWidth');
+    const imageHeight = document.getElementById('imageHeight');
+    
+    if (imageWidth) {
+        // Update aspect ratio when width changes
+        imageWidth.addEventListener('input', function() {
+            if (document.getElementById('maintainAspectRatio').checked && selectedImage) {
+                const img = selectedImage.querySelector('img');
+                if (img && img.naturalWidth && img.naturalHeight) {
+                    const aspectRatio = img.naturalWidth / img.naturalHeight;
+                    const newWidth = parseInt(this.value) || 0;
+                    if (newWidth > 0) {
+                        const newHeight = Math.round(newWidth / aspectRatio);
+                        document.getElementById('imageHeight').value = newHeight;
+                    }
+                }
+            }
+        });
+        
+        // Auto-apply changes after typing stops
+        let widthTimeout;
+        imageWidth.addEventListener('input', function() {
+            clearTimeout(widthTimeout);
+            widthTimeout = setTimeout(() => {
+                if (selectedImage && this.value > 0) {
+                    applyImageChanges();
+                }
+            }, 800);
+        });
+    }
+    
+    if (imageHeight) {
+        // Update aspect ratio when height changes
+        imageHeight.addEventListener('input', function() {
+            if (document.getElementById('maintainAspectRatio').checked && selectedImage) {
+                const img = selectedImage.querySelector('img');
+                if (img && img.naturalWidth && img.naturalHeight) {
+                    const aspectRatio = img.naturalWidth / img.naturalHeight;
+                    const newHeight = parseInt(this.value) || 0;
+                    if (newHeight > 0) {
+                        const newWidth = Math.round(newHeight * aspectRatio);
+                        document.getElementById('imageWidth').value = newWidth;
+                    }
+                }
+            }
+        });
+        
+        // Auto-apply changes after typing stops
+        let heightTimeout;
+        imageHeight.addEventListener('input', function() {
+            clearTimeout(heightTimeout);
+            heightTimeout = setTimeout(() => {
+                if (selectedImage && this.value > 0) {
+                    applyImageChanges();
+                }
+            }, 800);
+        });
+    }
+    
+    // Add instant apply for alignment and border changes
+    const imageAlignment = document.getElementById('imageAlignment');
+    if (imageAlignment) {
+        imageAlignment.addEventListener('change', function() {
+            if (selectedImage) {
+                applyImageChanges();
+            }
+        });
+    }
+    
+    const imageBorder = document.getElementById('imageBorder');
+    if (imageBorder) {
+        imageBorder.addEventListener('input', function() {
+            if (selectedImage) {
+                applyImageChanges();
+            }
+        });
+    }
+}
+
+// Close controls when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.image-controls') && !e.target.closest('.resizable-image')) {
+        closeImageControls();
+    }
+});
+
+// Mouse-based resizing functionality
+window.startResize = function(e, imageId, direction) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!iframeDoc) return;
+    
+    const image = iframeDoc.getElementById(imageId);
+    const img = image.querySelector('img');
+    
+    if (!img) return;
+    
+    isResizing = true;
+    selectedImage = image;
+    
+    // Store initial data
+    resizeStartData = {
+        startX: e.clientX,
+        startY: e.clientY,
+        startWidth: img.offsetWidth,
+        startHeight: img.offsetHeight,
+        direction: direction,
+        aspectRatio: img.naturalWidth / img.naturalHeight
+    };
+    
+    // Add event listeners for mouse move and up
+    document.addEventListener('mousemove', handleResize);
+    document.addEventListener('mouseup', stopResize);
+    
+    // Prevent text selection
+    document.body.style.userSelect = 'none';
+    
+    // Add visual feedback
+    image.style.cursor = direction + '-resize';
+};
+
+function handleResize(e) {
+    if (!isResizing || !selectedImage) return;
+    
+    const img = selectedImage.querySelector('img');
+    const deltaX = e.clientX - resizeStartData.startX;
+    const deltaY = e.clientY - resizeStartData.startY;
+    
+    let newWidth = resizeStartData.startWidth;
+    let newHeight = resizeStartData.startHeight;
+    
+    // Calculate new dimensions based on direction
+    switch(resizeStartData.direction) {
+        case 'se': // bottom-right
+            newWidth = resizeStartData.startWidth + deltaX;
+            newHeight = resizeStartData.startHeight + deltaY;
+            break;
+        case 'sw': // bottom-left
+            newWidth = resizeStartData.startWidth - deltaX;
+            newHeight = resizeStartData.startHeight + deltaY;
+            break;
+        case 'ne': // top-right
+            newWidth = resizeStartData.startWidth + deltaX;
+            newHeight = resizeStartData.startHeight - deltaY;
+            break;
+        case 'nw': // top-left
+            newWidth = resizeStartData.startWidth - deltaX;
+            newHeight = resizeStartData.startHeight - deltaY;
+            break;
+        case 'e': // right
+            newWidth = resizeStartData.startWidth + deltaX;
+            break;
+        case 'w': // left
+            newWidth = resizeStartData.startWidth - deltaX;
+            break;
+        case 's': // bottom
+            newHeight = resizeStartData.startHeight + deltaY;
+            break;
+        case 'n': // top
+            newHeight = resizeStartData.startHeight - deltaY;
+            break;
+    }
+    
+    // Maintain aspect ratio if shift key is pressed or maintain aspect ratio is checked
+    if (e.shiftKey || (document.getElementById('maintainAspectRatio') && document.getElementById('maintainAspectRatio').checked)) {
+        if (newWidth !== resizeStartData.startWidth) {
+            newHeight = newWidth / resizeStartData.aspectRatio;
+        } else if (newHeight !== resizeStartData.startHeight) {
+            newWidth = newHeight * resizeStartData.aspectRatio;
+        }
+    }
+    
+    // Apply minimum constraints only (remove restrictive maximum limits)
+    newWidth = Math.max(30, Math.min(2000, newWidth));
+    newHeight = Math.max(30, Math.min(1500, newHeight));
+    
+    // Apply new dimensions
+    img.style.width = newWidth + 'px';
+    img.style.height = newHeight + 'px';
+    
+    // Update control panel values
+    if (document.getElementById('imageWidth')) {
+        document.getElementById('imageWidth').value = Math.round(newWidth);
+        document.getElementById('imageHeight').value = Math.round(newHeight);
+    }
+}
+
+function stopResize() {
+    if (!isResizing) return;
+    
+    isResizing = false;
+    resizeStartData = {};
+    
+    // Remove event listeners
+    document.removeEventListener('mousemove', handleResize);
+    document.removeEventListener('mouseup', stopResize);
+    
+    // Restore user selection
+    document.body.style.userSelect = '';
+    
+    // Reset cursor
+    if (selectedImage) {
+        selectedImage.style.cursor = 'pointer';
+    }
+}
+
+// Replace broken placeholder images with local alternatives
+function fixBrokenImages() {
+    if (iframeDoc) {
+        const images = iframeDoc.querySelectorAll('img');
+        images.forEach(img => {
+            img.onerror = function() {
+                // Replace broken external images with a simple colored div
+                const placeholder = iframeDoc.createElement('div');
+                placeholder.style.cssText = `
+                    width: ${img.width || 400}px;
+                    height: ${img.height || 300}px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-family: Arial, sans-serif;
+                    font-size: 16px;
+                    border-radius: 8px;
+                    margin: 10px 0;
+                `;
+                placeholder.textContent = 'Imagen no disponible';
+                if (img.parentNode) {
+                    img.parentNode.replaceChild(placeholder, img);
+                }
+            };
+        });
+    }
+}
+
+// Close controls when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.image-controls') && !e.target.closest('.resizable-image')) {
+        closeImageControls();
+    }
+});
+
+// DOM Ready initialization 
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Initializing editor...');
+    
+    // Initialize image controls when DOM is ready
+    setTimeout(() => {
+        initializeImageControls();
+        console.log('Image controls initialized');
+    }, 100);
+});
+
+// New multimedia and advanced functions
+window.triggerAudioUpload = function() {
+    console.log('Triggering audio upload...');
+    const audioUpload = document.getElementById('audioUpload');
+    if (audioUpload) {
+        audioUpload.click();
+    } else {
+        console.error('Audio upload input not found');
+    }
+};
+
+window.handleAudioUpload = function(input) {
+    console.log('Handling audio upload...');
+    const file = input.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('audio/')) {
+        alert('Por favor selecciona un archivo de audio válido.');
+        return;
+    }
+    
+    if (file.size > 20 * 1024 * 1024) {
+        alert('El archivo de audio es demasiado grande. Máximo 20MB permitido.');
+        return;
+    }
+    
+    const progressBar = document.getElementById('audioProgress');
+    if (progressBar) {
+        progressBar.style.width = '0%';
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Data = e.target.result;
+        
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 8;
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                
+                const audioHTML = `
+                    <div style="margin: 15px 0; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <audio controls style="width: 100%; max-width: 400px;">
+                            <source src="${base64Data}" type="${file.type}">
+                            Tu navegador no soporta el elemento audio.
+                        </audio>
+                        <p style="font-size: 12px; color: #6c757d; margin-top: 8px;">${file.name}</p>
+                    </div>
+                `;
+                formatText('insertHTML', audioHTML);
+                
+                setTimeout(() => progressBar.style.width = '0%', 1000);
+                console.log('Audio insertado:', file.name);
+            }
+        }, 150);
+    };
+    
+    reader.readAsDataURL(file);
+    input.value = '';
+};
+
+window.insertYouTubeVideo = function() {
+    const url = prompt('URL del video de YouTube:');
+    if (url) {
+        const videoId = extractYouTubeID(url);
+        if (videoId) {
+            const embedHTML = `
+                <div style="margin: 20px 0; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+                    <iframe src="https://www.youtube.com/embed/${videoId}" 
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" 
+                            allowfullscreen>
+                    </iframe>
+                </div>
+            `;
+            formatText('insertHTML', embedHTML);
+        } else {
+            alert('URL de YouTube no válida');
+        }
+    }
+};
+
+function extractYouTubeID(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+}
+
+window.insertVideoEmbed = function() {
+    const embedCode = prompt('Código de inserción del video:');
+    if (embedCode) {
+        const videoHTML = `
+            <div style="margin: 20px 0; text-align: center;">
+                ${embedCode}
+            </div>
+        `;
+        formatText('insertHTML', videoHTML);
+    }
+};
+
+window.insertGoogleDrive = function() {
+    const url = prompt('URL del archivo de Google Drive (debe ser público):');
+    if (url) {
+        const driveHTML = `
+            <div style="margin: 20px 0; padding: 15px; border: 2px dashed #4285f4; border-radius: 8px; text-align: center;">
+                <i class="fab fa-google-drive" style="font-size: 48px; color: #4285f4; margin-bottom: 10px;"></i>
+                <p style="margin: 10px 0;"><strong>Archivo de Google Drive</strong></p>
+                <a href="${url}" target="_blank" style="display: inline-block; padding: 8px 16px; background: #4285f4; color: white; text-decoration: none; border-radius: 4px;">
+                    <i class="fas fa-external-link-alt"></i> Abrir archivo
+                </a>
+            </div>
+        `;
+        formatText('insertHTML', driveHTML);
+    }
+};
+
+window.insertInteractiveContent = function(type) {
+    let html = '';
+    
+    switch(type) {
+        case 'iframe':
+            const iframeUrl = prompt('URL del sitio web a insertar:');
+            if (iframeUrl) {
+                html = `
+                    <div style="margin: 20px 0; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+                        <iframe src="${iframeUrl}" style="width: 100%; height: 400px; border: 0;"></iframe>
+                    </div>
+                `;
+            }
+            break;
+        case 'simulation':
+            html = `
+                <div style="margin: 20px 0; padding: 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; text-align: center; color: white;">
+                    <i class="fas fa-play-circle" style="font-size: 64px; margin-bottom: 15px;"></i>
+                    <h3 style="margin: 10px 0; color: white;">Simulación Interactiva</h3>
+                    <p style="margin: 10px 0; color: rgba(255,255,255,0.9);">Aquí puedes insertar tu simulación o actividad interactiva</p>
+                    <button style="padding: 10px 20px; background: white; color: #667eea; border: none; border-radius: 4px; cursor: pointer;">
+                        Iniciar Simulación
+                    </button>
+                </div>
+            `;
+            break;
+        case 'map':
+            html = `
+                <div style="margin: 20px 0; padding: 20px; border: 1px solid #dee2e6; border-radius: 8px; text-align: center;">
+                    <i class="fas fa-map" style="font-size: 48px; color: #28a745; margin-bottom: 15px;"></i>
+                    <h4 style="margin: 10px 0;">Mapa Interactivo</h4>
+                    <p style="color: #6c757d;">Inserta aquí tu mapa de Google Maps o cualquier otro servicio de mapas</p>
+                </div>
+            `;
+            break;
+    }
+    
+    if (html) {
+        formatText('insertHTML', html);
+    }
+};
+
+window.insertAdvancedContent = function(type) {
+    let html = '';
+    
+    switch(type) {
+        case 'columns':
+            html = `
+                <div style="margin: 20px 0; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <h4>Columna 1</h4>
+                        <p>Contenido de la primera columna...</p>
+                    </div>
+                    <div style="padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                        <h4>Columna 2</h4>
+                        <p>Contenido de la segunda columna...</p>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'tabs':
+            html = `
+                <div style="margin: 20px 0; border: 1px solid #dee2e6; border-radius: 8px;">
+                    <div style="display: flex; background: #f8f9fa; border-bottom: 1px solid #dee2e6;">
+                        <button style="padding: 10px 20px; border: none; background: #005CFF; color: white; cursor: pointer;">Pestaña 1</button>
+                        <button style="padding: 10px 20px; border: none; background: transparent; cursor: pointer;">Pestaña 2</button>
+                        <button style="padding: 10px 20px; border: none; background: transparent; cursor: pointer;">Pestaña 3</button>
+                    </div>
+                    <div style="padding: 20px;">
+                        <h4>Contenido de Pestaña 1</h4>
+                        <p>Aquí va el contenido de la primera pestaña...</p>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'accordion':
+            html = `
+                <div style="margin: 20px 0; border: 1px solid #dee2e6; border-radius: 8px;">
+                    <div style="border-bottom: 1px solid #dee2e6;">
+                        <button style="width: 100%; padding: 15px; text-align: left; border: none; background: #f8f9fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                            Sección 1 <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div style="padding: 15px; background: white;">
+                            <p>Contenido de la primera sección del acordeón...</p>
+                        </div>
+                    </div>
+                    <div>
+                        <button style="width: 100%; padding: 15px; text-align: left; border: none; background: #f8f9fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                            Sección 2 <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'callout':
+            const calloutType = prompt('Tipo de destacado (info, warning, success, error):') || 'info';
+            const colors = {
+                info: { bg: '#d1ecf1', border: '#bee5eb', text: '#0c5460' },
+                warning: { bg: '#fff3cd', border: '#ffeeba', text: '#856404' },
+                success: { bg: '#d4edda', border: '#c3e6cb', text: '#155724' },
+                error: { bg: '#f8d7da', border: '#f5c6cb', text: '#721c24' }
+            };
+            const color = colors[calloutType] || colors.info;
+            html = `
+                <div style="margin: 20px 0; padding: 15px; background: ${color.bg}; border-left: 4px solid ${color.border}; border-radius: 4px; color: ${color.text};">
+                    <h4 style="margin: 0 0 10px 0; color: ${color.text};">Importante</h4>
+                    <p style="margin: 0; color: ${color.text};">Este es un mensaje destacado. Edita este texto para agregar tu contenido.</p>
+                </div>
+            `;
+            break;
+        case 'timeline':
+            html = `
+                <div style="margin: 20px 0; position: relative; padding-left: 30px;">
+                    <div style="position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: #005CFF;"></div>
+                    <div style="margin-bottom: 30px; position: relative;">
+                        <div style="position: absolute; left: -22px; top: 5px; width: 12px; height: 12px; background: #005CFF; border-radius: 50%;"></div>
+                        <h4 style="margin: 0 0 5px 0;">2024</h4>
+                        <p style="margin: 0; color: #6c757d;">Primer evento de la línea de tiempo</p>
+                    </div>
+                    <div style="margin-bottom: 30px; position: relative;">
+                        <div style="position: absolute; left: -22px; top: 5px; width: 12px; height: 12px; background: #005CFF; border-radius: 50%;"></div>
+                        <h4 style="margin: 0 0 5px 0;">2025</h4>
+                        <p style="margin: 0; color: #6c757d;">Segundo evento de la línea de tiempo</p>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'chart':
+            html = `
+                <div style="margin: 20px 0; padding: 20px; border: 1px solid #dee2e6; border-radius: 8px; text-align: center;">
+                    <i class="fas fa-chart-bar" style="font-size: 48px; color: #005CFF; margin-bottom: 15px;"></i>
+                    <h4 style="margin: 10px 0;">Gráfico</h4>
+                    <p style="color: #6c757d;">Aquí puedes insertar un gráfico o tabla de datos</p>
+                </div>
+            `;
+            break;
+        case 'code':
+            const code = prompt('Ingresa el código:') || 'console.log("Hola mundo");';
+            html = `
+                <div style="margin: 20px 0; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; font-family: 'Courier New', monospace;">
+                    <pre style="margin: 0; overflow-x: auto;"><code>${code}</code></pre>
+                </div>
+            `;
+            break;
+        case 'formula':
+            const formula = prompt('Ingresa la fórmula:') || 'E = mc²';
+            html = `
+                <div style="margin: 20px 0; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <span style="font-size: 24px; font-family: serif;">${formula}</span>
+                </div>
+            `;
+            break;
+        case 'html':
+            const htmlCode = prompt('Ingresa el código HTML:');
+            if (htmlCode) {
+                html = htmlCode;
+            }
+            break;
+    }
+    
+    if (html) {
+        formatText('insertHTML', html);
+    }
+};
+
+window.insertEducationalContent = function(type) {
+    let html = '';
+    
+    switch(type) {
+        case 'objectives':
+            html = `
+                <div style="margin: 20px 0; padding: 20px; background: #e8f4fd; border-left: 4px solid #005CFF; border-radius: 8px;">
+                    <h3 style="margin: 0 0 15px 0; color: #005CFF;"><i class="fas fa-bullseye"></i> Objetivos de Aprendizaje</h3>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>Objetivo 1: Describir los conceptos fundamentales</li>
+                        <li>Objetivo 2: Analizar las relaciones entre variables</li>
+                        <li>Objetivo 3: Aplicar los conocimientos en casos prácticos</li>
+                    </ul>
+                </div>
+            `;
+            break;
+        case 'activities':
+            html = `
+                <div style="margin: 20px 0; padding: 20px; background: #f0f9ff; border-left: 4px solid #28a745; border-radius: 8px;">
+                    <h3 style="margin: 0 0 15px 0; color: #28a745;"><i class="fas fa-tasks"></i> Actividades</h3>
+                    <ol style="margin: 0; padding-left: 20px;">
+                        <li>Lectura del material proporcionado</li>
+                        <li>Realización de ejercicios prácticos</li>
+                        <li>Participación en discusión grupal</li>
+                    </ol>
+                </div>
+            `;
+            break;
+        case 'evaluations':
+            html = `
+                <div style="margin: 20px 0; padding: 20px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 8px;">
+                    <h3 style="margin: 0 0 15px 0; color: #856404;"><i class="fas fa-clipboard-check"></i> Evaluación</h3>
+                    <p style="margin: 0 0 10px 0;"><strong>Criterios de evaluación:</strong></p>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>Comprensión de conceptos (40%)</li>
+                        <li>Aplicación práctica (35%)</li>
+                        <li>Participación y colaboración (25%)</li>
+                    </ul>
+                </div>
+            `;
+            break;
+        case 'examples':
+            html = `
+                <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;">
+                    <h3 style="margin: 0 0 15px 0; color: #6f42c1;"><i class="fas fa-lightbulb"></i> Ejemplo</h3>
+                    <p style="margin: 0;">Aquí puedes insertar un ejemplo práctico que ilustre los conceptos explicados...</p>
+                </div>
+            `;
+            break;
+        case 'notes':
+            html = `
+                <div style="margin: 20px 0; padding: 15px; background: #fff9c4; border: 1px dashed #f0e68c; border-radius: 8px;">
+                    <h4 style="margin: 0 0 10px 0; color: #8a6914;"><i class="fas fa-sticky-note"></i> Nota</h4>
+                    <p style="margin: 0; color: #8a6914;">Información adicional o recordatorio importante...</p>
+                </div>
+            `;
+            break;
+        case 'summary':
+            html = `
+                <div style="margin: 20px 0; padding: 20px; background: #e8f5e8; border-left: 4px solid #28a745; border-radius: 8px;">
+                    <h3 style="margin: 0 0 15px 0; color: #28a745;"><i class="fas fa-file-alt"></i> Resumen</h3>
+                    <p style="margin: 0;">Puntos clave y conclusiones principales del tema tratado...</p>
+                </div>
+            `;
+            break;
+        case 'quiz':
+            html = `
+                <div style="margin: 20px 0; padding: 20px; background: #f0f8ff; border: 2px solid #005CFF; border-radius: 8px;">
+                    <h3 style="margin: 0 0 15px 0; color: #005CFF;"><i class="fas fa-question-circle"></i> Quiz</h3>
+                    <p style="margin: 0 0 10px 0;"><strong>1. ¿Cuál es la respuesta correcta?</strong></p>
+                    <div style="margin-left: 20px;">
+                        <label style="display: block; margin: 5px 0;"><input type="radio" name="q1"> Opción A</label>
+                        <label style="display: block; margin: 5px 0;"><input type="radio" name="q1"> Opción B</label>
+                        <label style="display: block; margin: 5px 0;"><input type="radio" name="q1"> Opción C</label>
+                    </div>
+                </div>
+            `;
+            break;
+        case 'references':
+            html = `
+                <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-top: 3px solid #6c757d; border-radius: 8px;">
+                    <h3 style="margin: 0 0 15px 0; color: #6c757d;"><i class="fas fa-book"></i> Referencias</h3>
+                    <ol style="margin: 0; padding-left: 20px; font-size: 14px;">
+                        <li>Autor, A. (2024). Título del libro. Editorial.</li>
+                        <li>Autor, B. (2023). Título del artículo. Revista Académica, 15(2), 123-145.</li>
+                        <li>Sitio Web. (2024). Título del recurso. URL</li>
+                    </ol>
+                </div>
+            `;
+            break;
+    }
+    
+    if (html) {
+        formatText('insertHTML', html);
+    }
+};
+
+window.triggerDocumentUpload = function() {
+    document.getElementById('documentUpload').click();
+};
+
+// Handle document upload
+window.handleDocumentUpload = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Define accepted types
+    const acceptedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+    
+    // Validate file type
+    if (!acceptedTypes.includes(file.type)) {
+        alert('Tipo de archivo no válido. Formatos permitidos: PDF, Word (.doc, .docx), PowerPoint (.ppt, .pptx), Excel (.xls, .xlsx)');
+        return;
+    }
+    
+    // Validate file size (max 20MB)
+    if (file.size > 20 * 1024 * 1024) {
+        alert('El archivo es demasiado grande. Máximo 20MB permitido.');
+        return;
+    }
+    
+    const progressBar = document.getElementById('documentProgress');
+    if (progressBar) {
+        progressBar.style.width = '0%';
+    }
+    
+    // Create FileReader to convert to base64
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Data = e.target.result;
+        
+        // Simulate progress
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 8;
+            if (progressBar) {
+                progressBar.style.width = progress + '%';
+            }
+            
+            if (progress >= 100) {
+                clearInterval(interval);
+                
+                // Determine file type and icon
+                let fileIcon = 'fas fa-file';
+                let fileColor = '#6c757d';
+                let fileTypeName = 'Documento';
+                
+                if (file.type === 'application/pdf') {
+                    fileIcon = 'fas fa-file-pdf';
+                    fileColor = '#dc3545';
+                    fileTypeName = 'PDF';
+                } else if (file.type.includes('word')) {
+                    fileIcon = 'fas fa-file-word';
+                    fileColor = '#2b579a';
+                    fileTypeName = 'Word';
+                } else if (file.type.includes('powerpoint') || file.type.includes('presentation')) {
+                    fileIcon = 'fas fa-file-powerpoint';
+                    fileColor = '#d24726';
+                    fileTypeName = 'PowerPoint';
+                } else if (file.type.includes('excel') || file.type.includes('spreadsheet')) {
+                    fileIcon = 'fas fa-file-excel';
+                    fileColor = '#217346';
+                    fileTypeName = 'Excel';
+                }
+                
+                // Create document HTML
+                const documentHTML = `
+                    <div style="margin: 15px 0; padding: 15px; border: 2px dashed ${fileColor}; border-radius: 8px; text-align: center; background: #f8f9fa;">
+                        <i class="${fileIcon}" style="font-size: 48px; color: ${fileColor}; margin-bottom: 10px;"></i>
+                        <h4 style="margin: 10px 0; color: ${fileColor};">${fileTypeName}</h4>
+                        <p style="margin: 5px 0; font-weight: bold;">${file.name}</p>
+                        <p style="margin: 5px 0; font-size: 12px; color: #6c757d;">Tamaño: ${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                        <a href="${base64Data}" download="${file.name}" style="display: inline-block; margin-top: 10px; padding: 8px 16px; background: ${fileColor}; color: white; text-decoration: none; border-radius: 4px;">
+                            <i class="fas fa-download"></i> Descargar
+                        </a>
+                    </div>
+                `;
+                
+                formatText('insertHTML', documentHTML);
+                
+                // Reset progress bar
+                setTimeout(() => {
+                    if (progressBar) progressBar.style.width = '0%';
+    }, 1000);
+                
+                console.log('Documento insertado:', file.name);
+            }
+        }, 150);
+    };
+    
+    reader.onerror = function() {
+        console.error('Error reading document file');
+        alert('Error al procesar el archivo de documento.');
+    };
+    
+    reader.readAsDataURL(file);
+    
+    // Reset input
+    input.value = '';
+};
+</script>
+{% endblock %} 

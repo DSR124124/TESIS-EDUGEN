@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}Contenido Educativo - {{ block.super }}{% endblock %}
+
+{% block page_title %}Contenido Educativo{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-robot mr-2"></i> Contenido Educativo Generado por IA</h5>
+                </div>
+                <div class="card-body">
+                    <p class="lead">
+                        Aquí puedes encontrar todo el contenido educativo generado por IA disponible para tus cursos. 
+                        Este material es creado por tus profesores para complementar tu aprendizaje.
+                    </p>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle mr-2"></i> El contenido mostrado corresponde a tus cursos actuales.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y búsqueda -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="course-filter">Filtrar por curso:</label>
+                <select class="form-control" id="course-filter">
+                    <option value="">Todos los cursos</option>
+                    {% for course in student_courses %}
+                    <option value="{{ course.id }}">{{ course.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="type-filter">Filtrar por tipo:</label>
+                <select class="form-control" id="type-filter">
+                    <option value="">Todos los tipos</option>
+                    <option value="material_apoyo">Material de Apoyo</option>
+                    <option value="plan_sesion">Plan de Sesión</option>
+                    <option value="guia_ejercicios">Guía de Ejercicios</option>
+                    <option value="evaluacion">Evaluación</option>
+                    <option value="material_interactivo">Material Interactivo</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="form-group">
+                <label for="search">Buscar:</label>
+                <input type="text" class="form-control" id="search" placeholder="Buscar por tema o título...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Listado de contenido -->
+    <div class="row">
+        <div class="col-12">
+            {% if content_list %}
+                <div class="content-grid">
+                    {% for content in content_list %}
+                    <div class="content-card" 
+                         data-course="{{ content.request.course.id }}"
+                         data-type="{{ content.request.content_type.code }}">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-header bg-light">
+                                <h6 class="card-title mb-0">{{ content.title }}</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-2">
+                                    <span class="badge badge-primary">{{ content.request.content_type.name }}</span>
+                                    <span class="badge badge-info">{{ content.request.course.name }}</span>
+                                </div>
+                                <p class="card-text">{{ content.request.topic }}</p>
+                                <small class="text-muted">Creado: {{ content.created_at|date:"d/m/Y H:i" }}</small>
+                            </div>
+                            <div class="card-footer">
+                                <a href="{% url 'content:detail' content.id %}" class="btn btn-sm btn-primary btn-block">
+                                    <i class="fas fa-eye mr-1"></i> Ver Contenido
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> No hay contenido disponible para tus cursos actualmente.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .content-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .content-card {
+        transition: transform 0.3s ease;
+    }
+    
+    .content-card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const courseFilter = document.getElementById('course-filter');
+        const typeFilter = document.getElementById('type-filter');
+        const searchInput = document.getElementById('search');
+        const contentCards = document.querySelectorAll('.content-card');
+        
+        function applyFilters() {
+            const courseValue = courseFilter.value;
+            const typeValue = typeFilter.value;
+            const searchValue = searchInput.value.toLowerCase();
+            
+            contentCards.forEach(card => {
+                const coursePasses = !courseValue || card.dataset.course === courseValue;
+                const typePasses = !typeValue || card.dataset.type === typeValue;
+                const cardTitle = card.querySelector('.card-title').textContent.toLowerCase();
+                const cardText = card.querySelector('.card-text').textContent.toLowerCase();
+                const searchPasses = !searchValue || 
+                                     cardTitle.includes(searchValue) || 
+                                     cardText.includes(searchValue);
+                
+                if (coursePasses && typePasses && searchPasses) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        courseFilter.addEventListener('change', applyFilters);
+        typeFilter.addEventListener('change', applyFilters);
+        searchInput.addEventListener('input', applyFilters);
+    });
+</script>
+{% endblock %} 

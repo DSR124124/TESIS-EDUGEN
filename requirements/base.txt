@@ -1,0 +1,41 @@
+# Django y componentes principales
+Django>=4.2.0,<5.0
+django-crispy-forms>=2.0
+crispy-bootstrap5>=0.7
+djangorestframework>=3.14.0
+django-filter>=23.0
+django-cors-headers>=4.2.0
+
+# Autenticación y seguridad
+social-auth-app-django>=5.0.0
+social-auth-core>=4.4.2
+python-dotenv>=1.0.0
+django-allauth>=0.57.0
+
+# Base de datos y cache
+psycopg2-binary>=2.9.6
+django-redis>=5.2.0
+whitenoise>=6.4.0
+
+# DeepSeek API - Usando requests para llamadas directas
+# openai>=1.0.0  # Removido - Ahora usamos DeepSeek
+
+# SCORM y contenido
+xhtml2pdf>=0.2.11
+reportlab>=4.0.4
+django-tinymce>=3.6.1
+
+# Utilidades
+Pillow>=10.0.0
+python-dateutil>=2.8.2
+pytz>=2023.3
+requests>=2.31.0
+
+# Testing
+pytest>=7.3.1
+pytest-django>=4.5.2
+factory-boy>=3.3.0
+
+# Desarrollo
+django-debug-toolbar>=4.1.0
+django-extensions>=3.2.3

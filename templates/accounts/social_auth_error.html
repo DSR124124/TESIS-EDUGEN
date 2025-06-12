@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Error de Autenticación - {{ block.super }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 2rem;
+        text-align: center;
+    }
+    
+    .error-icon {
+        font-size: 4rem;
+        color: #dc3545;
+        margin-bottom: 1rem;
+    }
+    
+    .error-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .retry-button {
+        background: linear-gradient(135deg, #005CFF, #A142F5);
+        border: none;
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+        margin: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .retry-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.3);
+        color: white;
+    }
+    
+    .alternative-login {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        color: #495057;
+    }
+    
+    .alternative-login:hover {
+        background: #e9ecef;
+        color: #495057;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-container">
+    <div class="error-card">
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h2 class="mb-3">Error de Autenticación</h2>
+        
+        <p class="text-muted mb-4">
+            Hubo un problema al intentar iniciar sesión con Google. 
+            Esto puede deberse a problemas temporales de conectividad.
+        </p>
+        
+        <div class="d-flex flex-column flex-sm-row justify-content-center gap-2">
+            <a href="{% url 'social:begin' 'google-oauth2' %}" class="retry-button">
+                <i class="fab fa-google me-2"></i>
+                Intentar de Nuevo con Google
+            </a>
+            
+            <a href="{% url 'login' %}" class="retry-button alternative-login">
+                <i class="fas fa-sign-in-alt me-2"></i>
+                Usar Login Tradicional
+            </a>
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <h5>Consejos para solucionar el problema:</h5>
+        <ul class="text-start" style="max-width: 400px; margin: 0 auto;">
+            <li>Verifica tu conexión a internet</li>
+            <li>Intenta cerrar y abrir tu navegador</li>
+            <li>Verifica que tu cuenta de Google esté activa</li>
+            <li>Si el problema persiste, usa el login tradicional</li>
+        </ul>
+    </div>
+</div>
+{% endblock %} 

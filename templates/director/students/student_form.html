@@ -1,0 +1,607 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}Editar Estudiante{% else %}Nuevo Estudiante{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-2">
+    <!-- Breadcrumb con estilos por defecto -->
+    <nav aria-label="breadcrumb" class="py-2">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{% url 'director:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'director:student_list' %}">Estudiantes</a></li>
+            <li class="breadcrumb-item active">
+                {% if form.instance.pk %}Editar Estudiante{% else %}Nuevo Estudiante{% endif %}
+            </li>
+        </ol>
+    </nav>
+
+    <!-- Form Card -->
+    <div class="card form-card">
+        <div class="form-header">
+            <h4 class="mb-1">
+                <i class="fas fa-user-graduate me-2"></i>
+                {% if form.instance.pk %}Editar Estudiante{% else %}Nuevo Estudiante{% endif %}
+            </h4>
+            <p class="mb-0">
+                {% if form.instance.pk %}
+                Actualiza la información del estudiante "{{ form.instance.user.get_full_name }}"
+                {% else %}
+                Completa el formulario para registrar un nuevo estudiante
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Contenedor de pestañas con padding específico -->
+        <div class="nav-tabs-container">
+            <ul class="nav nav-tabs" id="studentFormTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="account-tab" data-bs-toggle="tab" data-bs-target="#account-tab-pane" type="button" role="tab" aria-controls="account-tab-pane" aria-selected="true">
+                        <i class="fas fa-user me-2"></i>Cuenta
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="student-tab" data-bs-toggle="tab" data-bs-target="#student-tab-pane" type="button" role="tab" aria-controls="student-tab-pane" aria-selected="false">
+                        <i class="fas fa-graduation-cap me-2"></i>Estudiante
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-0">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="tab-content" id="studentFormTabsContent">
+                    <!-- Account Information Tab -->
+                    <div class="tab-pane fade show active" id="account-tab-pane" role="tabpanel" aria-labelledby="account-tab" tabindex="0">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label for="{{ user_form.username.id_for_label }}" class="form-label">Nombre de Usuario</label>
+                                    {{ user_form.username.errors }}
+                                    <input type="text" 
+                                        name="{{ user_form.username.name }}" 
+                                        id="{{ user_form.username.id_for_label }}" 
+                                        class="form-control {% if user_form.username.errors %}is-invalid{% endif %}"
+                                        value="{{ user_form.username.value|default:'' }}"
+                                        placeholder="Ingrese nombre de usuario">
+                                    <div class="form-text">
+                                        Nombre de usuario para acceder al sistema
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label for="{{ user_form.email.id_for_label }}" class="form-label">Correo Electrónico</label>
+                                    {{ user_form.email.errors }}
+                                    <input type="email" 
+                                        name="{{ user_form.email.name }}" 
+                                        id="{{ user_form.email.id_for_label }}" 
+                                        class="form-control {% if user_form.email.errors %}is-invalid{% endif %}"
+                                        value="{{ user_form.email.value|default:'' }}"
+                                        placeholder="correo@ejemplo.com">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label for="{{ user_form.first_name.id_for_label }}" class="form-label">Nombres</label>
+                                    {{ user_form.first_name.errors }}
+                                    <input type="text" 
+                                        name="{{ user_form.first_name.name }}" 
+                                        id="{{ user_form.first_name.id_for_label }}" 
+                                        class="form-control {% if user_form.first_name.errors %}is-invalid{% endif %}"
+                                        value="{{ user_form.first_name.value|default:'' }}"
+                                        placeholder="Nombres del estudiante">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label for="{{ user_form.last_name.id_for_label }}" class="form-label">Apellidos</label>
+                                    {{ user_form.last_name.errors }}
+                                    <input type="text" 
+                                        name="{{ user_form.last_name.name }}" 
+                                        id="{{ user_form.last_name.id_for_label }}" 
+                                        class="form-control {% if user_form.last_name.errors %}is-invalid{% endif %}"
+                                        value="{{ user_form.last_name.value|default:'' }}"
+                                        placeholder="Apellidos del estudiante">
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if not form.instance.pk %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label for="{{ user_form.password.id_for_label }}" class="form-label">Contraseña</label>
+                                    {{ user_form.password.errors }}
+                                    <input type="password" 
+                                        name="{{ user_form.password.name }}" 
+                                        id="{{ user_form.password.id_for_label }}" 
+                                        class="form-control {% if user_form.password.errors %}is-invalid{% endif %}"
+                                        placeholder="Ingrese contraseña">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <!-- Opción de vincular con Google -->
+                                <div class="toggle-container">
+                                    <div class="form-check form-switch">
+                                        {{ form.link_with_google }}
+                                        <label class="form-check-label" for="{{ form.link_with_google.id_for_label }}">
+                                            <i class="fab fa-google text-danger me-1"></i>
+                                            {{ form.link_with_google.label }}
+                                        </label>
+                                    </div>
+                                    <div class="form-text small">
+                                        <i class="fas fa-info-circle me-1 text-primary"></i>
+                                        {{ form.link_with_google.help_text }}
+                                    </div>
+                                    {% if form.link_with_google.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.link_with_google.errors.0 }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <button type="button" class="btn btn-primary btn-form next-tab">
+                                Siguiente <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Student Information Tab -->
+                    <div class="tab-pane fade" id="student-tab-pane" role="tabpanel" aria-labelledby="student-tab" tabindex="0">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label for="{{ form.dni.id_for_label }}" class="form-label">DNI</label>
+                                    {{ form.dni.errors }}
+                                    <input type="text" 
+                                        name="{{ form.dni.name }}" 
+                                        id="{{ form.dni.id_for_label }}" 
+                                        class="form-control {% if form.dni.errors %}is-invalid{% endif %}"
+                                        value="{{ form.dni.value|default:'' }}"
+                                        placeholder="Ingrese DNI (8 dígitos)">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label for="{{ form.birth_date.id_for_label }}" class="form-label">Fecha de Nacimiento</label>
+                                    {{ form.birth_date.errors }}
+                                    <input type="date" 
+                                        name="{{ form.birth_date.name }}" 
+                                        id="{{ form.birth_date.id_for_label }}" 
+                                        class="form-control {% if form.birth_date.errors %}is-invalid{% endif %}"
+                                        value="{{ form.birth_date.value|date:'Y-m-d'|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-group">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">Dirección</label>
+                                {{ form.address.errors }}
+                                <textarea 
+                                    name="{{ form.address.name }}" 
+                                    id="{{ form.address.id_for_label }}" 
+                                    class="form-control {% if form.address.errors %}is-invalid{% endif %}"
+                                    rows="3"
+                                    placeholder="Ingrese dirección completa">{{ form.address.value|default:'' }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label for="{{ form.guardian_name.id_for_label }}" class="form-label">Nombre del Apoderado</label>
+                                    {{ form.guardian_name.errors }}
+                                    <input type="text" 
+                                        name="{{ form.guardian_name.name }}" 
+                                        id="{{ form.guardian_name.id_for_label }}" 
+                                        class="form-control {% if form.guardian_name.errors %}is-invalid{% endif %}"
+                                        value="{{ form.guardian_name.value|default:'' }}"
+                                        placeholder="Nombre completo del apoderado">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label for="{{ form.guardian_phone.id_for_label }}" class="form-label">Teléfono del Apoderado</label>
+                                    {{ form.guardian_phone.errors }}
+                                    <input type="text" 
+                                        name="{{ form.guardian_phone.name }}" 
+                                        id="{{ form.guardian_phone.id_for_label }}" 
+                                        class="form-control {% if form.guardian_phone.errors %}is-invalid{% endif %}"
+                                        value="{{ form.guardian_phone.value|default:'' }}"
+                                        placeholder="Teléfono del apoderado">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input type="checkbox" 
+                                    name="{{ form.is_active.name }}" 
+                                    id="{{ form.is_active.id_for_label }}" 
+                                    class="form-check-input {% if form.is_active.errors %}is-invalid{% endif %}"
+                                    {% if form.is_active.value %}checked{% endif %}>
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Estudiante Activo
+                                </label>
+                                {{ form.is_active.errors }}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-outline-secondary btn-form prev-tab">
+                                <i class="fas fa-arrow-left me-2"></i> Anterior
+                            </button>
+                            <button type="submit" class="btn btn-success btn-form">
+                                <i class="fas fa-save me-2"></i>
+                                {% if form.instance.pk %}Actualizar{% else %}Guardar{% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #005CFF;       /* Azul intenso */
+        --secondary-color: #A142F5;     /* Púrpura vibrante */
+        --accent-color: #00CFFF;        /* Azul eléctrico */
+        --dark-accent: #3B0E6D;         /* Azul violeta oscuro */
+        --bg-dark: #0A0A0A;             /* Fondo negro degradado */
+        --light-accent: rgba(0, 207, 255, 0.1); /* Azul eléctrico con transparencia */
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 20px rgba(0, 92, 255, 0.15);
+    }
+
+    /* Container */
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Breadcrumb ajustado */
+    .breadcrumb {
+        font-size: 0.9rem;
+        padding: 0.5rem 0;
+    }
+
+    /* Card del Formulario */
+    .form-card {
+        margin-bottom: 1rem;
+        border: none;
+        border-radius: 1rem;
+        background: white;
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+
+    /* Encabezado del Formulario */
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .form-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 100px;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1));
+    }
+
+    .form-header h4 {
+        margin: 0;
+        color: white;
+        font-weight: 600;
+        font-size: 1.25rem;
+    }
+
+    .form-header p {
+        color: rgba(255, 255, 255, 0.9);
+        margin: 0.5rem 0 0;
+        font-size: 0.95rem;
+    }
+
+    /* Contenido del Formulario */
+    .tab-content {
+        padding: 2rem;
+        background-color: white;
+    }
+
+    /* Grupos de Formulario */
+    .form-group {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        color: var(--dark-accent);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        border-radius: 0.5rem;
+        background: white;
+        color: var(--dark-accent);
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--light-accent);
+    }
+
+    /* Filas y Columnas */
+    .row {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -0.75rem;
+        margin-left: -0.75rem;
+    }
+
+    .col-md-6 {
+        position: relative;
+        width: 100%;
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+    }
+
+    @media (min-width: 768px) {
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+    }
+
+    /* Botones */
+    .btn-form {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        color: white;
+    }
+
+    .btn-outline-secondary {
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+        background: transparent;
+    }
+
+    .btn-outline-secondary:hover {
+        background-color: var(--light-accent);
+        color: var(--primary-color);
+        border-color: var(--secondary-color);
+    }
+
+    .btn-success {
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+        color: white;
+    }
+
+    /* Mensajes de Error */
+    .alert-danger {
+        background-color: rgba(220, 53, 69, 0.1);
+        border-color: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Pestañas */
+    .nav-tabs {
+        border-bottom: 2px solid #e9ecef;
+        margin-bottom: 0;
+    }
+    
+    .nav-tabs-container {
+        padding: 0 2rem;
+        background-color: #f8f9fa;
+    }
+    
+    .nav-tabs .nav-item {
+        margin-bottom: -2px;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: #6c757d;
+        padding: 1rem 1.5rem;
+        background: transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        border-color: transparent;
+        border-bottom-color: var(--accent-color);
+        color: var(--primary-color);
+        background-color: rgba(0, 207, 255, 0.1);
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        background-color: white;
+        border-color: transparent;
+        border-bottom-color: var(--primary-color);
+        font-weight: 600;
+    }
+    
+    .tab-pane {
+        display: none;
+    }
+    
+    .tab-pane.active {
+        display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+
+        .tab-content {
+            padding: 1.5rem;
+        }
+        
+        .nav-tabs-container {
+            padding: 0 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .col-md-6 {
+            margin-bottom: 1rem;
+        }
+
+        .row {
+            margin-right: -0.5rem;
+            margin-left: -0.5rem;
+        }
+
+        .col-md-6 {
+            padding-right: 0.5rem;
+            padding-left: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Navegación de pestañas mediante botones
+        const nextTabButton = document.querySelector('.next-tab');
+        const prevTabButton = document.querySelector('.prev-tab');
+        
+        if (nextTabButton) {
+            nextTabButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Obtener la pestaña activa actual
+                const activeTab = document.querySelector('#studentFormTabs .nav-link.active');
+                if (activeTab) {
+                    const nextTabItem = activeTab.parentElement.nextElementSibling;
+                    if (nextTabItem) {
+                        const nextTabLink = nextTabItem.querySelector('.nav-link');
+                        if (nextTabLink) {
+                            // Desactivar pestaña actual
+                            activeTab.classList.remove('active');
+                            activeTab.setAttribute('aria-selected', 'false');
+                            document.querySelector(activeTab.getAttribute('data-bs-target')).classList.remove('show', 'active');
+                            
+                            // Activar siguiente pestaña
+                            nextTabLink.classList.add('active');
+                            nextTabLink.setAttribute('aria-selected', 'true');
+                            document.querySelector(nextTabLink.getAttribute('data-bs-target')).classList.add('show', 'active');
+                        }
+                    }
+                }
+            });
+        }
+        
+        if (prevTabButton) {
+            prevTabButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Obtener la pestaña activa actual
+                const activeTab = document.querySelector('#studentFormTabs .nav-link.active');
+                if (activeTab) {
+                    const prevTabItem = activeTab.parentElement.previousElementSibling;
+                    if (prevTabItem) {
+                        const prevTabLink = prevTabItem.querySelector('.nav-link');
+                        if (prevTabLink) {
+                            // Desactivar pestaña actual
+                            activeTab.classList.remove('active');
+                            activeTab.setAttribute('aria-selected', 'false');
+                            document.querySelector(activeTab.getAttribute('data-bs-target')).classList.remove('show', 'active');
+                            
+                            // Activar pestaña anterior
+                            prevTabLink.classList.add('active');
+                            prevTabLink.setAttribute('aria-selected', 'true');
+                            document.querySelector(prevTabLink.getAttribute('data-bs-target')).classList.add('show', 'active');
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Controlar la visibilidad del campo de contraseña según la opción de vincular con Google
+        const passwordField = document.querySelector('#{{ user_form.password.id_for_label }}');
+        const googleLinkCheckbox = document.querySelector('#{{ form.link_with_google.id_for_label }}');
+        
+        function updatePasswordField() {
+            if (passwordField && googleLinkCheckbox) {
+                const passwordContainer = passwordField.closest('.mb-3');
+                if (passwordContainer) {
+                    if (googleLinkCheckbox.checked) {
+                        passwordContainer.style.display = 'none';
+                    } else {
+                        passwordContainer.style.display = 'block';
+                    }
+                }
+            }
+        }
+        
+        // Ejecutar al cargar la página
+        updatePasswordField();
+        
+        // Ejecutar cuando cambia el checkbox
+        if (googleLinkCheckbox) {
+            googleLinkCheckbox.addEventListener('change', updatePasswordField);
+        }
+    });
+</script>
+{% endblock %} 

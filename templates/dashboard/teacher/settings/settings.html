@@ -1,0 +1,230 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #4B0082;
+        --secondary-color: #8A2BE2;
+        --accent-color: #9370DB;
+        --light-accent: #E6E6FA;
+    }
+    
+    .settings-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .settings-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 15px;
+        padding: 30px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 5px 15px rgba(75, 0, 130, 0.2);
+    }
+    
+    .settings-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border: none;
+    }
+    
+    .settings-card-header {
+        padding: 15px 20px;
+        border-bottom: 1px solid #eee;
+        font-weight: 600;
+    }
+    
+    .settings-card-body {
+        padding: 20px;
+    }
+    
+    .settings-section {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .settings-section:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    
+    .settings-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--primary-color);
+        border-color: var(--primary-color);
+    }
+    
+    .form-select:focus, .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(75, 0, 130, 0.25);
+    }
+    
+    .btn-save {
+        background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 50px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(75, 0, 130, 0.2);
+        color: white;
+    }
+    
+    .settings-description {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4 settings-container">
+    <!-- Settings Header -->
+    <div class="settings-header">
+        <h2 class="mb-1">Configuración</h2>
+        <p class="mb-0">Personaliza tu experiencia en el sistema</p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Apariencia -->
+                <div class="settings-card">
+                    <div class="settings-card-header bg-light">
+                        <i class="fas fa-palette me-2"></i> Apariencia
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="settings-section">
+                            <div class="settings-title">Tema</div>
+                            <div class="settings-description">
+                                Personaliza el aspecto visual de la plataforma
+                            </div>
+                            <select class="form-select" name="theme">
+                                <option value="light" {% if settings.theme == 'light' %}selected{% endif %}>Claro</option>
+                                <option value="dark" {% if settings.theme == 'dark' %}selected{% endif %}>Oscuro</option>
+                                <option value="system" {% if settings.theme == 'system' %}selected{% endif %}>Según el sistema</option>
+                            </select>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <div class="settings-title">Animaciones</div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="animations" id="animations" 
+                                       {% if settings.animations_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="animations">
+                                    Habilitar animaciones en la interfaz
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <div class="settings-title">Modo Compacto</div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="compact_mode" id="compactMode"
+                                       {% if settings.compact_mode %}checked{% endif %}>
+                                <label class="form-check-label" for="compactMode">
+                                    Reducir el espaciado en la interfaz
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notificaciones -->
+                <div class="settings-card">
+                    <div class="settings-card-header bg-light">
+                        <i class="fas fa-bell me-2"></i> Notificaciones
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="settings-section">
+                            <div class="settings-title">Preferencias de Notificación</div>
+                            <div class="settings-description">
+                                Configura cómo quieres recibir las notificaciones
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="email_notifications" id="emailNotifications"
+                                       {% if settings.email_notifications %}checked{% endif %}>
+                                <label class="form-check-label" for="emailNotifications">
+                                    Notificaciones por correo electrónico
+                                </label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="system_notifications" id="systemNotifications"
+                                       {% if settings.system_notifications %}checked{% endif %}>
+                                <label class="form-check-label" for="systemNotifications">
+                                    Notificaciones del sistema
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="reminders" id="reminders"
+                                       {% if settings.reminders %}checked{% endif %}>
+                                <label class="form-check-label" for="reminders">
+                                    Recordatorios de tareas
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Privacidad y Seguridad -->
+                <div class="settings-card">
+                    <div class="settings-card-header bg-light">
+                        <i class="fas fa-shield-alt me-2"></i> Privacidad y Seguridad
+                    </div>
+                    <div class="settings-card-body">
+                        <div class="settings-section">
+                            <div class="settings-title">Información de Contacto</div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="show_contact_info" id="showContactInfo"
+                                       {% if settings.show_contact_info %}checked{% endif %}>
+                                <label class="form-check-label" for="showContactInfo">
+                                    Mostrar mi información de contacto a otros usuarios
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-section">
+                            <div class="settings-title">Autenticación de Dos Factores</div>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="two_factor" id="twoFactor"
+                                       {% if settings.two_factor_enabled %}checked{% endif %}>
+                                <label class="form-check-label" for="twoFactor">
+                                    Habilitar autenticación de dos factores
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botón Guardar -->
+                <button type="submit" class="btn btn-save w-100">
+                    <i class="fas fa-save me-2"></i>
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %} 

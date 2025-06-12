@@ -1,0 +1,525 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #005CFF;       /* Azul intenso */
+        --secondary-color: #A142F5;     /* Púrpura vibrante */
+        --accent-color: #00CFFF;        /* Azul eléctrico */
+        --dark-accent: #3B0E6D;         /* Azul violeta oscuro */
+        --bg-dark: #0A0A0A;             /* Fondo negro degradado */
+        --light-accent: rgba(0, 207, 255, 0.1); /* Azul eléctrico con transparencia */
+    }
+
+    .form-container {
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border: none;
+        transition: all 0.3s ease;
+    }
+
+    .form-container:hover {
+        box-shadow: 0 8px 20px rgba(0, 92, 255, 0.15);
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 20px;
+        border-bottom: none;
+    }
+
+    .form-header h4 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .form-body {
+        padding: 30px;
+    }
+
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        position: relative;
+    }
+
+    .step-indicator:before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: #e9ecef;
+        z-index: 1;
+    }
+
+    .step {
+        position: relative;
+        z-index: 2;
+        background: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        border: 2px solid #e9ecef;
+        color: #6c757d;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .step.active {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-color: transparent;
+    }
+
+    .form-section {
+        display: none;
+    }
+
+    .form-section.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-title {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--light-accent);
+    }
+
+    .icon-input {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .icon-input i {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--primary-color);
+    }
+
+    .icon-input input,
+    .icon-input select {
+        padding-left: 45px;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .icon-input input:focus,
+    .icon-input select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(0, 92, 255, 0.1);
+    }
+
+    .help-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 12px rgba(0, 92, 255, 0.2);
+    }
+
+    .btn-outline-secondary {
+        border: 1px solid var(--primary-color);
+        color: var(--primary-color);
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-secondary:hover {
+        background: var(--light-accent);
+        color: var(--primary-color);
+    }
+
+    .alert {
+        border-radius: 8px;
+        border: none;
+    }
+
+    .alert-danger {
+        background-color: #fff5f5;
+        color: #dc3545;
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card form-container">
+                <div class="form-header">
+                    <h4>
+                        <i class="fas {% if is_update %}fa-user-edit{% else %}fa-user-plus{% endif %} me-2"></i>
+                        {% if is_update %}Actualizar Docente{% else %}Registrar Nuevo Docente{% endif %}
+                    </h4>
+                </div>
+                <div class="form-body">
+                    <!-- Steps Indicator -->
+                    <div class="step-indicator">
+                        <div class="step active" data-section="personal-info">
+                            <i class="fas fa-user me-1"></i> Información Personal
+                        </div>
+                        <div class="step" data-section="contact-info">
+                            <i class="fas fa-id-card me-1"></i> Datos de Contacto
+                        </div>
+                        {% if not is_update %}
+                        <div class="step" data-section="access-info">
+                            <i class="fas fa-key me-1"></i> Acceso al Sistema
+                        </div>
+                        {% else %}
+                        <div class="step" data-section="status-info">
+                            <i class="fas fa-cog me-1"></i> Estado
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post" novalidate id="teacher-form">
+                        {% csrf_token %}
+                        
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Sección: Información Personal -->
+                        <div class="form-section active" id="personal-info">
+                            <h5 class="section-title">
+                                <i class="fas fa-user-circle me-2"></i>Información Personal
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="icon-input">
+                                        <i class="fas fa-user"></i>
+                                        <label for="{{ form.first_name.id_for_label }}" class="form-label">{{ form.first_name.label }}</label>
+                                        {{ form.first_name }}
+                                        {% if form.first_name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.first_name.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="icon-input">
+                                        <i class="fas fa-user"></i>
+                                        <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }}</label>
+                                        {{ form.last_name }}
+                                        {% if form.last_name.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.last_name.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="icon-input">
+                                        <i class="fas fa-id-card"></i>
+                                        <label for="{{ form.dni.id_for_label }}" class="form-label">{{ form.dni.label }}</label>
+                                        {{ form.dni }}
+                                        {% if form.dni.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.dni.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="icon-input">
+                                        <i class="fas fa-graduation-cap"></i>
+                                        <label for="{{ form.speciality.id_for_label }}" class="form-label">{{ form.speciality.label }}</label>
+                                        {{ form.speciality }}
+                                        {% if form.speciality.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.speciality.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-navigation">
+                                <button type="button" class="btn btn-outline-secondary" disabled>
+                                    <i class="fas fa-arrow-left me-1"></i> Anterior
+                                </button>
+                                <button type="button" class="btn btn-primary next-section" data-next="contact-info">
+                                    Siguiente <i class="fas fa-arrow-right ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Sección: Datos de Contacto -->
+                        <div class="form-section" id="contact-info">
+                            <h5 class="section-title">
+                                <i class="fas fa-address-card me-2"></i>Datos de Contacto
+                            </h5>
+                            <div class="row g-3">
+                                <div class="col-md-12">
+                                    <div class="icon-input">
+                                        <i class="fas fa-envelope"></i>
+                                        <label for="{{ form.email.id_for_label }}" class="form-label">{{ form.email.label }}</label>
+                                        {{ form.email }}
+                                        {% if form.email.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.email.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="icon-input">
+                                        <i class="fas fa-phone"></i>
+                                        <label for="{{ form.phone.id_for_label }}" class="form-label">{{ form.phone.label }}</label>
+                                        {{ form.phone }}
+                                        {% if form.phone.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.phone.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="icon-input">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        <label for="{{ form.address.id_for_label }}" class="form-label">{{ form.address.label }}</label>
+                                        {{ form.address }}
+                                        {% if form.address.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.address.errors.0 }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-navigation">
+                                <button type="button" class="btn btn-outline-secondary prev-section" data-prev="personal-info">
+                                    <i class="fas fa-arrow-left me-1"></i> Anterior
+                                </button>
+                                {% if not is_update %}
+                                <button type="button" class="btn btn-primary next-section" data-next="access-info">
+                                    Siguiente <i class="fas fa-arrow-right ms-1"></i>
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-primary next-section" data-next="status-info">
+                                    Siguiente <i class="fas fa-arrow-right ms-1"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if not is_update %}
+                        <!-- Sección: Acceso al Sistema (solo para creación) -->
+                        <div class="form-section" id="access-info">
+                            <h5 class="section-title">
+                                <i class="fas fa-key me-2"></i>Acceso al Sistema
+                            </h5>
+                            
+                            <!-- Opción de vincular con Google -->
+                            <div class="toggle-container mb-4">
+                                <div class="form-check form-switch">
+                                    {{ form.link_with_google }}
+                                    <label class="form-check-label" for="{{ form.link_with_google.id_for_label }}">
+                                        <i class="fab fa-google text-danger me-1"></i>
+                                        {{ form.link_with_google.label }}
+                                    </label>
+                                </div>
+                                <div class="form-text small">
+                                    <i class="fas fa-info-circle me-1 text-primary"></i>
+                                    {{ form.link_with_google.help_text }}
+                                </div>
+                                {% if form.link_with_google.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.link_with_google.errors.0 }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Sección de contraseña (condicionalmente visible) -->
+                            <div id="password-section" class="password-toggle">
+                                <h6 class="mb-3 text-muted">
+                                    <i class="fas fa-lock me-1"></i>
+                                    Configuración de contraseña
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="icon-input">
+                                            <i class="fas fa-key"></i>
+                                            <label for="{{ form.password1.id_for_label }}" class="form-label">{{ form.password1.label }}</label>
+                                            {{ form.password1 }}
+                                            {% if form.password1.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.password1.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="icon-input">
+                                            <i class="fas fa-key"></i>
+                                            <label for="{{ form.password2.id_for_label }}" class="form-label">{{ form.password2.label }}</label>
+                                            {{ form.password2 }}
+                                            {% if form.password2.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.password2.errors.0 }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-navigation">
+                                <button type="button" class="btn btn-outline-secondary prev-section" data-prev="contact-info">
+                                    <i class="fas fa-arrow-left me-1"></i> Anterior
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-1"></i> Finalizar
+                                </button>
+                            </div>
+                        </div>
+                        {% else %}
+                        <!-- Sección: Estado (solo para actualización) -->
+                        <div class="form-section" id="status-info">
+                            <h5 class="section-title">
+                                <i class="fas fa-cog me-2"></i>Estado del Docente
+                            </h5>
+                            
+                            <div class="status-switch">
+                                <div class="form-check form-switch">
+                                    {{ form.is_active }}
+                                    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                        <i class="fas fa-toggle-on text-success me-1"></i>
+                                        {{ form.is_active.label }}
+                                    </label>
+                                </div>
+                                <div class="form-text small mt-2">
+                                    <i class="fas fa-info-circle me-1 text-primary"></i>
+                                    Los docentes inactivos no podrán acceder al sistema ni serán mostrados en listados públicos
+                                </div>
+                            </div>
+                            <div class="form-navigation">
+                                <button type="button" class="btn btn-outline-secondary prev-section" data-prev="contact-info">
+                                    <i class="fas fa-arrow-left me-1"></i> Anterior
+                                </button>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save me-1"></i> Actualizar
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Referencias a elementos del DOM
+    const form = document.getElementById('teacher-form');
+    const formSections = document.querySelectorAll('.form-section');
+    const stepIndicators = document.querySelectorAll('.step');
+    const nextButtons = document.querySelectorAll('.next-section');
+    const prevButtons = document.querySelectorAll('.prev-section');
+    
+    // Hacer click en los indicadores de paso
+    stepIndicators.forEach(step => {
+        step.addEventListener('click', function() {
+            const targetSection = this.getAttribute('data-section');
+            
+            // Quitar la clase active de todas las secciones e indicadores
+            formSections.forEach(section => section.classList.remove('active'));
+            stepIndicators.forEach(s => s.classList.remove('active'));
+            
+            // Añadir la clase active a la sección e indicador seleccionados
+            document.getElementById(targetSection).classList.add('active');
+            this.classList.add('active');
+        });
+    });
+    
+    // Botones Next
+    nextButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const nextSection = this.getAttribute('data-next');
+            
+            // Quitar la clase active de todas las secciones e indicadores
+            formSections.forEach(section => section.classList.remove('active'));
+            stepIndicators.forEach(s => s.classList.remove('active'));
+            
+            // Añadir la clase active a la siguiente sección e indicador
+            document.getElementById(nextSection).classList.add('active');
+            document.querySelector(`.step[data-section="${nextSection}"]`).classList.add('active');
+        });
+    });
+    
+    // Botones Previous
+    prevButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const prevSection = this.getAttribute('data-prev');
+            
+            // Quitar la clase active de todas las secciones e indicadores
+            formSections.forEach(section => section.classList.remove('active'));
+            stepIndicators.forEach(s => s.classList.remove('active'));
+            
+            // Añadir la clase active a la sección anterior e indicador
+            document.getElementById(prevSection).classList.add('active');
+            document.querySelector(`.step[data-section="${prevSection}"]`).classList.add('active');
+        });
+    });
+    
+    {% if not is_update %}
+    // Manejo de contraseñas para formulario de creación
+    const googleCheckbox = document.getElementById('{{ form.link_with_google.id_for_label }}');
+    const passwordSection = document.getElementById('password-section');
+    
+    // Función para mostrar/ocultar la sección de contraseña
+    function togglePasswordSection() {
+        if (googleCheckbox.checked) {
+            passwordSection.style.display = 'none';
+        } else {
+            passwordSection.style.display = 'block';
+        }
+    }
+    
+    // Inicializar
+    togglePasswordSection();
+    
+    // Añadir eventos
+    googleCheckbox.addEventListener('change', togglePasswordSection);
+    {% endif %}
+});
+</script>
+{% endblock %}
+{% endblock %} 

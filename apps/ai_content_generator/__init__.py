@@ -1,0 +1,1 @@
+default_app_config = 'apps.ai_content_generator.apps.AiContentGeneratorConfig' 

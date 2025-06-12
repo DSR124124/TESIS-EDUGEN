@@ -1,0 +1,634 @@
+{% extends 'base_student.html' %}
+{% load static %}
+
+{% block title %}Información del Profesor - {{ block.super }}{% endblock %}
+
+{% block page_title %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        /* Esquema de colores principal - Estilo estudiante consistente */
+        --primary-color: #005CFF;       /* Azul intenso */
+        --primary-light: rgba(0, 92, 255, 0.1);
+        --secondary-color: #A142F5;     /* Púrpura vibrante */
+        --accent-color: #00CFFF;        /* Azul eléctrico */
+        --dark-accent: #3B0E6D;         /* Azul violeta oscuro */
+        --success-color: #10B981;
+        --warning-color: #F59E0B;
+        --danger-color: #EF4444;
+        --light-gray: #f5f7fa;
+        --medium-gray: #e9ecef;
+        --dark-gray: #495057;
+        --bg-dark: #0A0A0A;             /* Fondo negro degradado */
+        --card-bg: #FFFFFF;
+        --text-primary: #333333;
+        --text-secondary: #6B7280;
+        --border-radius: 12px;
+        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.12);
+        --transition-fast: all 0.2s ease;
+        --transition-normal: all 0.3s ease;
+    }
+
+    /* Content Container */
+    .content-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Dashboard Header - Estilo estudiante consistente */
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: var(--border-radius);
+        padding: 25px;
+        color: white;
+        box-shadow: 0 5px 15px rgba(0, 92, 255, 0.2);
+        margin-bottom: 25px;
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition-normal);
+        transform: translateY(0);
+        animation: headerFadeIn 0.5s ease-out;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    @keyframes headerFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .dashboard-header:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+    }
+
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .header-left {
+        flex: 1;
+    }
+
+    .teacher-info-header {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .teacher-avatar-large {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+    }
+
+    .teacher-basic-info h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+    }
+
+    .teacher-basic-info p {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin: 0;
+    }
+
+    .back-button {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: var(--transition-normal);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .back-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Stats Grid */
+    .stats-section {
+        margin-bottom: 1.5rem;
+        animation: fadeIn 0.6s ease-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid rgba(0, 92, 255, 0.08);
+        transition: var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+        transition: width 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .stat-card:hover::before {
+        width: 8px;
+    }
+    
+    .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: white;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        box-shadow: 0 4px 8px rgba(0, 92, 255, 0.2);
+    }
+    
+    .stat-content {
+        text-align: left;
+    }
+    
+    .stat-title {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+    
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-subtitle {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    /* Content Sections */
+    .content-section {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        border: 1px solid rgba(0, 92, 255, 0.08);
+        margin-bottom: 2rem;
+        overflow: hidden;
+        transition: var(--transition-normal);
+    }
+    
+    .content-section:hover {
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .section-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        padding: 1.25rem 1.5rem;
+        border-bottom: none;
+    }
+    
+    .section-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .section-body {
+        padding: 1.5rem;
+    }
+
+    /* Course cards */
+    .course-list {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .course-card {
+        background: var(--light-gray);
+        border-radius: var(--border-radius);
+        padding: 1.25rem;
+        border: 1px solid var(--medium-gray);
+        transition: var(--transition-normal);
+    }
+
+    .course-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-color);
+    }
+
+    .course-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+
+    .course-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .course-code {
+        background: var(--primary-color);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .course-section {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    /* Material cards */
+    .material-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .material-item {
+        background: var(--light-gray);
+        border-radius: 8px;
+        padding: 1rem;
+        border: 1px solid var(--medium-gray);
+        transition: var(--transition-fast);
+    }
+
+    .material-item:hover {
+        background: white;
+        border-color: var(--primary-color);
+    }
+
+    .material-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .material-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+    }
+
+    .material-title {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .material-description {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin: 0;
+    }
+
+    .material-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    /* Empty states */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+        background: var(--light-gray);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+
+    .empty-subtitle {
+        font-size: 1rem;
+    }
+
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .content-container {
+            padding: 15px;
+        }
+        
+        .header-content {
+            flex-direction: column;
+            text-align: center;
+            gap: 1rem;
+        }
+        
+        .teacher-info-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="teacher-info-header">
+                    <div class="teacher-avatar-large">
+                        {{ teacher.user.first_name|slice:":1" }}{{ teacher.user.last_name|slice:":1" }}
+                    </div>
+                    <div class="teacher-basic-info">
+                        <h1>{{ teacher.user.get_full_name }}</h1>
+                        <p>{{ teacher.user.email }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <a href="{% url 'dashboard:student_salon' %}" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver al Salón
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Section -->
+    <div class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-chalkboard"></i>
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-title">Secciones</div>
+                    <div class="stat-value">{{ total_sections }}</div>
+                    <div class="stat-subtitle">Que enseña</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-title">Cursos</div>
+                    <div class="stat-value">{{ total_courses }}</div>
+                    <div class="stat-subtitle">Diferentes materias</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-title">Estudiantes</div>
+                    <div class="stat-value">{{ total_students }}</div>
+                    <div class="stat-subtitle">En total</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cursos que enseña al estudiante -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-graduation-cap"></i>
+                Cursos que te enseña
+            </h2>
+        </div>
+        <div class="section-body">
+            {% if courses_with_teacher %}
+                <div class="course-list">
+                    {% for item in courses_with_teacher %}
+                        <div class="course-card">
+                            <div class="course-card-header">
+                                <h3 class="course-name">{{ item.course.name }}</h3>
+                                <span class="course-code">{{ item.course.code }}</span>
+                            </div>
+                            <p class="course-section">
+                                <i class="fas fa-users me-1"></i>
+                                Sección {{ item.section.name }} - {{ item.section.grade.name }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-book-open"></i>
+                    </div>
+                    <h3 class="empty-title">Sin cursos en común</h3>
+                    <p class="empty-subtitle">
+                        Este profesor no tiene cursos asignados contigo actualmente.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Materiales recientes -->
+    <div class="content-section">
+        <div class="section-header">
+            <h2 class="section-title">
+                <i class="fas fa-file-alt"></i>
+                Materiales recientes para ti
+            </h2>
+        </div>
+        <div class="section-body">
+            {% if recent_materials %}
+                <div class="material-list">
+                    {% for material in recent_materials %}
+                        <div class="material-item">
+                            <div class="material-header">
+                                <div class="material-icon">
+                                    {% if material.material_type == 'PDF' %}
+                                        <i class="fas fa-file-pdf"></i>
+                                    {% elif material.material_type == 'VIDEO' %}
+                                        <i class="fas fa-video"></i>
+                                    {% elif material.material_type == 'AUDIO' %}
+                                        <i class="fas fa-volume-up"></i>
+                                    {% elif material.material_type == 'IMAGE' %}
+                                        <i class="fas fa-image"></i>
+                                    {% elif material.material_type == 'DOCUMENT' %}
+                                        <i class="fas fa-file-word"></i>
+                                    {% elif material.material_type == 'PRESENTATION' %}
+                                        <i class="fas fa-file-powerpoint"></i>
+                                    {% elif material.material_type == 'SCORM' %}
+                                        <i class="fas fa-graduation-cap"></i>
+                                    {% else %}
+                                        <i class="fas fa-file"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h4 class="material-title">{{ material.title }}</h4>
+                                    {% if material.description %}
+                                        <p class="material-description">{{ material.description|truncatewords:15 }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="material-meta">
+                                <span><i class="fas fa-calendar me-1"></i>{{ material.created_at|date:"d/m/Y" }}</span>
+                                <span><i class="fas fa-tag me-1"></i>{{ material.get_material_type_display }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-folder-open"></i>
+                    </div>
+                    <h3 class="empty-title">Sin materiales recientes</h3>
+                    <p class="empty-subtitle">
+                        Este profesor aún no ha subido materiales para ti.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Scripts para funcionalidad -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animación de contadores
+    const statValues = document.querySelectorAll('.stat-value');
+    statValues.forEach(stat => {
+        const finalValue = parseInt(stat.textContent);
+        let currentValue = 0;
+        const increment = finalValue / 30;
+        
+        const counter = setInterval(() => {
+            currentValue += increment;
+            if (currentValue >= finalValue) {
+                currentValue = finalValue;
+                clearInterval(counter);
+            }
+            stat.textContent = Math.floor(currentValue);
+        }, 100);
+    });
+
+    // Efectos hover para las tarjetas
+    const cards = document.querySelectorAll('.stat-card, .course-card, .material-item');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %} 

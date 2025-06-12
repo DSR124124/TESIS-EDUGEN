@@ -1,0 +1,22 @@
+# Importar requerimientos base
+-r base.txt
+
+# Servidor WSGI
+gunicorn>=21.2.0
+
+# Monitoreo y logging
+sentry-sdk>=1.30.0
+
+# Seguridad
+django-secure>=1.0.2
+django-storages>=1.14.0  # Para AWS S3
+
+# Cache y sesiones
+django-redis>=5.3.0
+redis>=5.0.0
+
+# Compresión de archivos estáticos
+whitenoise>=6.5.0
+
+# Base de datos
+psycopg2-binary>=2.9.7  # PostgreSQL

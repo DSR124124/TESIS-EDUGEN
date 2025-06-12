@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestión de Cursos - {{ block.super }}{% endblock %}
+
+{% block page_title %}Gestión de Cursos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Creación de Curso -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Registro de Cursos</h5>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newCourseModal">
+                        <i class="fas fa-plus"></i> Nuevo Curso
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre del Curso</th>
+                                    <th>Área Curricular</th>
+                                    <th>Horas Semanales</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in courses %}
+                                <tr>
+                                    <td>{{ course.code }}</td>
+                                    <td>{{ course.name }}</td>
+                                    <td>{{ course.get_curricular_area_display }}</td>
+                                    <td>{{ course.weekly_hours }}</td>
+                                    <td>
+                                        <span class="badge {% if course.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ course.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-warning" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#editCourseModal{{ course.id }}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#deleteCourseModal{{ course.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gestión de Grados y Secciones -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Grados y Secciones</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for grade in grades %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">{{ grade.name }}</h6>
+                                    <button class="btn btn-sm btn-success" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#newSectionModal{{ grade.id }}">
+                                        <i class="fas fa-plus"></i> Sección
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="list-group">
+                                        {% for section in grade.sections.all %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0">Sección {{ section.name }}</h6>
+                                                <div class="btn-group">
+                                                    <button class="btn btn-sm btn-info" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#assignCoursesModal{{ section.id }}">
+                                                        <i class="fas fa-book"></i> Asignar Cursos
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <small class="text-muted">
+                                                {{ section.courses.count }} cursos asignados
+                                            </small>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Nuevo Curso -->
+<div class="modal fade" id="newCourseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nuevo Curso</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{% url 'academic:course_create' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="courseName" class="form-label">Nombre del Curso</label>
+                        <input type="text" class="form-control" id="courseName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="courseCode" class="form-label">Código</label>
+                        <input type="text" class="form-control" id="courseCode" name="code" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="courseArea" class="form-label">Área Curricular</label>
+                        <select class="form-select" id="courseArea" name="curricular_area" required>
+                            <option value="MAT">Matemática</option>
+                            <option value="COM">Comunicación</option>
+                            <option value="CTA">Ciencia y Tecnología</option>
+                            <option value="SOC">Ciencias Sociales</option>
+                            <option value="ING">Inglés</option>
+                            <option value="ART">Arte y Cultura</option>
+                            <option value="EFI">Educación Física</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="courseHours" class="form-label">Horas Semanales</label>
+                        <input type="number" class="form-control" id="courseHours" 
+                               name="weekly_hours" min="1" max="10" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Curso</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Asignar Cursos a Sección -->
+<div class="modal fade" id="assignCoursesModal{{ section.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Asignar Cursos - Sección {{ section.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{% url 'academic:assign_courses' section.id %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="row">
+                        {% for course in available_courses %}
+                        <div class="col-md-6">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="courses[]" value="{{ course.id }}"
+                                       id="course{{ course.id }}"
+                                       {% if course in section.courses.all %}checked{% endif %}>
+                                <label class="form-check-label" for="course{{ course.id }}">
+                                    {{ course.name }}
+                                    <small class="text-muted d-block">
+                                        {{ course.get_curricular_area_display }} - 
+                                        {{ course.weekly_hours }} horas/semana
+                                    </small>
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Asignaciones</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

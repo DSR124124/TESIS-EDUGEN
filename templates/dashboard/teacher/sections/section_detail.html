@@ -1,0 +1,1501 @@
+{% extends 'dashboard/teacher/base.html' %}
+{% load static %}
+
+{% block title %}Detalle de Sección - {{ section.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        /* Esquema de colores principal - Revertido a colores estáticos */
+        --primary-color: #005CFF;       /* Azul intenso */
+        --primary-light: rgba(0, 92, 255, 0.1);
+        --secondary-color: #A142F5;     /* Púrpura vibrante */
+        --accent-color: #00CFFF;        /* Azul eléctrico */
+        --dark-accent: #3B0E6D;         /* Azul violeta oscuro */
+        --success-color: #10B981;
+        --warning-color: #F59E0B;
+        --danger-color: #EF4444;
+        --light-gray: #f5f7fa;
+        --medium-gray: #e9ecef;
+        --dark-gray: #495057;
+        --bg-dark: #0A0A0A;             /* Fondo negro degradado */
+        --card-bg: #FFFFFF;
+        --text-primary: #333333;
+        --text-secondary: #6B7280;
+        --border-radius: 12px;
+        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.12);
+        --transition-fast: all 0.2s ease;
+        --transition-normal: all 0.3s ease;
+    }
+
+    /* Content Container - Fix for spacing and overflow */
+    .section-detail-content {
+        padding: 20px;
+        width: 90%;
+        margin: 0 auto;
+        box-sizing: border-box;
+        overflow-x: hidden;
+    }
+    
+    @media (max-width: 768px) {
+        .section-detail-content {
+            padding: 15px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .section-detail-content {
+            padding: 10px;
+        }
+    }
+
+    /* Breadcrumb Navigation - Consistent with other pages */
+    .dashboard-breadcrumb {
+        margin-bottom: 20px;
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .breadcrumb {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 12px 20px;
+        margin-bottom: 0;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        backdrop-filter: blur(10px);
+    }
+
+    .breadcrumb-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before {
+        content: '›';
+        color: var(--text-secondary);
+        margin: 0 12px;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .breadcrumb-link {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--primary-color);
+        text-decoration: none;
+        padding: 4px 8px;
+        border-radius: 6px;
+        transition: var(--transition-fast);
+        font-weight: 500;
+    }
+
+    .breadcrumb-link:hover {
+        background-color: var(--primary-light);
+        color: var(--primary-color);
+        transform: translateX(2px);
+    }
+
+    .breadcrumb-link i {
+        font-size: 0.85rem;
+    }
+
+    .breadcrumb-item.active {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        font-weight: 600;
+    }
+
+    .breadcrumb-item.active i {
+        font-size: 0.85rem;
+        color: var(--primary-color);
+    }
+
+    /* Dashboard Header - Consistente con dashboard principal */
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: var(--border-radius);
+        padding: 25px;
+        color: white;
+        box-shadow: 0 5px 15px rgba(0, 92, 255, 0.2);
+        margin-bottom: 25px;
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition-normal);
+        transform: translateY(0);
+        animation: headerFadeIn 0.5s ease-out;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 250px;
+        height: 100%;
+        background: url('{% static "img/pattern-dots.png" %}') no-repeat;
+        background-size: cover;
+        opacity: 0.15;
+    }
+    
+    @keyframes headerFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .dashboard-header:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+    }
+
+    /* Header Content */
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .header-left {
+        flex: 1;
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .welcome-message {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .greeting-text {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+    }
+
+    /* Dashboard Cards */
+    .section-info-card {
+        background: white;
+        border-radius: var(--border-radius);
+        border: none;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: var(--transition-normal);
+        height: 100%;
+        margin-bottom: 25px;
+    }
+    
+    .section-info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+    }
+    
+    .section-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        padding: 20px;
+        color: white;
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+    
+    .section-code {
+        display: inline-block;
+        background-color: rgba(255,255,255,0.2);
+        padding: 3px 10px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+    
+    .section-name {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+    }
+    
+    .section-meta {
+        display: flex;
+        gap: 15px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        background-color: rgba(255,255,255,0.15);
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+    
+    .meta-item i {
+        margin-right: 8px;
+    }
+    
+    /* Student Cards */
+    /* Button Improvements */
+    .btn {
+        border-radius: 50px;
+        font-weight: 500;
+        transition: var(--transition-normal);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        box-shadow: 0 4px 10px rgba(0, 92, 255, 0.2);
+    }
+
+    .btn-primary:hover {
+        box-shadow: 0 6px 15px rgba(0, 92, 255, 0.3);
+    }
+
+    .btn-outline-primary {
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    .btn-outline-light {
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        transition: var(--transition-fast);
+        font-weight: 500;
+    }
+
+    .btn-outline-light:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+    }
+
+    /* Badge Improvements */
+    .badge {
+        border-radius: 50px;
+        font-weight: 500;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    /* Alert Improvements */
+    .alert {
+        border-radius: var(--border-radius);
+        border: none;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .alert-info {
+        background: linear-gradient(135deg, rgba(0, 92, 255, 0.1), rgba(161, 66, 245, 0.1));
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .student-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: var(--transition-fast);
+    }
+
+    .student-avatar:hover {
+        background-color: var(--secondary-color);
+        transform: scale(1.1);
+    }
+    
+    /* Table Improvements */
+    .table {
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .student-row {
+        transition: var(--transition-fast);
+        border: none;
+    }
+    
+    .student-row:hover {
+        background-color: var(--primary-light);
+        transform: translateX(3px);
+    }
+
+    .table thead th {
+        background: var(--light-gray);
+        border: none;
+        font-weight: 600;
+        color: var(--text-primary);
+        padding: 15px;
+    }
+
+    .table tbody td {
+        border: none;
+        padding: 15px;
+        vertical-align: middle;
+    }
+
+    /* Card Improvements */
+    .card {
+        border: none;
+        border-radius: var(--border-radius);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        transition: var(--transition-normal);
+        margin-bottom: 25px;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+    }
+
+    .card-header {
+        background: var(--light-gray);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 15px 20px;
+        border-radius: var(--border-radius) var(--border-radius) 0 0;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+    
+    /* Table utilities */
+    .text-truncate {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .min-width-0 {
+        min-width: 0;
+    }
+    
+    .fw-mono {
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+
+    /* Animation Improvements */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animated-element {
+        animation: fadeIn 0.6s ease-out;
+    }
+
+    /* Section Title */
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+        position: relative;
+        padding-left: 0.75rem;
+        display: flex;
+        align-items: center;
+        line-height: 1.1;
+    }
+    
+    .section-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+        border-radius: 10px;
+    }
+
+    /* Form Controls */
+    .form-control {
+        border-radius: 50px;
+        padding: 12px 20px;
+        border: 1px solid var(--medium-gray);
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition-normal);
+    }
+
+    .form-control:focus {
+        box-shadow: 0 0 0 0.2rem rgba(0, 92, 255, 0.25);
+        border-color: var(--primary-color);
+        outline: none;
+    }
+
+    /* Module Container Styles */
+    .module-container {
+        background: white;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 25px;
+        position: relative;
+        transition: var(--transition-normal);
+        border: none;
+    }
+    
+    .module-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+    }
+
+    /* List Group Improvements */
+    .list-group-item {
+        border: none;
+        border-radius: 8px !important;
+        margin-bottom: 8px;
+        transition: var(--transition-fast);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .list-group-item:hover {
+        transform: translateX(5px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    /* Responsive table adjustments */
+    @media (max-width: 992px) {
+        .students-table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        #studentsTable {
+            min-width: 700px;
+        }
+    }
+    @media (max-width: 768px) {
+        .student-contact-col {
+            display: none;
+        }
+        .student-code-col {
+            display: none;
+        }
+        #studentsTable th:nth-child(1) { min-width: 40px !important; width: 10% !important; }
+        #studentsTable th:nth-child(2) { min-width: 180px !important; width: 60% !important; }
+        #studentsTable th:nth-child(5) { min-width: 70px !important; width: 15% !important; }
+        #studentsTable th:nth-child(6) { min-width: 70px !important; width: 15% !important; }
+    }
+    @media (max-width: 576px) {
+        .students-table-container {
+            padding: 0;
+        }
+        .student-avatar {
+            width: 30px;
+            height: 30px;
+            font-size: 0.75rem;
+        }
+        .student-name {
+            font-size: 0.9rem;
+        }
+        .student-email {
+            font-size: 0.75rem;
+        }
+        #studentsTable th, #studentsTable td {
+            padding: 0.4rem 0.3rem;
+        }
+    }
+    
+    /* Course Badges */
+    .course-badge {
+        display: inline-block;
+        background-color: rgba(0, 92, 255, 0.1);
+        color: #005CFF;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-right: 10px;
+        transition: all 0.2s ease;
+    }
+    
+    .course-badge:hover {
+        background-color: #005CFF;
+        color: white;
+    }
+    
+    /* Custom Buttons */
+    .custom-btn-primary {
+        background: linear-gradient(135deg, #005CFF, #A142F5);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .custom-btn-primary:hover {
+        background: linear-gradient(135deg, #A142F5, #005CFF);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 92, 255, 0.25);
+    }
+    
+    .custom-btn-outline {
+        background-color: transparent;
+        color: #005CFF;
+        border: 1px solid #005CFF;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .custom-btn-outline:hover {
+        background-color: rgba(0, 92, 255, 0.05);
+        transform: translateY(-2px);
+        color: #A142F5;
+        border-color: #A142F5;
+    }
+    
+    /* Search Bar */
+    .search-container {
+        position: relative;
+        max-width: 300px;
+    }
+    
+    .search-input {
+        border-radius: 50px;
+        padding-right: 40px;
+        border: 1px solid #e0e6f7;
+    }
+    
+    .search-btn {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #6c757d;
+        cursor: pointer;
+    }
+    
+    /* Tab styling */
+    .custom-tabs {
+        border-bottom: 1px solid #eaeaea;
+    }
+    
+    .custom-tabs .nav-link {
+        color: #6c757d;
+        border: none;
+        padding: 10px 15px;
+        border-bottom: 3px solid transparent;
+        font-weight: 500;
+    }
+    
+    .custom-tabs .nav-link:hover {
+        color: #005CFF;
+    }
+    
+    .custom-tabs .nav-link.active {
+        color: #005CFF;
+        background-color: transparent;
+        border-bottom: 3px solid #005CFF;
+    }
+    
+    /* Action buttons */
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    
+    .action-btn:hover {
+        background-color: rgba(0, 92, 255, 0.05);
+    }
+    
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+    }
+    
+    .empty-state-icon {
+        font-size: 3rem;
+        color: rgba(0, 92, 255, 0.2);
+        margin-bottom: 15px;
+    }
+    
+    /* Topic Cards - New Design */
+    .topic-card {
+        transition: all 0.3s ease;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .topic-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 92, 255, 0.15);
+        border-color: #A142F5 !important;
+    }
+    
+    /* Lista de temas - Nuevo diseño */
+    .topics-list {
+        animation: fadeInUp 0.4s ease-out;
+    }
+    
+    .topic-list-item {
+        transition: all 0.3s ease;
+        background: rgba(0, 92, 255, 0.02) !important;
+        border: 1px solid rgba(0, 92, 255, 0.2) !important;
+    }
+    
+    .topic-list-item:hover {
+        background: rgba(0, 92, 255, 0.05) !important;
+        border-color: #A142F5 !important;
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(0, 92, 255, 0.1);
+    }
+    
+    .topic-number .badge {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+    
+    .topic-info h6 {
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    
+    .topic-meta .badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+    
+    .topic-actions .btn {
+        padding: 6px 12px;
+    }
+    
+    .topic-main-actions {
+        border-top: 1px solid rgba(0, 92, 255, 0.1) !important;
+    }
+    
+    .topic-main-actions .btn {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+    
+    /* Vista de acordeón para temas */
+    .topic-accordion-item {
+        transition: all 0.3s ease;
+    }
+    
+    .topic-header-compact {
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+    }
+    
+    .topic-header-compact:hover {
+        background: rgba(0, 92, 255, 0.05) !important;
+        border-color: #A142F5 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 92, 255, 0.15);
+    }
+    
+    .topic-expand-btn {
+        border: none !important;
+        background: transparent !important;
+        color: #005CFF !important;
+    }
+    
+    .topic-expand-btn:hover {
+        background: rgba(0, 92, 255, 0.1) !important;
+        color: #A142F5 !important;
+    }
+    
+    .topic-chevron {
+        transition: transform 0.3s ease;
+    }
+    
+    .topic-chevron.rotated {
+        transform: rotate(180deg);
+    }
+    
+    .topic-details-expandable {
+        overflow: hidden;
+        transition: all 0.4s ease;
+    }
+    
+    .topic-expanded-content {
+        animation: slideDown 0.3s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Vista compacta global */
+    .compact-view .topic-details-expandable {
+        display: none !important;
+    }
+    
+    .compact-view .topic-header-compact {
+        padding: 12px 15px !important;
+    }
+    
+    .compact-view .topic-accordion-item {
+        margin-bottom: 8px !important;
+    }
+    
+    .course-section {
+        transition: all 0.3s ease;
+    }
+    
+    .course-section:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .topics-container {
+        animation: fadeInUp 0.4s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .empty-state-topics {
+        animation: fadeIn 0.5s ease-out;
+        background: linear-gradient(135deg, rgba(0, 92, 255, 0.03), rgba(161, 66, 245, 0.03));
+        border-radius: 12px;
+        border: 2px dashed rgba(0, 92, 255, 0.2);
+    }
+    
+    .topic-stats .badge {
+        font-size: 0.75rem;
+    }
+    
+    /* Estilos para tabla de estudiantes con scroll */
+    .students-table-container {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background-color: white;
+    }
+    
+    .students-table-container::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .students-table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    .students-table-container::-webkit-scrollbar-thumb {
+        background: #005CFF;
+        border-radius: 3px;
+    }
+    
+    .students-table-container::-webkit-scrollbar-thumb:hover {
+        background: #A142F5;
+    }
+    
+    /* Sticky header para la tabla */
+    #studentsTable thead th {
+        background-color: #f8f9fa !important;
+        border-bottom: 2px solid #005CFF;
+        z-index: 10;
+        position: sticky;
+        top: 0;
+    }
+    
+    /* Vista compacta de estudiantes */
+    .students-compact-view .student-email {
+        display: none !important;
+    }
+    
+    .students-compact-view .student-avatar {
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 0.75rem !important;
+    }
+    
+    .students-compact-view .student-name {
+        font-size: 0.9rem !important;
+        margin-bottom: 0 !important;
+    }
+    
+    .students-compact-view .student-info {
+        padding: 4px 0 !important;
+    }
+    
+    .students-compact-view .student-row {
+        height: 45px;
+    }
+    
+    .students-compact-view .student-row td {
+        padding: 8px !important;
+        vertical-align: middle;
+    }
+    
+    .students-compact-view .status-badge {
+        font-size: 0.7rem !important;
+        padding: 3px 6px !important;
+    }
+    
+    .students-compact-view .btn-sm {
+        padding: 4px 8px !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Responsividad mejorada para tabla de estudiantes */
+    @media (max-width: 768px) {
+        .students-table-container {
+            max-height: 300px;
+        }
+        
+        .student-code-col,
+        .student-status-col {
+            display: none;
+        }
+        
+        .student-actions-col {
+            width: 80px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .students-table-container {
+            max-height: 250px;
+        }
+        
+        .student-avatar {
+            width: 25px !important;
+            height: 25px !important;
+            font-size: 0.7rem !important;
+        }
+    }
+
+    /* Action buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem !important;
+    }
+    
+    .action-buttons .btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 110px;
+        transition: all 0.3s ease;
+        border-width: 2px;
+    }
+    
+    .action-buttons .btn i {
+        font-size: 0.9rem;
+        margin-right: 0.5rem;
+    }
+    
+    .action-buttons .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .action-buttons .custom-btn-outline {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        background-color: transparent;
+    }
+    
+    .action-buttons .custom-btn-outline:hover {
+        color: white;
+        background-color: var(--primary-color);
+    }
+    
+    .action-buttons .btn-outline-secondary {
+        color: #6c757d;
+        border-color: #6c757d;
+    }
+    
+    .action-buttons .btn-outline-secondary:hover {
+        color: white;
+        background-color: #6c757d;
+    }
+    
+    .action-buttons .btn-outline-danger {
+        color: #dc3545;
+        border-color: #dc3545;
+    }
+    
+    .action-buttons .btn-outline-danger:hover {
+        color: white;
+        background-color: #dc3545;
+    }
+    
+    @media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .action-buttons .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block teacher_content %}
+<div class="section-detail-content">
+    <!-- Breadcrumb Navigation -->
+    <nav class="dashboard-breadcrumb" aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'dashboard:teacher' %}" class="breadcrumb-link">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="breadcrumb-item">
+                <a href="{% url 'dashboard:teacher_sections' %}" class="breadcrumb-link">
+                    <i class="fas fa-users"></i>
+                    <span>Mis Secciones</span>
+                </a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+                <i class="fas fa-door-open"></i>
+                <span>{{ section.grade.name }} - Sección {{ section.name }}</span>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Section Information -->
+        <div class="col-lg-4 mb-4">
+            <div class="section-info-card shadow-sm">
+                <div class="section-header">
+                    <span class="section-code">{{ section.code }}</span>
+                    <h1 class="section-name">{{ section.grade.name }} - Sección {{ section.name }}</h1>
+                    <p class="mb-0">{{ section.description|default:"Sin descripción" }}</p>
+                    
+                    <div class="section-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-user-graduate"></i> {{ students|length }} Estudiantes
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mt-2 mb-3">Mis Cursos en esta Sección</h5>
+                    <div class="mb-4">
+                        {% for course_assignment in course_assignments %}
+                            <div class="course-badge mb-2">
+                                <i class="fas fa-book me-1"></i> {{ course_assignment.course.name }}
+                            </div>
+                        {% empty %}
+                            <p class="text-muted mb-0">No tienes cursos asignados en esta sección.</p>
+                        {% endfor %}
+                    </div>
+
+                   
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-0">
+                    <!-- Tabs Navigation -->
+                    <ul class="nav nav-tabs custom-tabs" id="sectionTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" 
+                                    type="button" role="tab" aria-controls="students" aria-selected="true">
+                                <i class="fas fa-users me-2"></i>Estudiantes
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="materials-tab" data-bs-toggle="tab" data-bs-target="#materials" 
+                                    type="button" role="tab" aria-controls="materials" aria-selected="false">
+                                <i class="fas fa-book-open me-2"></i>Materiales de Clase
+                            </button>
+                        </li>
+                    </ul>
+                    
+                    <!-- Tab Content -->
+                    <div class="tab-content p-4" id="sectionTabContent">
+                        <!-- Students Tab -->
+                        <div class="tab-pane fade show active" id="students" role="tabpanel" aria-labelledby="students-tab">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h4 class="fw-bold m-0">Lista de Estudiantes</h4>
+                                
+                                <div class="d-flex gap-2 align-items-center">
+                                    <!-- Toggle de vista compacta -->
+                                    <button class="btn btn-sm btn-outline-primary" onclick="toggleStudentsView()" id="studentsViewToggleBtn">
+                                        <i class="fas fa-compress-alt me-1" id="studentsViewToggleIcon"></i> 
+                                        <span id="studentsViewToggleText">Vista Compacta</span>
+                                    </button>
+                                
+                                <!-- Search Form -->
+                                <div class="search-container d-flex">
+                                    <input type="text" class="form-control search-input" placeholder="Buscar estudiante..." id="searchStudent">
+                                    <button class="search-btn">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {% if students %}
+                            <!-- Students Table -->
+                            <div class="table-responsive students-table-container" id="studentsTableContainer">
+                                <table class="table table-hover align-middle" id="studentsTable" style="table-layout: fixed;">
+                                    <thead class="sticky-top bg-light">
+                                        <tr>
+                                            <th style="width: 8%;">#</th>
+                                            <th style="width: 40%;">Estudiante</th>
+                                            <!--<th style="width: 15%;" class="student-code-col">DNI</th>-->
+                                            <th style="width: 20%;" class="student-contact-col">Contacto</th>
+                                            <th style="width: 10%;" class="student-status-col">Estado</th>
+                                            <th style="width: 7%; min-width: 80px; text-align: center;" class="student-actions-col">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student in students %}
+                                        <tr class="student-row">
+                                            <td class="text-center">{{ forloop.counter }}</td>
+                                            <td>
+                                                <div class="d-flex align-items-center student-info">
+                                                    <div class="student-avatar me-2 flex-shrink-0">
+                                                        {{ student.user.first_name|first }}{{ student.user.last_name|first }}
+                                                    </div>
+                                                    <div class="student-details flex-grow-1 min-width-0">
+                                                        <h6 class="mb-0 fw-bold student-name text-truncate">{{ student.user.get_full_name }}</h6>
+                                                        <small class="text-muted student-email text-truncate d-block">{{ student.user.email|truncatechars:25 }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <!--<td class="text-center student-code-col">
+                                                <span class="fw-mono">{{ student.dni|default:"N/A" }}</span>
+                                            </td>-->
+                                            <td class="student-contact-col">
+                                                <div class="min-width-0">
+                                                    <div class="text-truncate fw-semibold">{{ student.guardian_name|default:"No registrado"|truncatechars:18 }}</div>
+                                                    <small class="text-muted text-truncate d-block">{{ student.guardian_phone|default:"Sin teléfono" }}</small>
+                                                </div>
+                                            </td>
+                                            <td class="text-center student-status-col">
+                                                {% if student.is_active %}
+                                                <span class="badge bg-success">Activo</span>
+                                                {% else %}
+                                                <span class="badge bg-danger">Inactivo</span>
+                                                {% endif %}
+                                            </td>
+                                            <td class="text-center student-actions-col" style="min-width: 80px;">
+                                                <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+                                                    <a href="{% url 'dashboard:teacher_portfolios' %}?student_id={{ student.id }}&section_id={{ section.id }}" 
+                                                       class="btn btn-sm custom-btn-outline px-2 py-1" 
+                                                       data-bs-toggle="tooltip" 
+                                                       title="Ver portafolio">
+                                                        <i class="fas fa-folder-open"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Contador de estudiantes -->
+                            <div class="mt-3 text-muted text-center">
+                                <small>
+                                    <i class="fas fa-users me-1"></i>
+                                    Mostrando {{ students|length }} estudiante{{ students|length|pluralize }}
+                                </small>
+                            </div>
+                            {% else %}
+                            <!-- Empty State -->
+                            <div class="empty-state">
+                                <i class="fas fa-user-graduate empty-state-icon"></i>
+                                <h5 class="fw-bold">No hay estudiantes registrados</h5>
+                                <p class="text-muted mb-4">Esta sección aún no tiene estudiantes matriculados.</p>
+                                <a href="#" class="btn custom-btn-outline">
+                                    <i class="fas fa-plus-circle me-1"></i> Solicitar Matriculación
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Materials Tab -->
+                        <div class="tab-pane fade" id="materials" role="tabpanel" aria-labelledby="materials-tab">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h4 class="fw-bold m-0">Gestión de Temas y Materiales</h4>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-primary" onclick="toggleTopicsView()" id="viewToggleBtn">
+                                        <i class="fas fa-compress-alt me-1" id="viewToggleIcon"></i> 
+                                        <span id="viewToggleText">Vista Compacta</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                {% for assignment in course_assignments %}
+                                <div class="col-md-12 mb-4">
+                                    <div class="card border-0 shadow-sm course-section">
+                                        <div class="card-header bg-gradient d-flex justify-content-between align-items-center" 
+                                             style="background: linear-gradient(135deg, #f8f9fa, #e9ecef); color: #212529;">
+                                            <div>
+                                                <h5 class="fw-bold mb-1">
+                                                    <i class="fas fa-book me-2"></i>
+                                                    Gestión de Temas
+                                            </h5>
+                                                <small style="opacity: 0.7;">Crea y organiza los temas para tus estudiantes</small>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <a href="{% url 'dashboard:course_topic_create' section_id=section.id course_id=assignment.course.id %}" 
+                                                   class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-plus-circle me-1"></i> Crear Nuevo Tema
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <!-- Temas del curso -->
+                                            {% with course_topics=section_topics %}
+                                                {% if course_topics %}
+                                                    <div class="topics-container">
+                                                        <h6 class="fw-bold mb-3 text-primary d-flex align-items-center">
+                                                            <i class="fas fa-bookmark me-2"></i>
+                                                            Temas del Curso ({{ course_topics|length }})
+                                                        </h6>
+                                                        
+                                                        <!-- Lista de temas -->
+                                                        <div class="topics-list" id="topicsList">
+                                                            {% for topic in course_topics %}
+                                                            {% if topic.course == assignment.course %}
+                                                                <div class="topic-accordion-item mb-3" id="topic-{{ topic.id }}">
+                                                                    <!-- Header compacto del tema -->
+                                                                    <div class="topic-header-compact border rounded-3 p-3"
+                                                                    style="border-color: #005CFF !important; background: rgba(0, 92, 255, 0.02);"
+                                                                    onclick="toggleTopicDetails('{{ topic.id }}')">
+                                                                        <div class="d-flex align-items-center justify-content-between">
+                                                                            <div class="topic-basic-info d-flex align-items-center flex-grow-1">
+                                                                                <span class="badge bg-primary rounded-pill me-3">{{ forloop.counter }}</span>
+                                                                                <div class="flex-grow-1">
+                                                                                    <h6 class="fw-bold text-primary mb-1">{{ topic.title }}</h6>
+                                                                                    <small class="text-muted">{{ topic.description|default:"Sin descripción"|truncatechars:50 }}</small>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div class="topic-compact-actions d-flex align-items-center gap-2">
+                                                                                <span class="badge bg-success">Activo</span>
+                                                                                <button class="btn btn-sm btn-outline-primary topic-expand-btn" type="button">
+                                                                                    <i class="fas fa-chevron-down topic-chevron"></i>
+                                                                        </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <!-- Detalles expandibles del tema -->
+                                                                    <div class="topic-details-expandable" style="display: none;">
+                                                                        <div class="topic-expanded-content border-start border-end border-bottom rounded-bottom p-3"
+                                                                             style="border-color: #005CFF !important; background: rgba(0, 92, 255, 0.01);">
+                                                                            
+                                                                            <!-- Información adicional -->
+                                                                            <div class="topic-meta d-flex align-items-center gap-3 mb-3">
+                                                                                <span class="badge bg-secondary">
+                                                                                    <i class="fas fa-calendar me-1"></i> 
+                                                                                    {{ topic.created_at|date:"d/m/Y" }}
+                                                                                </span>
+                                                                                <span class="badge bg-info">
+                                                                                    <i class="fas fa-clock me-1"></i> 
+                                                                                    Creado hace {{ topic.created_at|timesince }}
+                                                                                                            </span>
+                                                                                                            </div>
+                                                                            
+                                                                            <!-- Descripción completa -->
+                                                                            {% if topic.description %}
+                                                                            <div class="topic-description mb-3">
+                                                                                <p class="text-muted mb-0">{{ topic.description }}</p>
+                                                                                </div>
+                                                                            {% endif %}
+                                                                            
+                                                                            <!-- Menú de acciones expandido -->
+                                                                            <div class="topic-expanded-actions d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                                                                <div class="action-buttons d-flex gap-2">
+                                                                                    <a href="{% url 'dashboard:course_topic_detail' topic.id %}" 
+                                                                                       class="btn btn-sm custom-btn-outline">
+                                                                                        <i class="fas fa-eye me-1"></i> Ver Detalles
+                                                                                    </a>
+                                                                                    <a href="{% url 'dashboard:course_topic_edit' topic.id %}" 
+                                                                                       class="btn btn-sm btn-outline-secondary">
+                                                                                        <i class="fas fa-edit me-1"></i> Editar
+                                                                                    </a>
+                                                                                    <!-- Formulario de eliminación individual -->
+                                                                                    <form method="post" action="{% url 'dashboard:course_topic_delete' pk=topic.id %}" 
+                                                                                          style="display: inline-block;" 
+                                                                                          onsubmit="return confirmTopicDeletion('{{ topic.title|escapejs }}')">
+                                                                                        {% csrf_token %}
+                                                                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                                                            <i class="fas fa-trash me-1"></i> Eliminar
+                                                                                        </button>
+                                                                                    </form>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                    </div>
+                                                {% else %}
+                                                    <!-- Estado vacío - Sin temas -->
+                                                    <div class="empty-state-topics text-center py-5">
+                                                        <i class="fas fa-bookmark fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
+                                                        <h5 class="fw-bold text-muted">No hay temas creados</h5>
+                                                        <p class="text-muted mb-4">
+                                                            Crea el primer tema para <strong>{{ assignment.course.name }}</strong> en 
+                                                            <strong>{{ section.grade.name }} - Sección {{ section.name }}</strong>
+                                                        </p>
+                                                        <div class="text-muted">
+                                                            <small>
+                                                                <i class="fas fa-info-circle me-1"></i>
+                                                                Utiliza el botón "Crear Nuevo Tema" para comenzar
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
+                                </div>
+                                {% empty %}
+                                <div class="col-12">
+                                    <div class="empty-state py-5 text-center">
+                                        <i class="fas fa-book fa-3x text-muted mb-3" style="opacity: 0.3;"></i>
+                                        <h5 class="fw-bold text-muted">No hay cursos asignados</h5>
+                                        <p class="text-muted">No tienes cursos asignados a esta sección para crear temas y materiales.</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+        
+        // Student search functionality
+        const searchInput = document.getElementById('searchStudent');
+        const studentRows = document.querySelectorAll('.student-row');
+        
+        if (searchInput && studentRows.length > 0) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            studentRows.forEach(row => {
+                const studentName = row.querySelector('h6').textContent.toLowerCase();
+                const studentCode = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                
+                if (studentName.includes(searchTerm) || studentCode.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+                });
+            });
+        }
+        
+        // Animate topic cards on load
+        const topicCards = document.querySelectorAll('.topic-card');
+        topicCards.forEach((card, index) => {
+            setTimeout(() => {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+        
+        // Highlight course sections when hovering over topic cards
+        document.querySelectorAll('.topic-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.borderColor = '#A142F5';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.borderColor = '#005CFF';
+            });
+        });
+    });
+
+    // Function for topic view toggle implementation
+    function toggleTopicsView() {
+        const topicsList = document.getElementById('topicsList');
+        const toggleText = document.getElementById('viewToggleText');
+        const toggleIcon = document.getElementById('viewToggleIcon');
+        
+        if (topicsList && toggleText && toggleIcon) {
+            const isCompact = topicsList.classList.contains('compact-view');
+            
+            if (isCompact) {
+                // Cambiar a vista expandida
+                topicsList.classList.remove('compact-view');
+                toggleText.textContent = 'Vista Compacta';
+                toggleIcon.className = 'fas fa-compress-alt me-1';
+                // Expandir todos los temas
+                document.querySelectorAll('.topic-details-expandable').forEach(detail => {
+                    detail.style.display = 'block';
+                });
+                document.querySelectorAll('.topic-chevron').forEach(chevron => {
+                    chevron.classList.add('rotated');
+                });
+            } else {
+                // Cambiar a vista compacta
+                topicsList.classList.add('compact-view');
+                toggleText.textContent = 'Vista Expandida';
+                toggleIcon.className = 'fas fa-expand-alt me-1';
+                // Contraer todos los temas
+                document.querySelectorAll('.topic-details-expandable').forEach(detail => {
+                    detail.style.display = 'none';
+                });
+                document.querySelectorAll('.topic-chevron').forEach(chevron => {
+                    chevron.classList.remove('rotated');
+                });
+            }
+        }
+    }
+    
+    // Function to toggle individual topic details
+    function toggleTopicDetails(topicId) {
+        const topicElement = document.getElementById(`topic-${topicId}`);
+        const topicsList = document.getElementById('topicsList');
+        
+        // No permitir expansión individual en vista compacta global
+        if (topicsList && topicsList.classList.contains('compact-view')) {
+            return;
+        }
+        
+        if (topicElement) {
+            const expandableContent = topicElement.querySelector('.topic-details-expandable');
+            const chevron = topicElement.querySelector('.topic-chevron');
+            
+            if (expandableContent && chevron) {
+                const isVisible = expandableContent.style.display === 'block';
+                
+                if (isVisible) {
+                    expandableContent.style.display = 'none';
+                    chevron.classList.remove('rotated');
+                } else {
+                    expandableContent.style.display = 'block';
+                    chevron.classList.add('rotated');
+                }
+            }
+        }
+    }
+    
+    // Function to toggle students view (compact/expanded)
+    function toggleStudentsView() {
+        const studentsContainer = document.getElementById('studentsTableContainer');
+        const toggleText = document.getElementById('studentsViewToggleText');
+        const toggleIcon = document.getElementById('studentsViewToggleIcon');
+        
+        if (studentsContainer && toggleText && toggleIcon) {
+            const isCompact = studentsContainer.classList.contains('students-compact-view');
+            
+            if (isCompact) {
+                // Cambiar a vista expandida
+                studentsContainer.classList.remove('students-compact-view');
+                toggleText.textContent = 'Vista Compacta';
+                toggleIcon.className = 'fas fa-compress-alt me-1';
+            } else {
+                // Cambiar a vista compacta
+                studentsContainer.classList.add('students-compact-view');
+                toggleText.textContent = 'Vista Expandida';
+                toggleIcon.className = 'fas fa-expand-alt me-1';
+            }
+        }
+    }
+
+    // Function to confirm topic deletion (simplified)
+    function confirmTopicDeletion(topicTitle) {
+        const message = `¿Estás seguro de que quieres eliminar el tema "${topicTitle}"?\n\nEsta acción también eliminará:\n• El tema de todos los portafolios de estudiantes\n• Todos los materiales asociados al tema\n\nEsta acción no se puede deshacer.`;
+        
+        return confirm(message);
+    }
+</script>
+{% endblock %} 

@@ -1,0 +1,584 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Agregar Material - Portafolio{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #005CFF;       
+        --secondary-color: #A142F5;     
+        --accent-color: #00CFFF;
+        --light-bg: #f8f9ff;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .page-container {
+        background-color: var(--light-bg);
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .page-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .page-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 300px;
+        height: 100%;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(255, 255, 255, 0.1)' fill-opacity='1' d='M0,160L48,154.7C96,149,192,139,288,149.3C384,160,480,192,576,202.7C672,213,768,203,864,170.7C960,139,1056,85,1152,69.3C1248,53,1344,75,1392,85.3L1440,96L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+        background-position: center bottom;
+        background-repeat: no-repeat;
+        opacity: 0.5;
+    }
+    
+    /* Formulario */
+    .form-card {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow-sm);
+        padding: 2rem;
+    }
+    
+    .form-card-title {
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        color: #343a40;
+        font-weight: 600;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 0.6rem 1rem;
+        border: 1px solid #e0e6f7;
+        background-color: #f9fafc;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25rem rgba(0, 92, 255, 0.15);
+        background-color: white;
+    }
+    
+    .form-text {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+    
+    /* Sección de cargar archivos */
+    .file-upload-container {
+        position: relative;
+        background-color: #f9fafc;
+        border: 2px dashed #e0e6f7;
+        border-radius: 12px;
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .file-upload-container:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(0, 92, 255, 0.05);
+    }
+    
+    .file-upload-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        opacity: 0.7;
+    }
+    
+    .file-upload-text {
+        font-weight: 500;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+    
+    .file-upload-subtext {
+        color: #6c757d;
+        font-size: 0.85rem;
+    }
+    
+    .file-upload-input {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: pointer;
+    }
+    
+    /* Previsualización */
+    .preview-container {
+        margin-top: 1.5rem;
+    }
+    
+    .preview-item {
+        display: flex;
+        align-items: center;
+        background-color: #f9fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    
+    .preview-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        background-color: rgba(0, 92, 255, 0.1);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+    
+    .preview-info {
+        flex-grow: 1;
+    }
+    
+    .preview-title {
+        font-weight: 500;
+        color: #343a40;
+        margin-bottom: 0.25rem;
+        word-break: break-word;
+    }
+    
+    .preview-meta {
+        display: flex;
+        align-items: center;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .preview-size {
+        margin-right: 1rem;
+    }
+    
+    .preview-type {
+        text-transform: uppercase;
+    }
+    
+    .preview-remove {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background-color: rgba(255, 0, 0, 0.1);
+        color: #ff3b30;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    
+    .preview-remove:hover {
+        background-color: rgba(255, 0, 0, 0.2);
+        transform: scale(1.1);
+    }
+    
+    /* Previsualización de URL */
+    .link-preview {
+        background-color: #f9fafc;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .link-preview-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+    
+    .link-preview-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background-color: rgba(0, 92, 255, 0.1);
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        margin-right: 1rem;
+    }
+    
+    .link-preview-url {
+        font-weight: 500;
+        color: #343a40;
+        word-break: break-all;
+    }
+    
+    /* Selector de tipo */
+    .type-selector {
+        display: flex;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .type-option {
+        background-color: #f9fafc;
+        border: 1px solid #e0e6f7;
+        border-radius: 8px;
+        padding: 1rem;
+        flex: 1;
+        min-width: 140px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .type-option:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 92, 255, 0.1);
+    }
+    
+    .type-option.active {
+        background-color: rgba(0, 92, 255, 0.05);
+        border-color: var(--primary-color);
+    }
+    
+    .type-option-icon {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 0.75rem;
+    }
+    
+    .type-option-title {
+        font-weight: 500;
+        color: #343a40;
+        margin-bottom: 0.25rem;
+    }
+    
+    .type-option-desc {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    /* Botones de acción */
+    .action-buttons {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+    
+    .btn-action {
+        border-radius: 8px;
+        padding: 0.6rem 1.5rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-action:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="page-container">
+        <!-- Header del formulario -->
+        <div class="page-header">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h2 class="mb-1">Agregar Material</h2>
+                    <p class="mb-3">Tema: {{ topic.title }}</p>
+                    
+                    <div class="d-flex align-items-center flex-wrap">
+                        <span class="d-flex align-items-center text-white opacity-75 me-4">
+                            <i class="fas fa-book me-2"></i>
+                            {{ portfolio.course.name }}
+                        </span>
+                        <span class="d-flex align-items-center text-white opacity-75">
+                            <i class="fas fa-graduation-cap me-2"></i>
+                            {{ portfolio.course.grade_level }} - {{ portfolio.course.section }}
+                        </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="{% url 'dashboard:student_portfolio_detail' portfolio.id %}" class="btn btn-outline-light">
+                        <i class="fas fa-arrow-left me-2"></i> Volver al tema
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Formulario para agregar material -->
+        <div class="form-card">
+            <h4 class="form-card-title">Información del material</h4>
+            
+            <form method="post" enctype="multipart/form-data" id="materialForm">
+                {% csrf_token %}
+                
+                <!-- Selector de tipo -->
+                <div class="mb-4">
+                    <label class="form-label">Tipo de material</label>
+                    <div class="type-selector">
+                        <div class="type-option active" data-type="file">
+                            <div class="type-option-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="type-option-title">Archivo</div>
+                            <div class="type-option-desc">Sube documentos, imágenes, PDFs, etc.</div>
+                        </div>
+                        <div class="type-option" data-type="link">
+                            <div class="type-option-icon">
+                                <i class="fas fa-link"></i>
+                            </div>
+                            <div class="type-option-title">Enlace</div>
+                            <div class="type-option-desc">Comparte un enlace a un recurso web</div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="material_type" id="material_type" value="file">
+                </div>
+                
+                <!-- Título -->
+                <div class="mb-3">
+                    <label for="title" class="form-label">Título del material *</label>
+                    <input type="text" class="form-control" id="title" name="title" required placeholder="Escribe un título descriptivo">
+                    <div class="form-text">Un título que describa claramente el contenido del material.</div>
+                </div>
+                
+                <!-- Descripción -->
+                <div class="mb-3">
+                    <label for="description" class="form-label">Descripción (opcional)</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Describe brevemente este material..."></textarea>
+                    <div class="form-text">Una breve descripción que explique el contenido o propósito.</div>
+                </div>
+                
+                <!-- Sección para subir archivo -->
+                <div id="file-section" class="mb-4">
+                    <label class="form-label">Archivo *</label>
+                    <div class="file-upload-container" id="dropzone">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h5 class="file-upload-text">Arrastra y suelta un archivo o haz clic para seleccionar</h5>
+                        <p class="file-upload-subtext">Formatos soportados: PDF, Word, Excel, PowerPoint, imágenes, videos (max. 10MB)</p>
+                        <input type="file" class="file-upload-input" id="file" name="file">
+                    </div>
+                    
+                    <!-- Previsualización del archivo -->
+                    <div class="preview-container" id="file-preview" style="display: none;"></div>
+                </div>
+                
+                <!-- Sección para URL -->
+                <div id="link-section" class="mb-4" style="display: none;">
+                    <label for="url" class="form-label">URL del recurso *</label>
+                    <input type="url" class="form-control" id="url" name="url" placeholder="https://ejemplo.com/recurso">
+                    <div class="form-text">La dirección web completa del recurso en línea.</div>
+                    
+                    <!-- Previsualización del enlace -->
+                    <div id="link-preview" class="link-preview" style="display: none;">
+                        <div class="link-preview-header">
+                            <div class="link-preview-icon">
+                                <i class="fas fa-link"></i>
+                            </div>
+                            <div class="link-preview-url" id="link-preview-text"></div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="check-link">
+                            <i class="fas fa-external-link-alt me-1"></i> Verificar enlace
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Botones de acción -->
+                <div class="action-buttons">
+                    <a href="{% url 'dashboard:student_portfolio_detail' portfolio.id %}" class="btn btn-outline-secondary btn-action">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-action">
+                        <i class="fas fa-save me-1"></i> Guardar material
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Selección de tipo de material
+        const typeOptions = document.querySelectorAll('.type-option');
+        const materialTypeInput = document.getElementById('material_type');
+        const fileSection = document.getElementById('file-section');
+        const linkSection = document.getElementById('link-section');
+        
+        typeOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                // Actualizar estado activo
+                typeOptions.forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Actualizar tipo seleccionado
+                const type = this.getAttribute('data-type');
+                materialTypeInput.value = type;
+                
+                // Mostrar/ocultar secciones correspondientes
+                if (type === 'file') {
+                    fileSection.style.display = 'block';
+                    linkSection.style.display = 'none';
+                } else if (type === 'link') {
+                    fileSection.style.display = 'none';
+                    linkSection.style.display = 'block';
+                }
+            });
+        });
+        
+        // Gestión de subida de archivos
+        const fileInput = document.getElementById('file');
+        const dropzone = document.getElementById('dropzone');
+        const filePreview = document.getElementById('file-preview');
+        
+        dropzone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            dropzone.style.borderColor = 'var(--primary-color)';
+            dropzone.style.backgroundColor = 'rgba(0, 92, 255, 0.05)';
+        });
+        
+        dropzone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            dropzone.style.borderColor = '#e0e6f7';
+            dropzone.style.backgroundColor = '#f9fafc';
+        });
+        
+        dropzone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropzone.style.borderColor = '#e0e6f7';
+            dropzone.style.backgroundColor = '#f9fafc';
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                updateFilePreview(e.dataTransfer.files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', function() {
+            if (this.files.length) {
+                updateFilePreview(this.files[0]);
+            }
+        });
+        
+        function updateFilePreview(file) {
+            const fileSize = formatFileSize(file.size);
+            const fileType = file.type.split('/')[0] || 'unknown';
+            let fileIcon = 'fas fa-file';
+            
+            // Determinar icono según tipo
+            if (fileType === 'image') fileIcon = 'fas fa-file-image';
+            else if (fileType === 'video') fileIcon = 'fas fa-file-video';
+            else if (fileType === 'audio') fileIcon = 'fas fa-file-audio';
+            else if (file.name.endsWith('.pdf')) fileIcon = 'fas fa-file-pdf';
+            else if (file.name.endsWith('.doc') || file.name.endsWith('.docx')) fileIcon = 'fas fa-file-word';
+            else if (file.name.endsWith('.xls') || file.name.endsWith('.xlsx')) fileIcon = 'fas fa-file-excel';
+            else if (file.name.endsWith('.ppt') || file.name.endsWith('.pptx')) fileIcon = 'fas fa-file-powerpoint';
+            
+            filePreview.innerHTML = `
+                <div class="preview-item">
+                    <div class="preview-icon">
+                        <i class="${fileIcon}"></i>
+                    </div>
+                    <div class="preview-info">
+                        <div class="preview-title">${file.name}</div>
+                        <div class="preview-meta">
+                            <div class="preview-size">${fileSize}</div>
+                            <div class="preview-type">${fileType}</div>
+                        </div>
+                    </div>
+                    <div class="preview-remove" id="remove-file">
+                        <i class="fas fa-times"></i>
+                    </div>
+                </div>
+            `;
+            
+            filePreview.style.display = 'block';
+            
+            // Agregar evento para eliminar archivo
+            document.getElementById('remove-file').addEventListener('click', function() {
+                fileInput.value = '';
+                filePreview.style.display = 'none';
+            });
+        }
+        
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Gestión de enlaces
+        const urlInput = document.getElementById('url');
+        const linkPreview = document.getElementById('link-preview');
+        const linkPreviewText = document.getElementById('link-preview-text');
+        const checkLinkButton = document.getElementById('check-link');
+        
+        urlInput.addEventListener('input', function() {
+            if (this.value) {
+                linkPreview.style.display = 'block';
+                linkPreviewText.textContent = this.value;
+            } else {
+                linkPreview.style.display = 'none';
+            }
+        });
+        
+        checkLinkButton.addEventListener('click', function() {
+            if (urlInput.value) {
+                window.open(urlInput.value, '_blank');
+            }
+        });
+        
+        // Validación del formulario
+        const form = document.getElementById('materialForm');
+        form.addEventListener('submit', function(e) {
+            // Validar según tipo seleccionado
+            if (materialTypeInput.value === 'file') {
+                if (!fileInput.files.length) {
+                    e.preventDefault();
+                    alert('Por favor, selecciona un archivo para subir.');
+                    return false;
+                }
+            } else if (materialTypeInput.value === 'link') {
+                if (!urlInput.value) {
+                    e.preventDefault();
+                    alert('Por favor, introduce una URL válida.');
+                    return false;
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 

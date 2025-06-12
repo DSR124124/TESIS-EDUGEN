@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editor de  | {{ contenido.titulo }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'content/css/editor.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0 text-gray-800">Editor de Contenido</h1>
+            <p class="text-muted">Edita y personaliza tu contenido generado con IA</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'content:dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Editor Visual</h6>
+                    <div class="dropdown no-arrow">
+                        <button class="btn btn-sm btn-primary dropdown-toggle" type="button" id="contentActionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            Acciones
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="contentActionsDropdown">
+                            <li><button type="submit" form="editor-form" name="guardar_continuar" class="dropdown-item">
+                                <i class="fas fa-save fa-sm fa-fw me-2 text-primary"></i> Guardar y continuar
+                            </button></li>
+                            <li><button type="submit" form="editor-form" name="guardar_publicar" class="dropdown-item">
+                                <i class="fas fa-check-circle fa-sm fa-fw me-2 text-success"></i> Guardar y publicar
+                            </button></li>
+                            <li><button type="submit" form="editor-form" name="guardar_convertir" class="dropdown-item">
+                                <i class="fas fa-file-archive fa-sm fa-fw me-2 text-warning"></i> Guardar y convertir a SCORM
+                            </button></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a href="{% url 'content:detalle_contenido' pk=contenido.id %}" class="dropdown-item">
+                                <i class="fas fa-eye fa-sm fa-fw me-2 text-info"></i> Vista previa
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="editor-form">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="{{ form.titulo.id_for_label }}">{{ form.titulo.label }}</label>
+                                    {{ form.titulo }}
+                                    {% if form.titulo.help_text %}
+                                    <small class="form-text text-muted">{{ form.titulo.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.estado.id_for_label }}">{{ form.estado.label }}</label>
+                                    {{ form.estado }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="{{ form.descripcion.id_for_label }}">{{ form.descripcion.label }}</label>
+                                    {{ form.descripcion }}
+                                    {% if form.descripcion.help_text %}
+                                    <small class="form-text text-muted">{{ form.descripcion.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label for="{{ form.nivel_educativo.id_for_label }}">{{ form.nivel_educativo.label }}</label>
+                                    {{ form.nivel_educativo }}
+                                </div>
+                                <div class="form-group mt-3">
+                                    <label for="{{ form.etiquetas.id_for_label }}">{{ form.etiquetas.label }}</label>
+                                    {{ form.etiquetas }}
+                                    {% if form.etiquetas.help_text %}
+                                    <small class="form-text text-muted">{{ form.etiquetas.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="{{ form.contenido_html.id_for_label }}">{{ form.contenido_html.label }}</label>
+                            {{ form.contenido_html }}
+                            {% if form.contenido_html.help_text %}
+                            <small class="form-text text-muted">{{ form.contenido_html.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="submit" name="guardar_continuar" class="btn btn-primary me-md-2">
+                                <i class="fas fa-save"></i> Guardar y continuar
+                            </button>
+                            <button type="submit" name="guardar_convertir" class="btn btn-warning">
+                                <i class="fas fa-file-archive"></i> Guardar y convertir a SCORM
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para buscar imágenes -->
+<div class="modal fade" id="imagenModal" tabindex="-1" aria-labelledby="imagenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="imagenModalLabel">Buscar imágenes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="buscarImagenForm" class="mb-4">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        {{ buscar_imagen_form.query }}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                    </div>
+                </form>
+                
+                <div id="resultadosImagenes" class="row">
+                    <div class="col-12 text-center">
+                        <p class="text-muted">Busca imágenes para incluir en tu contenido</p>
+                    </div>
+                </div>
+                
+                <div id="cargandoImagenes" class="text-center d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p>Buscando imágenes...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Configurar el formulario de búsqueda de imágenes
+        const buscarImagenForm = document.getElementById('buscarImagenForm');
+        const resultadosImagenes = document.getElementById('resultadosImagenes');
+        const cargandoImagenes = document.getElementById('cargandoImagenes');
+        
+        buscarImagenForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Mostrar cargando
+            resultadosImagenes.classList.add('d-none');
+            cargandoImagenes.classList.remove('d-none');
+            
+            // Obtener datos del formulario
+            const formData = new FormData(buscarImagenForm);
+            
+            // Realizar solicitud AJAX
+            fetch('{% url "content:buscar_imagenes" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Ocultar cargando
+                cargandoImagenes.classList.add('d-none');
+                resultadosImagenes.classList.remove('d-none');
+                
+                if (data.success) {
+                    // Mostrar resultados
+                    resultadosImagenes.innerHTML = '';
+                    
+                    if (data.imagenes.length === 0) {
+                        resultadosImagenes.innerHTML = '<div class="col-12 text-center"><p>No se encontraron imágenes para esta búsqueda</p></div>';
+                        return;
+                    }
+                    
+                    data.imagenes.forEach(imagen => {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-3 mb-3';
+                        
+                        col.innerHTML = `
+                            <div class="card h-100">
+                                <img src="${imagen.preview}" class="card-img-top" alt="${imagen.alt_text}">
+                                <div class="card-body">
+                                    <p class="card-text small text-muted">Fuente: ${imagen.source}</p>
+                                    <button type="button" class="btn btn-sm btn-primary insertar-imagen" 
+                                            data-url="${imagen.full_url}" data-alt="${imagen.alt_text}">
+                                        <i class="fas fa-plus-circle"></i> Insertar
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        
+                        resultadosImagenes.appendChild(col);
+                    });
+                    
+                    // Configurar botones para insertar imágenes
+                    document.querySelectorAll('.insertar-imagen').forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            const url = this.getAttribute('data-url');
+                            const alt = this.getAttribute('data-alt');
+                            
+                            // Insertar imagen en el editor
+                            if (typeof tinyMCE !== 'undefined') {
+                                tinyMCE.activeEditor.execCommand('mceInsertContent', false, `<img src="${url}" alt="${alt}" style="max-width: 100%; height: auto;" />`);
+                                
+                                // Cerrar modal
+                                const modal = bootstrap.Modal.getInstance(document.getElementById('imagenModal'));
+                                modal.hide();
+                            }
+                        });
+                    });
+                    
+                } else {
+                    // Mostrar error
+                    resultadosImagenes.innerHTML = `<div class="col-12 text-center"><p class="text-danger">${data.error || 'Error al buscar imágenes'}</p></div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                cargandoImagenes.classList.add('d-none');
+                resultadosImagenes.classList.remove('d-none');
+                resultadosImagenes.innerHTML = '<div class="col-12 text-center"><p class="text-danger">Error al procesar la solicitud</p></div>';
+            });
+        });
+        
+        // Configurar botones de búsqueda de imagen
+        document.querySelectorAll('.buscar-imagen-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const query = this.getAttribute('data-query');
+                document.getElementById('id_query').value = query;
+                
+                // Disparar búsqueda
+                buscarImagenForm.dispatchEvent(new Event('submit'));
+            });
+        });
+    });
+</script>
+{% endblock %} 

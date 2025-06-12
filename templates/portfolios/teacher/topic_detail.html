@@ -1,0 +1,1114 @@
+{% extends 'dashboard/teacher/base.html' %}
+{% load static %}
+
+{% block title %}{{ topic.title }} - Detalle del Tema{% endblock %}
+
+{% block head_extra %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        /* Esquema de colores principal - Revertido a colores estáticos */
+        --primary-color: #005CFF;       /* Azul intenso */
+        --primary-light: rgba(0, 92, 255, 0.1);
+        --secondary-color: #A142F5;     /* Púrpura vibrante */
+        --accent-color: #00CFFF;        /* Azul eléctrico */
+        --dark-accent: #3B0E6D;         /* Azul violeta oscuro */
+        --success-color: #10B981;
+        --warning-color: #F59E0B;
+        --danger-color: #EF4444;
+        --light-gray: #f5f7fa;
+        --medium-gray: #e9ecef;
+        --dark-gray: #495057;
+        --bg-dark: #0A0A0A;             /* Fondo negro degradado */
+        --card-bg: #FFFFFF;
+        --text-primary: #333333;
+        --text-secondary: #6B7280;
+        --border-radius: 12px;
+        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.12);
+        --transition-fast: all 0.2s ease;
+        --transition-normal: all 0.3s ease;
+    }
+
+  /* Content Container */
+  .content-container {
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  
+  @media (max-width: 768px) {
+    .content-container {
+      padding: 15px;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .content-container {
+      padding: 10px;
+    }
+  }
+
+  /* Breadcrumb Navigation */
+  .dashboard-breadcrumb {
+    margin-bottom: 20px;
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  .breadcrumb {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 12px 20px;
+    margin-bottom: 0;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(10px);
+  }
+
+  .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+  }
+
+  .breadcrumb-item + .breadcrumb-item::before {
+    content: '›';
+    color: var(--text-secondary);
+    margin: 0 12px;
+    font-weight: 600;
+    font-size: 1.1rem;
+  }
+
+  .breadcrumb-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary-color);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: var(--transition-fast);
+    font-weight: 500;
+  }
+
+  .breadcrumb-link:hover {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    transform: translateX(2px);
+  }
+
+  .breadcrumb-link i {
+    font-size: 0.85rem;
+  }
+
+  .breadcrumb-item.active {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  .breadcrumb-item.active i {
+    font-size: 0.85rem;
+    color: var(--primary-color);
+  }
+
+    /* Dashboard Header Improvements */
+    .dashboard-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: var(--border-radius);
+        padding: 25px;
+        color: white;
+        box-shadow: 0 5px 15px rgba(0, 92, 255, 0.2);
+        margin-bottom: 25px;
+        position: relative;
+        overflow: hidden;
+        transition: var(--transition-normal);
+        transform: translateY(0);
+        animation: headerFadeIn 0.5s ease-out;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 250px;
+        height: 100%;
+        background: url('{% static "img/pattern-dots.png" %}') no-repeat;
+        background-size: cover;
+        opacity: 0.15;
+    }
+    
+    @keyframes headerFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .dashboard-header:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+    }
+
+    /* Header Content */
+    .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        z-index: 2;
+    }
+    
+    .header-left {
+        flex: 1;
+    }
+    
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .welcome-message {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .greeting-text {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+    }
+
+  /* Materials Section */
+  .bg-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+    border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .material-actions .btn {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: var(--transition-fast);
+    font-weight: 500;
+  }
+
+  .material-actions .btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+  }
+
+    /* Section Titles */
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        color: var(--text-primary);
+        position: relative;
+        padding-left: 0.75rem;
+        display: flex;
+        align-items: center;
+        line-height: 1.1;
+    }
+    
+    .section-title::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+        border-radius: 10px;
+    }
+
+    /* Module Container */
+    .module-container {
+        background: white;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 25px;
+        position: relative;
+        transition: var(--transition-normal);
+        border: none;
+    }
+    
+    .module-container:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15);
+    }
+
+    .card.shadow-sm {
+        border: none;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        transition: var(--transition-normal);
+        background: white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .card.shadow-sm:hover {
+        box-shadow: 0 8px 25px rgba(0, 92, 255, 0.15) !important;
+        transform: translateY(-5px);
+    }
+
+    .card-header {
+        background: var(--light-gray);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        padding: 15px 20px;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    /* Badge Improvements */
+    .badge {
+        border-radius: 50px;
+        font-weight: 500;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .badge.bg-white {
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* List Group Improvements */
+    .list-group-item {
+        border: none;
+        border-radius: 8px !important;
+        margin-bottom: 8px;
+        transition: var(--transition-fast);
+        box-shadow: var(--shadow-sm);
+    }
+
+    .list-group-item:hover {
+        transform: translateX(5px);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Custom Scrollbar */
+    .material-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .material-list::-webkit-scrollbar-track {
+        background: var(--light-gray);
+        border-radius: 3px;
+    }
+
+    .material-list::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border-radius: 3px;
+    }
+
+    .material-list::-webkit-scrollbar-thumb:hover {
+        background: var(--primary-color);
+    }
+
+  .material-item {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--primary-color);
+    transition: var(--transition-fast);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .material-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 92, 255, 0.12);
+    border-left-width: 6px;
+  }
+
+  .material-item.ai-material {
+    border-left-color: var(--success-color);
+  }
+
+  .materials-list {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 8px;
+  }
+
+  .materials-list::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .materials-list::-webkit-scrollbar-track {
+    background: var(--light-gray);
+    border-radius: 10px;
+  }
+
+  .materials-list::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 10px;
+  }
+
+  .materials-list::-webkit-scrollbar-thumb:hover {
+    background: var(--secondary-color);
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    font-weight: 500;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+  }
+
+  .empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+  }
+
+  /* Animaciones */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInFromLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Button Improvements */
+  .btn {
+    border-radius: 50px;
+    font-weight: 500;
+    transition: var(--transition-normal);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    box-shadow: 0 4px 10px rgba(0, 92, 255, 0.2);
+  }
+
+  .btn-primary:hover {
+    box-shadow: 0 6px 15px rgba(0, 92, 255, 0.3);
+  }
+
+  .btn-outline-primary {
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+  }
+
+  .btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+
+  .btn-outline-light {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    transition: var(--transition-fast);
+    font-weight: 500;
+  }
+
+  .btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
+  }
+
+  /* Alert Improvements */
+  .alert {
+    border-radius: var(--border-radius);
+    border: none;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .alert-info {
+    background: linear-gradient(135deg, rgba(0, 92, 255, 0.1), rgba(161, 66, 245, 0.1));
+    border-left: 4px solid var(--primary-color);
+  }
+</style>
+{% endblock %}
+
+{% block teacher_content %}
+<div class="content-container">
+    <!-- Mensajes flotantes -->
+    {% include 'partials/_messages.html' %}
+
+    <!-- Breadcrumb Navigation -->
+    <nav class="dashboard-breadcrumb" aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a href="{% url 'dashboard:teacher' %}" class="breadcrumb-link">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            {% if topic.portfolio %}
+                <li class="breadcrumb-item">
+                    <a href="{% url 'portfolios:teacher_portfolio_list' %}" class="breadcrumb-link">
+                        <i class="fas fa-folder-open"></i>
+                        <span>Portafolios</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a href="{% url 'portfolios:teacher_portfolio_detail' topic.portfolio.id %}" class="breadcrumb-link">
+                        <i class="fas fa-user-graduate"></i>
+                        <span>{{ topic.portfolio.student.user.get_full_name }}</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <i class="fas fa-book"></i>
+                    <span>{{ topic.title }}</span>
+                </li>
+            {% else %}
+                <li class="breadcrumb-item">
+                    <a href="{% url 'dashboard:teacher_section_detail' topic.section.id %}" class="breadcrumb-link">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        <span>{{ topic.section.grade.name }} - {{ topic.section.name }}</span>
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">
+                    <i class="fas fa-book"></i>
+                    <span>{{ topic.title }}</span>
+                </li>
+            {% endif %}
+        </ol>
+    </nav>
+
+    <!-- Dashboard Header -->
+    <div class="dashboard-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-1">{{ topic.title }}</h2>
+                {% if topic.portfolio %}
+                    <p class="mb-0">{{ topic.course.name }} - {{ topic.portfolio.student.user.get_full_name }}</p>
+                {% else %}
+                    <p class="mb-0">{{ topic.course.name }} - {{ topic.section.grade.name }} Sección {{ topic.section.name }}</p>
+                {% endif %}
+            </div>
+            {% if not topic.portfolio %}
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{% url 'dashboard:teacher_section_detail' topic.section.id %}" class="btn btn-outline-light">
+                        <i class="fas fa-chalkboard-teacher me-2"></i> Ir a Sección
+                    </a>
+                    <span class="btn btn-light disabled" title="Los temas de curso se editan desde la gestión de secciones">
+                        <i class="fas fa-lock me-2"></i> Solo lectura
+                    </span>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+        
+        <!-- Contenedor para notificaciones temporales -->
+        <div id="notification-container" class="position-fixed" style="top: 80px; right: 20px; z-index: 1050; max-width: 400px;"></div>
+        
+        <!-- Información del tema -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información del tema</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6 class="fw-bold">Descripción</h6>
+                        <p>{{ topic.description|default:"No hay descripción disponible para este tema." }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <h6 class="fw-bold">Fecha de creación</h6>
+                            <p class="mb-0">{{ topic.created_at|date:"d/m/Y" }}</p>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold">Última actualización</h6>
+                            <p class="mb-0">{{ topic.updated_at|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Materiales -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-gradient">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1 text-white fw-bold">
+                            <i class="fas fa-folder-open me-2"></i>Materiales del Tema
+                        </h5>
+                        <div class="d-flex gap-2 mt-2">
+                            <span class="badge bg-white text-primary">
+                                <i class="fas fa-list me-1"></i>Total: {{ materials|length|default:0 }}
+                            </span>
+                            {% if regular_materials_count > 0 %}
+                            <span class="badge bg-info">
+                                <i class="fas fa-users me-1"></i>Clase: {{ regular_materials_count }}
+                            </span>
+                            {% endif %}
+                            {% if ai_materials_count > 0 %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-robot me-1"></i>IA: {{ ai_materials_count }}
+                            </span>
+                            {% endif %}
+                            {% if materials|length == 0 %}
+                            <span class="badge bg-light text-muted">
+                                <i class="fas fa-inbox me-1"></i>Sin materiales
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if not topic.portfolio %}
+                    <!-- Interfaz para CourseTopic -->
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-info-circle me-3 fa-2x text-primary"></i>
+                            <div>
+                                <h6 class="mb-1">Tema de Curso/Sección</h6>
+                                <p class="mb-0">Este tema está disponible para todos los estudiantes de <strong>{{ topic.section.grade.name }} - Sección {{ topic.section.name }}</strong>.</p>
+                                {% if total_students %}
+                                    <small class="text-muted">Estudiantes con acceso: {{ total_students }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lista de estudiantes -->
+                    {% if students_with_topics %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-users me-2"></i>Estudiantes
+                                <span class="badge bg-primary rounded-pill ms-2">{{ total_students }}</span>
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for student_data in students_with_topics %}
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1 fw-bold">{{ student_data.student.user.get_full_name }}</h6>
+                                                    <small class="text-muted">{{ student_data.student.user.email }}</small>
+                                                </div>
+                                                <div class="btn-group">
+                                                    <a href="{% url 'portfolios:topic_detail' topic_id=student_data.portfolio_topic.id %}" 
+                                                       class="btn btn-primary btn-sm" title="Ver portafolio individual">
+                                                        <i class="fas fa-folder-open"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if class_materials %}
+                        <div class="row">
+                            <!-- COLUMNA 1: MATERIAL DE CLASE -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-0 fw-bold">
+                                                    <i class="fas fa-users me-2 text-primary"></i>Material de Clase
+                                                    {% if regular_materials_count > 0 %}
+                                                    <span class="badge bg-primary rounded-pill ms-2">{{ regular_materials_count }}</span>
+                                                    {% endif %}
+                                                </h5>
+                                                <small class="text-muted">Compartido con todos los estudiantes</small>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="materials-list">
+                                            {% for material in class_materials %}
+                                                <div class="material-item {% if material.ai_generated %}ai-material{% endif %}" data-material-id="{{ material.id }}">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-1 fw-bold">
+                                                                {{ material.title }}
+                                                                {% if material.ai_generated %}
+                                                                <span class="badge bg-info badge-sm ms-1">IA</span>
+                                                                {% else %}
+                                                                <span class="badge bg-primary badge-sm ms-1">Clase</span>
+                                                                {% endif %}
+                                                            </h6>
+                                                            <p class="mb-1 text-muted small">
+                                                                <i class="fas fa-calendar-alt me-1"></i> {{ material.created_at|date:"d/m/Y H:i" }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="btn-group">
+                                                            {% if material.file %}
+                                                                <a href="{{ material.file.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                                                    <i class="fas fa-download me-1"></i> Descargar
+                                                                </a>
+                                                            {% endif %}
+                                                            
+                                                            <!-- Comprobar si es un SCORM -->
+                                                            {% if material.scorm_package %}
+                                                                {% if material.scorm_package.package_file %}
+                                                                    <a href="{% url 'scorm_packager:download_scorm_package' material.scorm_package.id %}" 
+                                                                       class="btn btn-primary btn-sm"
+                                                                       title="Descargar Paquete SCORM">
+                                                                        <i class="fas fa-download me-1"></i> SCORM
+                                                                    </a>
+                                                                {% else %}
+                                                                    <span class="btn btn-outline-secondary btn-sm disabled" 
+                                                                          title="Paquete SCORM no disponible">
+                                                                        <i class="fas fa-exclamation-triangle me-1"></i> SCORM
+                                                                    </span>
+                                                                {% endif %}
+                                                            {% elif material.material_type == 'SCORM' %}
+                                                                <!-- Material marcado como SCORM pero sin paquete -->
+                                                                <span class="btn btn-outline-warning btn-sm disabled" 
+                                                                      title="Material SCORM sin paquete asociado">
+                                                                    <i class="fas fa-cog me-1"></i> SCORM
+                                                                </span>
+                                                            {% endif %}
+                                                            
+                                                            <a href="{% url 'portfolios:delete_portfolio_material' material_id=material.id %}" 
+                                                               class="btn btn-outline-danger btn-sm"
+                                                               onclick="return confirm('¿Estás seguro de eliminar este material?');">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                            {% if regular_materials_count == 0 %}
+                                                <div class="empty-state">
+                                                    <i class="fas fa-users"></i>
+                                                    <h6 class="mb-2">No hay materiales de clase</h6>
+                                                    <p class="mb-0 small">Sube un archivo utilizando el botón "Subir".</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- COLUMNA 2: MATERIAL PERSONALIZADO (para CourseTopic) -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-0 fw-bold">
+                                                    <i class="fas fa-user me-2 text-success"></i>Material Personalizado
+                                                    {% if ai_materials_count > 0 %}
+                                                    <span class="badge bg-success rounded-pill ms-2">{{ ai_materials_count }}</span>
+                                                    {% endif %}
+                                                </h5>
+                                                <small class="text-muted">Específico para este estudiante únicamente</small>
+                                            </div>
+                                            <div class="btn-group">
+                                                <a href="{% url 'portfolios:add_material_form' topic_id=topic.id %}?type=personal" class="btn btn-outline-success btn-sm">
+                                                    <i class="fas fa-upload me-1"></i> Subir
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="materials-list">
+                                            {% for material in portfolio_ai_materials %}
+                                                <div class="material-item {% if material.ai_generated %}ai-material{% endif %}" data-material-id="{{ material.id }}">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-1 fw-bold">
+                                                                {{ material.title }}
+                                                                {% if material.ai_generated %}
+                                                                <span class="badge bg-info badge-sm ms-1">IA</span>
+                                                                {% else %}
+                                                                <span class="badge bg-success badge-sm ms-1">Personal</span>
+                                                                {% endif %}
+                                                            </h6>
+                                                            <p class="mb-1 text-muted small">
+                                                                <i class="fas fa-calendar-alt me-1"></i> {{ material.created_at|date:"d/m/Y H:i" }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="btn-group">
+                                                            {% if material.file %}
+                                                                <a href="{{ material.file.url }}" class="btn btn-outline-success btn-sm" target="_blank">
+                                                                    <i class="fas fa-download me-1"></i> Descargar
+                                                                </a>
+                                                            {% endif %}
+                                                            
+                                                            <!-- Comprobar si es un SCORM -->
+                                                            {% if material.scorm_package %}
+                                                                {% if material.scorm_package.package_file %}
+                                                                    <a href="{% url 'scorm_packager:download_scorm_package' material.scorm_package.id %}" 
+                                                                       class="btn btn-primary btn-sm"
+                                                                       title="Descargar Paquete SCORM">
+                                                                        <i class="fas fa-download me-1"></i> SCORM
+                                                                    </a>
+                                                                {% else %}
+                                                                    <span class="btn btn-outline-secondary btn-sm disabled" 
+                                                                          title="Paquete SCORM no disponible">
+                                                                        <i class="fas fa-exclamation-triangle me-1"></i> SCORM
+                                                                    </span>
+                                                                {% endif %}
+                                                            {% elif material.material_type == 'SCORM' %}
+                                                                <!-- Material marcado como SCORM pero sin paquete -->
+                                                                <span class="btn btn-outline-warning btn-sm disabled" 
+                                                                      title="Material SCORM sin paquete asociado">
+                                                                    <i class="fas fa-cog me-1"></i> SCORM
+                                                                </span>
+                                                            {% endif %}
+                                                            
+                                                            <a href="{% url 'portfolios:delete_portfolio_material' material_id=material.id %}" 
+                                                               class="btn btn-outline-danger btn-sm"
+                                                               onclick="return confirm('¿Estás seguro de eliminar este material?');">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                            {% if ai_materials_count == 0 %}
+                                                <div class="text-center p-4">
+                                                    <i class="fas fa-user text-muted fa-2x mb-3"></i>
+                                                    <p class="mb-0">No hay materiales personalizados disponibles.</p>
+                                                    <p class="text-muted">Sube archivos específicos o genera contenido con IA.</p>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="empty-state py-5">
+                            <i class="fas fa-folder-open"></i>
+                            <h5 class="mt-3">No hay materiales disponibles</h5>
+                            <p class="mb-4">Aún no se han agregado materiales a este tema del portafolio.</p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    {% if materials %}
+                        <div class="row">
+                            <!-- COLUMNA 1: MATERIAL DE CLASE -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-0 fw-bold">
+                                                    <i class="fas fa-users me-2 text-primary"></i>Material de Clase
+                                                    {% if regular_materials_count > 0 %}
+                                                    <span class="badge bg-primary rounded-pill ms-2">{{ regular_materials_count }}</span>
+                                                    {% endif %}
+                                                </h5>
+                                                <small class="text-muted">Compartido con todos los estudiantes</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="materials-list">
+                                            {% for material in class_materials %}
+                                                <div class="material-item {% if material.ai_generated %}ai-material{% endif %}" data-material-id="{{ material.id }}">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-1 fw-bold">
+                                                                {{ material.title }}
+                                                                {% if material.ai_generated %}
+                                                                <span class="badge bg-info badge-sm ms-1">IA</span>
+                                                                {% else %}
+                                                                <span class="badge bg-primary badge-sm ms-1">Clase</span>
+                                                                {% endif %}
+                                                            </h6>
+                                                            <p class="mb-1 text-muted small">
+                                                                <i class="fas fa-calendar-alt me-1"></i> {{ material.created_at|date:"d/m/Y H:i" }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="btn-group">
+                                                            {% if material.file %}
+                                                                <a href="{{ material.file.url }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                                                                    <i class="fas fa-download me-1"></i> Descargar
+                                                                </a>
+                                                            {% endif %}
+                                                            
+                                                            <!-- Comprobar si es un SCORM -->
+                                                            {% if material.scorm_package %}
+                                                                {% if material.scorm_package.package_file %}
+                                                                    <a href="{% url 'scorm_packager:download_scorm_package' material.scorm_package.id %}" 
+                                                                       class="btn btn-primary btn-sm"
+                                                                       title="Descargar Paquete SCORM">
+                                                                        <i class="fas fa-download me-1"></i> SCORM
+                                                                    </a>
+                                                                {% else %}
+                                                                    <span class="btn btn-outline-secondary btn-sm disabled" 
+                                                                          title="Paquete SCORM no disponible">
+                                                                        <i class="fas fa-exclamation-triangle me-1"></i> SCORM
+                                                                    </span>
+                                                                {% endif %}
+                                                            {% elif material.material_type == 'SCORM' %}
+                                                                <!-- Material marcado como SCORM pero sin paquete -->
+                                                                <span class="btn btn-outline-warning btn-sm disabled" 
+                                                                      title="Material SCORM sin paquete asociado">
+                                                                    <i class="fas fa-cog me-1"></i> SCORM
+                                                                </span>
+                                                            {% endif %}
+                                                            
+                                                            <a href="{% url 'portfolios:delete_portfolio_material' material_id=material.id %}" 
+                                                               class="btn btn-outline-danger btn-sm"
+                                                               onclick="return confirm('¿Estás seguro de eliminar este material?');">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                                                        {% if class_materials|length == 0 %}
+                                <div class="text-center p-4">
+                                    <i class="fas fa-users text-muted fa-2x mb-3"></i>
+                                    <p class="mb-0">No hay materiales de clase disponibles.</p>
+                                    <p class="text-muted">Sube un archivo utilizando el botón "Subir".</p>
+                                </div>
+                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- COLUMNA 2: MATERIAL PERSONALIZADO -->
+                            <div class="col-md-6 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-light">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h5 class="mb-0 fw-bold">
+                                                    <i class="fas fa-user me-2 text-success"></i>Material Personalizado
+                                                    {% if personal_materials_count > 0 or ai_materials_count > 0 %}
+                                                    <span class="badge bg-success rounded-pill ms-2">{{ personal_materials_count|add:ai_materials_count }}</span>
+                                                    {% endif %}
+                                                </h5>
+                                                <small class="text-muted">Específico para este estudiante únicamente</small>
+                                            </div>
+                                            <div class="btn-group">
+                                                <a href="{% url 'portfolios:add_material_form' topic_id=topic.id %}?type=personal" class="btn btn-outline-success btn-sm">
+                                                    <i class="fas fa-upload me-1"></i> Subir
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-3">
+                                        <div class="materials-list">
+                                            {% for material in portfolio_ai_materials %}
+                                                <div class="material-item {% if material.ai_generated %}ai-material{% endif %}" data-material-id="{{ material.id }}">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <h6 class="mb-1 fw-bold">
+                                                                {{ material.title }}
+                                                                {% if material.ai_generated %}
+                                                                <span class="badge bg-info badge-sm ms-1">IA</span>
+                                                                {% else %}
+                                                                <span class="badge bg-success badge-sm ms-1">Personal</span>
+                                                                {% endif %}
+                                                            </h6>
+                                                            <p class="mb-1 text-muted small">
+                                                                <i class="fas fa-calendar-alt me-1"></i> {{ material.created_at|date:"d/m/Y H:i" }}
+                                                            </p>
+                                                        </div>
+                                                        <div class="btn-group">
+                                                            {% if material.file %}
+                                                                <a href="{{ material.file.url }}" class="btn btn-outline-success btn-sm" target="_blank">
+                                                                    <i class="fas fa-download me-1"></i> Descargar
+                                                                </a>
+                                                            {% endif %}
+                                                            
+                                                            <!-- Comprobar si es un SCORM -->
+                                                            {% if material.scorm_package %}
+                                                                {% if material.scorm_package.package_file %}
+                                                                    <a href="{% url 'scorm_packager:download_scorm_package' material.scorm_package.id %}" 
+                                                                       class="btn btn-primary btn-sm"
+                                                                       title="Descargar Paquete SCORM">
+                                                                        <i class="fas fa-download me-1"></i> SCORM
+                                                                    </a>
+                                                                {% else %}
+                                                                    <span class="btn btn-outline-secondary btn-sm disabled" 
+                                                                          title="Paquete SCORM no disponible">
+                                                                        <i class="fas fa-exclamation-triangle me-1"></i> SCORM
+                                                                    </span>
+                                                                {% endif %}
+                                                            {% elif material.material_type == 'SCORM' %}
+                                                                <!-- Material marcado como SCORM pero sin paquete -->
+                                                                <span class="btn btn-outline-warning btn-sm disabled" 
+                                                                      title="Material SCORM sin paquete asociado">
+                                                                    <i class="fas fa-cog me-1"></i> SCORM
+                                                                </span>
+                                                            {% endif %}
+                                                            
+                                                            <a href="{% url 'portfolios:delete_portfolio_material' material_id=material.id %}" 
+                                                               class="btn btn-outline-danger btn-sm"
+                                                               onclick="return confirm('¿Estás seguro de eliminar este material?');">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                                                        {% if portfolio_ai_materials|length == 0 %}
+                                <div class="empty-state">
+                                    <i class="fas fa-user"></i>
+                                    <h6 class="mb-2">No hay materiales personalizados</h6>
+                                    <p class="mb-0 small">Sube archivos específicos para este estudiante.</p>
+                                </div>
+                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+
+                        
+                        <!-- SECCIÓN ELIMINADA: Ya no se muestran materiales de otros temas -->
+                    {% else %}
+                        <div class="empty-state py-5">
+                            <i class="fas fa-folder-open"></i>
+                            <h5 class="mt-3">No hay materiales disponibles</h5>
+                            <p class="mb-4">Aún no se han agregado materiales a este tema del portafolio.</p>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Scroll to SCORM section if hash is present
+        if (window.location.hash === '#scorm') {
+            const scormElement = document.getElementById('scorm');
+            if (scormElement) {
+                scormElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                scormElement.classList.add('highlight-scorm');
+                setTimeout(() => {
+                    scormElement.classList.remove('highlight-scorm');
+                }, 3000);
+            }
+        }
+    
+        // Mobile touch interaction for swipe
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        if (isMobile) {
+            // Add swipe functionality to material items
+            document.querySelectorAll('.material-item').forEach(item => {
+                let startX, startY, touchStartTime;
+                
+                item.addEventListener('touchstart', e => {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                    touchStartTime = new Date().getTime();
+                }, {passive: true});
+                
+                item.addEventListener('touchend', e => {
+                    const endX = e.changedTouches[0].clientX;
+                    const endY = e.changedTouches[0].clientY;
+                    const touchEndTime = new Date().getTime();
+                    const touchDuration = touchEndTime - touchStartTime;
+                    
+                    // Calculate distance and direction
+                    const diffX = startX - endX;
+                    const diffY = startY - endY;
+                    
+                    // Only detect horizontal swipes (more horizontal than vertical)
+                    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50 && touchDuration < 250) {
+                        // Get the button group
+                        const btnGroup = item.querySelector('.btn-group');
+                        
+                        // Swipe left - show buttons
+                        if (diffX > 50) {
+                            // First reset any other swiped items
+                            document.querySelectorAll('.material-item').forEach(otherItem => {
+                                if (otherItem !== item) {
+                                    otherItem.querySelector('.btn-group').style.display = 'none';
+                                }
+                            });
+                            
+                            // Then show this item's buttons
+                            btnGroup.style.display = 'flex';
+                            btnGroup.style.width = '100%';
+                            btnGroup.style.justifyContent = 'space-between';
+                        }
+                        
+                        // Swipe right - hide buttons
+                        if (diffX < -50) {
+                            btnGroup.style.display = 'none';
+                        }
+                    }
+                }, {passive: true});
+            });
+        }
+    });
+    
+    // Ejecutar al cargar la página
+    // handlePageNotifications(); // Comentado porque la función no está definida
+    
+    // Sistema de notificaciones básico
+    window.showNotification = function(message, type) {
+        const container = document.getElementById('notification-container');
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-' + (type || 'success') + ' alert-dismissible fade show';
+        alert.innerHTML = '<span>' + message + '</span><button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+        container.appendChild(alert);
+        
+        setTimeout(function() {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 4000);
+    };
+</script>
+
+{% endblock %} 
