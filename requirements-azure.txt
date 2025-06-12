@@ -20,6 +20,10 @@ tqdm>=4.65.0
 # Rich text editor
 django-tinymce==3.7.1
 
+# Formularios mejorados
+django-crispy-forms>=2.0
+crispy-bootstrap4>=2022.1
+
 # Autenticación social
 django-allauth==0.61.1
 social-auth-app-django==5.4.0
@@ -46,4 +50,10 @@ python-decouple>=3.8
 azure-storage-blob>=12.14.0
 django-storages[azure]>=1.13.2
 gunicorn>=20.1.0
-dnspython>=2.3.0 
+dnspython>=2.3.0
+
+# Dependencias adicionales comunes
+django-cors-headers>=4.0.0
+Faker>=19.0.0
+python-dateutil>=2.8.0
+pytz>=2023.3 
