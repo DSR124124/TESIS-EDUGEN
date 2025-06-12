@@ -1,0 +1,101 @@
+# Git
+.git
+.gitignore
+README.md
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media
+
+# Archivos de desarrollo
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js (si tienes frontend)
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos temporales
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Documentación
+docs/
+*.md
+
+# Archivos de Azure
+.azure/
+
+# Archivos de backup
+*.bak
+*.backup
+
+# Archivos de logs
+logs/
+*.log
+
+# Archivos de testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de sistema
+*.pid
+*.seed
+*.pid.lock
+
+# Archivos de deployment específicos
+docker-compose.override.yml
+docker-compose.local.yml 

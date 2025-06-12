@@ -1,0 +1,71 @@
+apiVersion: 2021-03-01
+location: eastus
+name: edugen-container-group
+properties:
+  containers:
+  - name: edugen-web
+    properties:
+      image: acredugen.azurecr.io/edugen-web:latest
+      resources:
+        requests:
+          cpu: 1.0
+          memoryInGb: 2.0
+      ports:
+      - port: 8000
+        protocol: TCP
+      environmentVariables:
+      # Base de datos
+      - name: PGHOST
+        value: "edugen-postgres-server.postgres.database.azure.com"
+      - name: PGPORT
+        value: "5432"
+      - name: PGDATABASE
+        value: "edugen"
+      - name: PGUSER
+        value: "postgres"
+      - name: PGPASSWORD
+        secureValue: "EduGen123!"
+      
+      # Django
+      - name: DJANGO_SETTINGS_MODULE
+        value: "config.settings.azure_production"
+      - name: DEBUG
+        value: "False"
+      - name: SECRET_KEY
+        secureValue: "django-insecure-azure-container-key-2024-change-in-production-x9k8j7h6g5"
+      - name: ALLOWED_HOSTS
+        value: "edugen-app-unique.eastus.azurecontainer.io,localhost,127.0.0.1"
+      
+      # Google OAuth
+      - name: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+        value: "50661052209-7g0jf8e59ea1tme1sqaa80mgouibuj01.apps.googleusercontent.com"
+      - name: SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+        secureValue: "AIzaSyDbaO4sVGS5_dCMV1r4yizjzqAoakAnME0"
+      
+      # IA
+      - name: DEEPSEEK_API_KEY
+        secureValue: "sk-f1bfb13127b14daf97788bb0232a5584"
+      - name: AI_PROVIDER
+        value: "deepseek"
+      
+      # Configuración adicional
+      - name: WEBSITE_HOSTNAME
+        value: "edugen-app-unique.eastus.azurecontainer.io"
+      - name: CSRF_TRUSTED_ORIGINS
+        value: "https://edugen-app-unique.eastus.azurecontainer.io"
+        
+  osType: Linux
+  restartPolicy: Always
+  ipAddress:
+    type: Public
+    ports:
+    - protocol: TCP
+      port: 8000
+    dnsNameLabel: edugen-app-unique
+  imageRegistryCredentials:
+  - server: acredugen.azurecr.io
+    username: acredugen
+    password: "[tu-password-del-acr]"
+tags:
+  Environment: Production
+  Application: EduGen 
