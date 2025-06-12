@@ -13,16 +13,16 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: 📦 Checkout code
       uses: actions/checkout@v4
-      
+
     - name: 🐍 Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: ${{ env.PYTHON_VERSION }}
-        
+
     - name: 📋 Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -34,9 +34,9 @@ jobs:
         pip install --no-cache-dir --force-reinstall -r requirements-azure.txt
         pip list
 
-    - name: 🧪 Test ONLY imports (NO Django setup)
+    - name: 🧺a Test ONLY imports (NO Django setup)
       run: |
-        echo "🧪 Testing critical imports..."
+        echo "🧺a Testing critical imports..."
         python -c "import django; print('✅ Django OK')" || echo "❌ Django import failed"
         python -c "import rest_framework; print('✅ DRF OK')" || echo "❌ rest_framework import failed"
         python -c "import crispy_forms; print('✅ crispy_forms OK')" || echo "❌ crispy_forms import failed"
@@ -44,28 +44,28 @@ jobs:
         python -c "import social_django; print('✅ social_django OK')" || echo "❌ social_django import failed"
         python -c "import corsheaders; print('✅ corsheaders OK')" || echo "❌ corsheaders import failed"
 
-    - name: 🧪 Test Django setup with production settings
+    - name: 🧺a Test Django setup with production settings
       run: |
-        export DJANGO_SETTINGS_MODULE="config.settings.production"
+        export DJANGO_SETTINGS_MODULE="config.settings.azure_production"
         python -c "import os; print(f'DJANGO_SETTINGS_MODULE={os.environ.get(\"DJANGO_SETTINGS_MODULE\")}')"
         python -c "import django; django.setup(); print('✅ Django setup successful')"
 
     - name: 📁 Collect static files
       run: |
-        export DJANGO_SETTINGS_MODULE="config.settings.production"
+        export DJANGO_SETTINGS_MODULE="config.settings.azure_production"
         echo "🔧 Running collectstatic..."
         python manage.py collectstatic --noinput --clear
 
     - name: 🗂️ Prepare deployment
       run: |
-        echo "🧹 Cleaning unnecessary files..."
+        echo "🥹 Cleaning unnecessary files..."
         rm -rf .git .github
         find . -name "*.pyc" -delete
         find . -name "__pycache__" -type d -exec rm -rf {} + || true
         chmod +x startup.sh || true
         echo "✅ Deployment preparation completed"
 
-    - name: 🧹 Clean Azure deployment state
+    - name: 🥹 Clean Azure deployment state
       run: |
         echo "⏱️ Waiting to prevent SCM restart conflict..."
         sleep 90
