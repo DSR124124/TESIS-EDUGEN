@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 import zipfile
 import tempfile
 
-from .models import ContenidoInteractivo, ContenidoRecurso, TipoContenido
+from .models import ContenidoInteractivo, ContenidoRecurso
 from .forms import PrompterForm, EditorContenidoForm, RecursoForm, BuscarImagenForm
 from .services.image_service import image_service
 from .services.scorm_service import scorm_generator
