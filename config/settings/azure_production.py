@@ -8,44 +8,36 @@ from .base import *
 # CONFIGURACIÓN DE SEGURIDAD
 # ==========================================
 
+# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-SECRET_KEY = os.environ.get('SECRET_KEY', 'change-this-in-production-for-security')
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-azure-temp-key-change-in-production')
 
-# Hosts permitidos para Azure App Service
+# Hosts permitidos en Azure
 ALLOWED_HOSTS = [
-    '.azurewebsites.net',
+    'edugen-app.azurewebsites.net',
+    '*.azurewebsites.net',
     'localhost',
-    '127.0.0.1',
+    '127.0.0.1'
 ]
 
 # Configuración HTTPS para Azure
-SECURE_SSL_REDIRECT = False  # Azure App Service maneja SSL automáticamente
+SECURE_SSL_REDIRECT = False  # Azure maneja SSL
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
 # ==========================================
-# BASE DE DATOS - POSTGRESQL AZURE
+# BASE DE DATOS - TEMPORALMENTE SQLite para que funcione
 # ==========================================
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE', 'edugen'),
-        'USER': os.getenv('PGUSER', 'postgres'),
-        'PASSWORD': os.environ.get('PGPASSWORD', 'EduGen123!'),  # Requerido
-        'HOST': os.getenv('PGHOST', 'edugen-db-2024-01.postgres.database.azure.com'),
-        'PORT': os.getenv('PGPORT', '5432'),
-        'OPTIONS': {
-            'sslmode': 'require',
-            'connect_timeout': 30,
-            'application_name': 'sistema_educativo',
-        },
-        'CONN_MAX_AGE': 600,  # Reutilizar conexiones por 10 minutos
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db' / 'azure_production.sqlite3',
     }
 }
 
-print("🔧 Usando PostgreSQL en Azure")
+print("🔧 Usando SQLite temporalmente")
 
 # ==========================================
 # AZURE BLOB STORAGE para archivos media
@@ -70,12 +62,12 @@ if AZURE_STORAGE_CONNECTION_STRING:
     print("🔧 Usando Azure Blob Storage")
 else:
     # Fallback a almacenamiento local
-    MEDIA_ROOT = os.path.join('/tmp', 'media')
+    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
     MEDIA_URL = '/media/'
     print("🔧 Usando almacenamiento local como fallback")
 
-# Configuración de archivos estáticos
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Configuración de archivos estáticos para Azure
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # ==========================================
@@ -166,30 +158,17 @@ SESSION_SAVE_EVERY_REQUEST = False
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
-    },
     'handlers': {
         'console': {
-            'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
         },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
     },
     'loggers': {
         'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'apps.ai_content_generator': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
@@ -349,7 +328,7 @@ AI_RETRY_DELAY = 3
 # ==========================================
 
 print("🚀 Configuración Azure Production cargada:")
-print(f"  • Database: PostgreSQL Azure")
+print(f"  • Database: SQLite temporal")
 print(f"  • Storage: {'Azure Blob' if AZURE_STORAGE_CONNECTION_STRING else 'Local'}")
 print(f"  • Cache: {'Redis' if REDIS_URL else 'Local Memory'}")
 print(f"  • AI Provider: {AI_CONFIG['provider'] if AI_CONFIG else 'None'}")
