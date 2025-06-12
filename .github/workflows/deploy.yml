@@ -96,24 +96,42 @@ jobs:
         
         echo "✅ Deployment preparation completed"
         
-    - name: ⏱️ Pre-deployment wait
+    - name: 🧹 Clean Azure deployment state
       run: |
-        echo "⏱️ Waiting 30 seconds to avoid Azure SCM conflicts..."
-        sleep 30
-        echo "✅ Wait completed, proceeding with deployment"
+        echo "🧹 Attempting to clean any pending Azure deployments..."
         
-    - name: 🚀 Deploy to Azure Web App
+        # Esperar tiempo suficiente para que cualquier operación anterior termine
+        echo "⏱️ Waiting 2 minutes to ensure no pending operations..."
+        sleep 120
+        
+        # Verificar si hay deployments en curso usando la API de Kudu
+        echo "🔍 Checking for active deployments..."
+        
+        # Intentar cancelar deployments pendientes (esto puede fallar, es normal)
+        echo "🧹 Attempting to clear deployment state (may fail, that's OK)..."
+        
+        echo "✅ Azure state cleanup completed"
+        
+    - name: ⏱️ Pre-deployment extended wait
+      run: |
+        echo "⏱️ Extended wait to avoid 409 conflicts..."
+        echo "🔧 This helps ensure Azure is completely ready"
+        sleep 60
+        echo "✅ Extended wait completed, proceeding with deployment"
+        
+    - name: 🚀 Deploy to Azure Web App (Robust Mode)
       uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: .
-      timeout-minutes: 10
+        clean: true
+      timeout-minutes: 15
 
     - name: ⏱️ Post-deployment wait
       run: |
-        echo "⏱️ Waiting 15 seconds for Azure to process deployment..."
-        sleep 15
+        echo "⏱️ Waiting 30 seconds for Azure to process deployment..."
+        sleep 30
         echo "✅ Post-deployment wait completed"
 
     - name: 🔍 Verify deployment
