@@ -46,7 +46,7 @@ fi
 
 # Ejecutar migraciones
 echo "🔄 Ejecutando migraciones..."
-python manage.py migrate
+python manage.py migrate --noinput
 
 # Crear tablas de sesiones específicamente
 echo "🔄 Asegurando tablas de sesiones..."
@@ -56,17 +56,9 @@ python manage.py migrate sessions
 echo "🧹 Limpiando sesiones expiradas..."
 python manage.py clearsessions || echo "⚠️ No se pudieron limpiar sesiones (normal en primera ejecución)"
 
-# Crear superusuario
+# Crear superusuario si no existe
 echo "👤 Configurando superusuario..."
-python manage.py shell -c "
-from django.contrib.auth import get_user_model
-User = get_user_model()
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@edugen.com', 'EduGenAdmin123!')
-    print('✅ Superusuario creado: admin/EduGenAdmin123!')
-else:
-    print('✅ Superusuario ya existe')
-"
+echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@edugen.com', 'EduGen123!')" | python manage.py shell
 
 echo "🌐 Iniciando servidor Gunicorn en puerto ${PORT:-8000}..."
 

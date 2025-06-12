@@ -34,7 +34,7 @@ properties:
       - name: SECRET_KEY
         secureValue: "django-insecure-azure-container-key-2024-change-in-production-x9k8j7h6g5"
       - name: ALLOWED_HOSTS
-        value: "edugen-app-unique.eastus.azurecontainer.io,localhost,127.0.0.1"
+        value: "edugen-app-unique.centralus.azurecontainer.io,localhost,127.0.0.1"
       
       # Google OAuth
       - name: SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
@@ -50,9 +50,9 @@ properties:
       
       # Configuración adicional
       - name: WEBSITE_HOSTNAME
-        value: "edugen-app-unique.eastus.azurecontainer.io"
+        value: "edugen-app-unique.centralus.azurecontainer.io"
       - name: CSRF_TRUSTED_ORIGINS
-        value: "https://edugen-app-unique.eastus.azurecontainer.io"
+        value: "https://edugen-app-unique.centralus.azurecontainer.io"
         
   osType: Linux
   restartPolicy: Always

@@ -7,7 +7,7 @@ Esta guía te llevará paso a paso para desplegar tu aplicación EduGen en Azure
 - **Azure CLI** instalado y configurado
 - **Docker** instalado localmente
 - **Cuenta de Azure** activa
-- **Azure Container Registry** (ACR) o **Docker Hub**
+- **Azure Container Registry** (ACR)
 - **Base de datos PostgreSQL** en Azure
 
 ## 🔧 Paso 1: Preparar el Entorno Local
@@ -34,34 +34,28 @@ az account show
 az account set --subscription "tu-subscription-id"
 ```
 
-### 1.3 Configurar variables de entorno
 
-```bash
-# Configurar variables (ajusta según tus necesidades)
-$RESOURCE_GROUP = "rg-edugen-containers"
-$LOCATION = "East US"
-$ACR_NAME = "acredugen"
-$CONTAINER_NAME = "edugen-app"
-$IMAGE_NAME = "edugen-web"
-$DNS_LABEL = "edugen-app-unique"  # Debe ser único globalmente
-```
 
 ## 🏗️ Paso 2: Crear Recursos en Azure
 
 ### 2.1 Crear Resource Group
 
 ```bash
-az group create --name $RESOURCE_GROUP --location $LOCATION
+# Crear grupo de recursos
+az group create --name "rg-edugen-containers" --location "Central US"
+
+# Verificar que se creó
+az group show --name "rg-edugen-containers"
 ```
 
 ### 2.2 Crear Azure Container Registry (ACR)
 
 ```bash
 # Crear ACR
-az acr create --resource-group $RESOURCE_GROUP --name $ACR_NAME --sku Basic --admin-enabled true
+az acr create --resource-group "rg-edugen-containers" --name "acredugen" --sku Basic --admin-enabled true
 
 # Obtener credenciales del ACR
-az acr credential show --name $ACR_NAME
+az acr credential show --name "acredugen"
 ```
 
 **📝 Anota las credenciales del ACR:**
@@ -73,9 +67,9 @@ az acr credential show --name $ACR_NAME
 ```bash
 # Crear servidor PostgreSQL
 az postgres flexible-server create \
-  --resource-group $RESOURCE_GROUP \
+  --resource-group "rg-edugen-containers" \
   --name "edugen-postgres-server" \
-  --location $LOCATION \
+  --location "Central US" \
   --admin-user postgres \
   --admin-password "EduGen123!" \
   --sku-name Standard_B1ms \
@@ -85,7 +79,7 @@ az postgres flexible-server create \
 
 # Crear base de datos
 az postgres flexible-server db create \
-  --resource-group $RESOURCE_GROUP \
+  --resource-group "rg-edugen-containers" \
   --server-name "edugen-postgres-server" \
   --database-name edugen
 ```
@@ -101,7 +95,7 @@ az postgres flexible-server db create \
 ### 3.1 Iniciar sesión en ACR
 
 ```bash
-az acr login --name $ACR_NAME
+az acr login --name "acredugen"
 ```
 
 ### 3.2 Construir la imagen localmente
@@ -111,27 +105,25 @@ az acr login --name $ACR_NAME
 cd F:\TESIS-EDUGEN
 
 # Construir la imagen
-docker build -t $IMAGE_NAME .
+docker build -t edugen-web .
 
 # Etiquetar para ACR
-docker tag $IMAGE_NAME "$ACR_NAME.azurecr.io/$IMAGE_NAME:latest"
+docker tag edugen-web "acredugen.azurecr.io/edugen-web:latest"
 ```
 
 ### 3.3 Subir imagen a ACR
 
 ```bash
 # Subir imagen
-docker push "$ACR_NAME.azurecr.io/$IMAGE_NAME:latest"
+docker push "acredugen.azurecr.io/edugen-web:latest"
 
 # Verificar que se subió
-az acr repository list --name $ACR_NAME
+az acr repository list --name "acredugen"
 ```
 
-## 🚀 Paso 4: Desplegar Container Instance
+## 🚀 Paso 4: Crear Archivo de Configuración YAML
 
-### 4.1 Crear archivo de configuración YAML
-
-Crea un archivo `azure-container-config.yaml`:
+### 4.1 Crear `azure-container-config.yaml`
 
 ```yaml
 apiVersion: 2021-03-01
@@ -201,27 +193,33 @@ properties:
   imageRegistryCredentials:
   - server: acredugen.azurecr.io
     username: acredugen
-    password: "[tu-password-del-acr]"
+    password: "[REEMPLAZAR-CON-PASSWORD-DEL-ACR]"
 tags:
   Environment: Production
   Application: EduGen
 ```
 
-### 4.2 Desplegar usando Azure CLI
+### 4.2 Actualizar credenciales en YAML
+
+**IMPORTANTE**: Reemplaza `[REEMPLAZAR-CON-PASSWORD-DEL-ACR]` con la contraseña real obtenida en el paso 2.2.
+
+## 🚀 Paso 5: Desplegar Container Instance
+
+### 5.1 Desplegar usando Azure CLI
 
 ```bash
 # Opción 1: Usando archivo YAML
-az container create --resource-group $RESOURCE_GROUP --file azure-container-config.yaml
+az container create --resource-group "rg-edugen-containers" --file azure-container-config.yaml
 
 # Opción 2: Usando comando directo (alternativa)
 az container create \
-  --resource-group $RESOURCE_GROUP \
+  --resource-group "rg-edugen-containers" \
   --name edugen-container-group \
-  --image "$ACR_NAME.azurecr.io/$IMAGE_NAME:latest" \
-  --registry-login-server "$ACR_NAME.azurecr.io" \
-  --registry-username $ACR_NAME \
+  --image "acredugen.azurecr.io/edugen-web:latest" \
+  --registry-login-server "acredugen.azurecr.io" \
+  --registry-username "acredugen" \
   --registry-password "[password-del-acr]" \
-  --dns-name-label $DNS_LABEL \
+  --dns-name-label "edugen-app-unique" \
   --ports 8000 \
   --cpu 1 \
   --memory 2 \
@@ -232,10 +230,10 @@ az container create \
     PGUSER="postgres" \
     DJANGO_SETTINGS_MODULE="config.settings.azure_production" \
     DEBUG="False" \
-    ALLOWED_HOSTS="$DNS_LABEL.eastus.azurecontainer.io,localhost" \
+    ALLOWED_HOSTS="edugen-app-unique.centralus.azurecontainer.io,localhost" \
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY="50661052209-7g0jf8e59ea1tme1sqaa80mgouibuj01.apps.googleusercontent.com" \
     AI_PROVIDER="deepseek" \
-    WEBSITE_HOSTNAME="$DNS_LABEL.eastus.azurecontainer.io" \
+    WEBSITE_HOSTNAME="edugen-app-unique.centralus.azurecontainer.io" \
   --secure-environment-variables \
     PGPASSWORD="EduGen123!" \
     SECRET_KEY="django-insecure-azure-container-key-2024-x9k8j7h6g5" \
@@ -243,119 +241,37 @@ az container create \
     DEEPSEEK_API_KEY="sk-f1bfb13127b14daf97788bb0232a5584"
 ```
 
-## ⚙️ Paso 5: Configurar la Aplicación
+## ⚙️ Paso 6: Configurar la Aplicación
 
-### 5.1 Verificar el despliegue
+### 6.1 Verificar el despliegue
 
 ```bash
 # Ver estado del contenedor
-az container show --resource-group $RESOURCE_GROUP --name edugen-container-group --query "{FQDN:ipAddress.fqdn,ProvisioningState:provisioningState}" --out table
+az container show --resource-group "rg-edugen-containers" --name edugen-container-group --query "{FQDN:ipAddress.fqdn,ProvisioningState:provisioningState}" --out table
 
 # Ver logs
-az container logs --resource-group $RESOURCE_GROUP --name edugen-container-group
+az container logs --resource-group "rg-edugen-containers" --name edugen-container-group
 ```
 
-### 5.2 Ejecutar migraciones
+### 6.2 Ejecutar migraciones
 
 ```bash
 # Ejecutar comando en el contenedor
-az container exec --resource-group $RESOURCE_GROUP --name edugen-container-group --exec-command "python manage.py migrate"
+az container exec --resource-group "rg-edugen-containers" --name edugen-container-group --exec-command "python manage.py migrate"
 
 # Crear superusuario (interactivo)
-az container exec --resource-group $RESOURCE_GROUP --name edugen-container-group --exec-command "python manage.py createsuperuser"
+az container exec --resource-group "rg-edugen-containers" --name edugen-container-group --exec-command "python manage.py createsuperuser"
 
 # Recopilar archivos estáticos
-az container exec --resource-group $RESOURCE_GROUP --name edugen-container-group --exec-command "python manage.py collectstatic --noinput"
+az container exec --resource-group "rg-edugen-containers" --name edugen-container-group --exec-command "python manage.py collectstatic --noinput"
 ```
 
-## 🌐 Paso 6: Configurar Dominio y SSL (Opcional)
-
-### 6.1 Configurar dominio personalizado
-
-Si tienes un dominio propio:
-
-```bash
-# Obtener IP pública
-az container show --resource-group $RESOURCE_GROUP --name edugen-container-group --query ipAddress.ip --output tsv
-
-# Configurar registro DNS A en tu proveedor de dominio
-# Ejemplo: edugen.tudominio.com -> [IP obtenida]
-```
-
-### 6.2 Configurar SSL con Azure Application Gateway (Avanzado)
-
-Para SSL personalizado, necesitarías configurar Azure Application Gateway o usar Azure Front Door.
-
-## 📊 Paso 7: Monitoreo y Mantenimiento
-
-### 7.1 Comandos útiles de monitoreo
-
-```bash
-# Ver estado del contenedor
-az container show --resource-group $RESOURCE_GROUP --name edugen-container-group
-
-# Ver logs en tiempo real
-az container logs --resource-group $RESOURCE_GROUP --name edugen-container-group --follow
-
-# Ver métricas de uso
-az monitor metrics list --resource "/subscriptions/[subscription-id]/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ContainerInstance/containerGroups/edugen-container-group" --metric "CpuUsage,MemoryUsage"
-
-# Reiniciar contenedor
-az container restart --resource-group $RESOURCE_GROUP --name edugen-container-group
-```
-
-### 7.2 Actualizar la aplicación
-
-```bash
-# 1. Construir nueva imagen
-docker build -t $IMAGE_NAME .
-docker tag $IMAGE_NAME "$ACR_NAME.azurecr.io/$IMAGE_NAME:v2"
-docker push "$ACR_NAME.azurecr.io/$IMAGE_NAME:v2"
-
-# 2. Actualizar contenedor
-az container delete --resource-group $RESOURCE_GROUP --name edugen-container-group --yes
-
-# 3. Recrear con nueva imagen (modificar YAML con :v2)
-az container create --resource-group $RESOURCE_GROUP --file azure-container-config.yaml
-```
-
-## 🔒 Paso 8: Configuración de Seguridad
-
-### 8.1 Configurar Network Security Group
-
-```bash
-# Crear NSG (si necesitas restricciones de red)
-az network nsg create --resource-group $RESOURCE_GROUP --name edugen-nsg
-
-# Agregar regla para HTTP/HTTPS
-az network nsg rule create \
-  --resource-group $RESOURCE_GROUP \
-  --nsg-name edugen-nsg \
-  --name AllowHTTP \
-  --protocol Tcp \
-  --priority 1000 \
-  --destination-port-range 8000 \
-  --access Allow
-```
-
-### 8.2 Configurar Azure Key Vault (Recomendado)
-
-```bash
-# Crear Key Vault
-az keyvault create --name "edugen-keyvault" --resource-group $RESOURCE_GROUP --location $LOCATION
-
-# Agregar secretos
-az keyvault secret set --vault-name "edugen-keyvault" --name "database-password" --value "EduGen123!"
-az keyvault secret set --vault-name "edugen-keyvault" --name "secret-key" --value "tu-secret-key-seguro"
-az keyvault secret set --vault-name "edugen-keyvault" --name "deepseek-api-key" --value "sk-f1bfb13127b14daf97788bb0232a5584"
-```
-
-## 🌍 URLs de Acceso
+## 🌐 Paso 7: Verificar Acceso
 
 Después del despliegue exitoso, tu aplicación estará disponible en:
 
-- **URL Principal**: `https://edugen-app-unique.eastus.azurecontainer.io:8000`
-- **Admin Django**: `https://edugen-app-unique.eastus.azurecontainer.io:8000/admin/`
+- **URL Principal**: `https://edugen-app-unique.centralus.azurecontainer.io:8000`
+- **Admin Django**: `https://edugen-app-unique.centralus.azurecontainer.io:8000/admin/`
 - **Login Google**: Funcionará con las credenciales OAuth configuradas
 
 ## 💰 Estimación de Costos
@@ -372,13 +288,30 @@ Después del despliegue exitoso, tu aplicación estará disponible en:
 
 **Total estimado: $55-90/mes**
 
+## 🔧 Comandos Útiles de Monitoreo
+
+### Ver logs en tiempo real
+```bash
+az container logs --resource-group "rg-edugen-containers" --name edugen-container-group --follow
+```
+
+### Reiniciar contenedor
+```bash
+az container restart --resource-group "rg-edugen-containers" --name edugen-container-group
+```
+
+### Ver métricas de uso
+```bash
+az monitor metrics list --resource "/subscriptions/[subscription-id]/resourceGroups/rg-edugen-containers/providers/Microsoft.ContainerInstance/containerGroups/edugen-container-group" --metric "CpuUsage,MemoryUsage"
+```
+
 ## 🐛 Solución de Problemas
 
 ### Problemas Comunes
 
 1. **Contenedor no inicia:**
    ```bash
-   az container logs --resource-group $RESOURCE_GROUP --name edugen-container-group
+   az container logs --resource-group "rg-edugen-containers" --name edugen-container-group
    ```
 
 2. **Error de conexión a base de datos:**
@@ -391,32 +324,20 @@ Después del despliegue exitoso, tu aplicación estará disponible en:
 
 4. **Problemas de autenticación ACR:**
    ```bash
-   az acr credential show --name $ACR_NAME
+   az acr credential show --name "acredugen"
    ```
 
 ### Comandos de Debugging
 
 ```bash
 # Entrar al contenedor
-az container exec --resource-group $RESOURCE_GROUP --name edugen-container-group --exec-command "/bin/bash"
+az container exec --resource-group "rg-edugen-containers" --name edugen-container-group --exec-command "/bin/bash"
 
 # Ver variables de entorno
-az container exec --resource-group $RESOURCE_GROUP --name edugen-container-group --exec-command "env"
+az container exec --resource-group "rg-edugen-containers" --name edugen-container-group --exec-command "env"
 
 # Verificar conectividad a base de datos
-az container exec --resource-group $RESOURCE_GROUP --name edugen-container-group --exec-command "python manage.py dbshell"
-```
-
-## 🔄 Backup y Recuperación
-
-### Backup de Base de Datos
-
-```bash
-# Backup automático (ya configurado en Azure PostgreSQL)
-az postgres flexible-server backup list --resource-group $RESOURCE_GROUP --server-name "edugen-postgres-server"
-
-# Backup manual
-az container exec --resource-group $RESOURCE_GROUP --name edugen-container-group --exec-command "python manage.py dumpdata > backup.json"
+az container exec --resource-group "rg-edugen-containers" --name edugen-container-group --exec-command "python manage.py dbshell"
 ```
 
 ## 📝 Notas Importantes
