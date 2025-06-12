@@ -8,131 +8,150 @@ from .base import *
 # CONFIGURACIÓN DE SEGURIDAD
 # ==========================================
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-azure-temp-key-change-in-production')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY o DJANGO_SECRET_KEY debe estar configurado en producción")
 
-# Hosts permitidos en Azure
-ALLOWED_HOSTS = [
-    'edugen-app.azurewebsites.net',
-    '*.azurewebsites.net',
+# Hosts permitidos para Azure App Service
+ALLOWED_HOSTS = []
+django_allowed_hosts = os.environ.get('DJANGO_ALLOWED_HOSTS', '')
+if django_allowed_hosts:
+    ALLOWED_HOSTS.extend([host.strip() for host in django_allowed_hosts.split(',') if host.strip()])
+
+website_hostname = os.environ.get('WEBSITE_HOSTNAME')
+if website_hostname:
+    ALLOWED_HOSTS.append(website_hostname)
+
+ALLOWED_HOSTS.extend([
+    '.azurewebsites.net',
     'localhost',
-    '127.0.0.1'
-]
+    '127.0.0.1',
+])
 
-# Configuración HTTPS para Azure
-SECURE_SSL_REDIRECT = False  # Azure maneja SSL
+SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+CSRF_TRUSTED_ORIGINS = []
+if website_hostname:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{website_hostname}")
+
 # ==========================================
-# BASE DE DATOS - TEMPORALMENTE SQLite para que funcione
+# BASE DE DATOS - POSTGRESQL AZURE
 # ==========================================
+
+DB_NAME = os.environ.get('DB_NAME') or os.environ.get('PGDATABASE', 'postgres')
+DB_USER = os.environ.get('DB_USER') or os.environ.get('PGUSER', 'EDUGEN')
+DB_PASSWORD = os.environ.get('DB_PASSWORD') or os.environ.get('PGPASSWORD')
+DB_HOST = os.environ.get('DB_HOST') or os.environ.get('PGHOST', 'edugenbd.postgres.database.azure.com')
+DB_PORT = os.environ.get('DB_PORT') or os.environ.get('PGPORT', '5432')
+
+if not DB_PASSWORD:
+    raise ValueError("DB_PASSWORD o PGPASSWORD debe estar configurado para PostgreSQL")
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db' / 'azure_production.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': DB_NAME,
+        'USER': DB_USER,
+        'PASSWORD': DB_PASSWORD,
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
+        'OPTIONS': {
+            'sslmode': 'require',
+            'connect_timeout': 30,
+            'application_name': 'sistema_educativo',
+        },
+        'CONN_MAX_AGE': 600,
+        'CONN_HEALTH_CHECKS': True,
     }
 }
 
-print("🔧 Usando SQLite temporalmente")
+print(f"🔧 PostgreSQL configurado: {DB_HOST}:{DB_PORT}/{DB_NAME}")
 
 # ==========================================
-# AZURE BLOB STORAGE para archivos media
+# ARCHIVOS ESTÁTICOS Y MEDIA
 # ==========================================
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = False
+WHITENOISE_MANIFEST_STRICT = False
 
 AZURE_STORAGE_CONNECTION_STRING = os.environ.get('AZURE_STORAGE_CONNECTION_STRING')
 AZURE_CONTAINER = os.environ.get('AZURE_STORAGE_CONTAINER_NAME', 'media')
 
 if AZURE_STORAGE_CONNECTION_STRING:
     DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
-    
-    # Extraer account name del connection string
     account_name = None
     for part in AZURE_STORAGE_CONNECTION_STRING.split(';'):
         if part.startswith('AccountName='):
             account_name = part.split('=')[1]
             break
-    
     if account_name:
         AZURE_CUSTOM_DOMAIN = f"{account_name}.blob.core.windows.net"
         MEDIA_URL = f"https://{AZURE_CUSTOM_DOMAIN}/{AZURE_CONTAINER}/"
-    print("🔧 Usando Azure Blob Storage")
+    print("🔧 Azure Blob Storage configurado")
 else:
-    # Fallback a almacenamiento local
-    MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    MEDIA_ROOT = os.path.join('/home/site/wwwroot', 'media')
     MEDIA_URL = '/media/'
-    print("🔧 Usando almacenamiento local como fallback")
+    print("🔧 Usando almacenamiento local")
 
-# Configuración de archivos estáticos para Azure
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# ==========================================
-# CONFIGURACIÓN DE IA - DEEPSEEK Y OPENAI
-# ==========================================
-
-# Configuración DeepSeek (más económico)
-DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
-DEEPSEEK_ENDPOINT = 'https://api.deepseek.com/v1'
-DEEPSEEK_MODEL = 'deepseek-chat'
-
-# OpenAI configuration (Backup)
-OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-OPENAI_ENDPOINT = 'https://api.openai.com/v1'
-OPENAI_MODEL = 'gpt-3.5-turbo'
-
-# Configuración de IA unificada
-AI_PROVIDER = os.environ.get('AI_PROVIDER', 'deepseek')
-
-if AI_PROVIDER == 'deepseek' and DEEPSEEK_API_KEY:
-    AI_CONFIG = {
-        'api_key': DEEPSEEK_API_KEY,
-        'endpoint': DEEPSEEK_ENDPOINT,
-        'model': DEEPSEEK_MODEL,
-        'provider': 'deepseek'
-    }
-    print("🔧 Usando DeepSeek como proveedor de IA")
-elif OPENAI_API_KEY:
-    AI_CONFIG = {
-        'api_key': OPENAI_API_KEY,
-        'endpoint': OPENAI_ENDPOINT,
-        'model': OPENAI_MODEL,
-        'provider': 'openai'
-    }
-    print("🔧 Usando OpenAI como proveedor de IA")
-else:
-    AI_CONFIG = None
-    print("⚠️ No se encontró configuración de IA válida")
-
-# Límites para controlar costos
-MAX_TOKENS_PER_REQUEST = 1000
-AI_REQUEST_TIMEOUT = 30
-MAX_AI_REQUESTS_PER_HOUR = 50
-MAX_AI_REQUESTS_PER_DAY = 200
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 
 # ==========================================
-# CACHE - Redis Azure o Local Memory
+# CONFIGURACIÓN DE EMAIL
+# ==========================================
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'Sistema Educativo <noreply@azurewebsites.net>')
+
+if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    print("🔧 Email: Usando console backend (no SMTP configurado)")
+
+# ==========================================
+# CONFIGURACIÓN DE CACHE
 # ==========================================
 
 REDIS_URL = os.environ.get('REDIS_URL')
 
 if REDIS_URL:
-    # Usar Redis si está disponible
     CACHES = {
         'default': {
             'BACKEND': 'django_redis.cache.RedisCache',
             'LOCATION': REDIS_URL,
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            }
+                'CONNECTION_POOL_KWARGS': {
+                    'max_connections': 50,
+                    'retry_on_timeout': True,
+                },
+            },
+            'TIMEOUT': 300,
+            'KEY_PREFIX': 'sistema_educativo',
         }
     }
-    print("🔧 Usando Redis para cache")
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+    print("🔧 Cache: Usando Redis")
 else:
-    # Fallback a memoria local
     CACHES = {
         'default': {
             'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
@@ -143,35 +162,56 @@ else:
             }
         }
     }
-    print("🔧 Usando cache local como fallback")
+    SESSION_ENGINE = 'django.contrib.sessions.backends.file'
+    SESSION_FILE_PATH = '/tmp/sessions'
+    print("🔧 Cache: Usando memoria local")
 
-# Cache para sesiones - CAMBIAR A DATABASE para persistencia
-SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Cambiar de cache a database
-SESSION_CACHE_ALIAS = 'default'
-SESSION_COOKIE_AGE = 86400  # 24 horas
+SESSION_COOKIE_AGE = 86400
 SESSION_SAVE_EVERY_REQUEST = False
-
-# Configuración de cookies más conservadora para Azure
-SESSION_COOKIE_SECURE = False  # Temporalmente False para debug
-SESSION_COOKIE_HTTPONLY = True  # Prevenir acceso via JavaScript
-SESSION_COOKIE_SAMESITE = 'Lax'  # Permitir navegación normal
-SESSION_COOKIE_NAME = 'edugen_sessionid'  # Nombre personalizado
-
-# Configuración CSRF conservadora
-CSRF_COOKIE_SECURE = False  # Temporalmente False para debug
-CSRF_COOKIE_HTTPONLY = False  # Temporalmente False para debug
-CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_TRUSTED_ORIGINS = [
-    'https://edugen-app.azurewebsites.net',
-    'http://edugen-app.azurewebsites.net',  # Agregar HTTP también por si acaso
-]
-
-# Configuración adicional para Azure App Service
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 # ==========================================
-# LOGGING OPTIMIZADO
+# CONFIGURACIÓN DE IA
+# ==========================================
+
+DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
+DEEPSEEK_ENDPOINT = 'https://api.deepseek.com/v1'
+DEEPSEEK_MODEL = 'deepseek-chat'
+
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+OPENAI_ENDPOINT = 'https://api.openai.com/v1'
+OPENAI_MODEL = 'gpt-3.5-turbo'
+
+AI_PROVIDER = os.environ.get('AI_PROVIDER', 'deepseek')
+
+if AI_PROVIDER == 'deepseek' and DEEPSEEK_API_KEY:
+    AI_CONFIG = {
+        'api_key': DEEPSEEK_API_KEY,
+        'endpoint': DEEPSEEK_ENDPOINT,
+        'model': DEEPSEEK_MODEL,
+        'provider': 'deepseek'
+    }
+    print("🔧 IA: Usando DeepSeek")
+elif OPENAI_API_KEY:
+    AI_CONFIG = {
+        'api_key': OPENAI_API_KEY,
+        'endpoint': OPENAI_ENDPOINT,
+        'model': OPENAI_MODEL,
+        'provider': 'openai'
+    }
+    print("🔧 IA: Usando OpenAI")
+else:
+    AI_CONFIG = None
+    print("⚠️ IA: No configurada")
+
+MAX_TOKENS_PER_REQUEST = 1000
+AI_REQUEST_TIMEOUT = 30
+MAX_AI_REQUESTS_PER_HOUR = 50
+MAX_AI_REQUESTS_PER_DAY = 200
+
+# ==========================================
+# LOGGING
 # ==========================================
 
 LOGGING = {
@@ -196,109 +236,7 @@ LOGGING = {
 }
 
 # ==========================================
-# CONFIGURACIÓN DE EMAIL
-# ==========================================
-
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-DEFAULT_FROM_EMAIL = 'Sistema Educativo <noreply@azurewebsites.net>'
-
-# ==========================================
-# MIDDLEWARE OPTIMIZADO
-# ==========================================
-
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'allauth.account.middleware.AccountMiddleware',
-    'apps.accounts.middleware.SocialAuthExceptionMiddleware',
-    'apps.portfolios.middleware.TopicRelationshipErrorMiddleware',
-    'apps.portfolios.middleware.PortfolioErrorRecoveryMiddleware',
-]
-
-# Configuración WhiteNoise
-WHITENOISE_USE_FINDERS = True
-WHITENOISE_AUTOREFRESH = False
-WHITENOISE_MANIFEST_STRICT = False
-
-# ==========================================
-# CONFIGURACIÓN ESPECÍFICA DE AZURE
-# ==========================================
-
-if 'WEBSITE_HOSTNAME' in os.environ:
-    ALLOWED_HOSTS.append(os.environ['WEBSITE_HOSTNAME'])
-    CSRF_TRUSTED_ORIGINS = [
-        f"https://{os.environ['WEBSITE_HOSTNAME']}",
-    ]
-
-AZURE_DEPLOYMENT = True
-WEBSITE_HOSTNAME = os.environ.get('WEBSITE_HOSTNAME', 'edugen-app.azurewebsites.net')
-
-# ==========================================
-# CONFIGURACIÓN DE GOOGLE OAUTH
-# ==========================================
-
-# URI de redirección para OAuth - debe coincidir exactamente con Google Cloud Console
-OAUTH_REDIRECT_URI = f"https://{WEBSITE_HOSTNAME}/auth/complete/google-oauth2/"
-
-SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = os.environ.get(
-    "SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI", 
-    OAUTH_REDIRECT_URI
-)
-
-# Debug info para OAuth
-print(f"🔧 OAuth Redirect URI configurado: {SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI}")
-print(f"🔧 Website Hostname: {WEBSITE_HOSTNAME}")
-print(f"🔧 Client ID: {getattr(base_settings, 'SOCIAL_AUTH_GOOGLE_OAUTH2_KEY', 'No configurado')}")
-
-# ==========================================
-# CONFIGURACIÓN DE CONTENIDO IA
-# ==========================================
-
-AI_CONTENT_GENERATION = {
-    'max_tokens': MAX_TOKENS_PER_REQUEST,
-    'temperature': 0.7,
-    'top_p': 0.9,
-    'frequency_penalty': 0.1,
-    'presence_penalty': 0.1,
-    'timeout': AI_REQUEST_TIMEOUT,
-    'stream': False,
-}
-
-AI_CONTENT_CACHE_TIMEOUT = 3600 * 24  # 24 horas
-
-# ==========================================
-# CONFIGURACIÓN DE ARCHIVOS
-# ==========================================
-
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
-FILE_UPLOAD_PERMISSIONS = 0o644
-
-ALLOWED_UPLOAD_EXTENSIONS = [
-    '.jpg', '.jpeg', '.png', '.gif', '.bmp',
-    '.pdf', '.doc', '.docx', '.txt',
-    '.mp4', '.avi', '.mov',
-    '.mp3', '.wav',
-]
-
-# ==========================================
-# MONITOREO Y DEBUGGING
-# ==========================================
-
-APPINSIGHTS_INSTRUMENTATION_KEY = os.environ.get('APPINSIGHTS_INSTRUMENTATION_KEY')
-
-if APPINSIGHTS_INSTRUMENTATION_KEY:
-    INSTALLED_APPS += ['applicationinsights.django']
-    MIDDLEWARE.insert(0, 'applicationinsights.django.ApplicationInsightsMiddleware')
-
-# ==========================================
-# CONFIGURACIÓN REGIONAL
+# REGIÓN Y LENGUAJE
 # ==========================================
 
 TIME_ZONE = 'America/Lima'
@@ -306,56 +244,35 @@ USE_TZ = True
 LANGUAGE_CODE = 'es-pe'
 
 # ==========================================
-# VERIFICACIÓN DE CONFIGURACIÓN
+# VERIFICACIÓN FINAL
 # ==========================================
 
-# Variables críticas requeridas
 REQUIRED_ENV_VARS = [
-    'PGPASSWORD',  # PostgreSQL es obligatorio
+    ('SECRET_KEY', 'DJANGO_SECRET_KEY'),
+    ('DB_PASSWORD', 'PGPASSWORD'),
 ]
 
-# Variables recomendadas
+for var_options in REQUIRED_ENV_VARS:
+    if not any(os.environ.get(var) for var in var_options):
+        missing_vars = ' o '.join(var_options)
+        raise ValueError(f"Variable requerida no encontrada: {missing_vars}")
+
 RECOMMENDED_ENV_VARS = [
-    'SECRET_KEY',
+    'WEBSITE_HOSTNAME',
     'AZURE_STORAGE_CONNECTION_STRING',
     'DEEPSEEK_API_KEY',
-    'WEBSITE_HOSTNAME',
+    'EMAIL_HOST_USER',
 ]
 
-# Verificar variables requeridas
-missing_required = []
-for var in REQUIRED_ENV_VARS:
-    if not os.environ.get(var):
-        missing_required.append(var)
-
-if missing_required:
-    raise ValueError(f"Variables de entorno requeridas no encontradas: {', '.join(missing_required)}")
-
-# Verificar variables recomendadas
-missing_recommended = []
-for var in RECOMMENDED_ENV_VARS:
-    if not os.environ.get(var):
-        missing_recommended.append(var)
-
+missing_recommended = [var for var in RECOMMENDED_ENV_VARS if not os.environ.get(var)]
 if missing_recommended:
-    print(f"⚠️  Variables de entorno recomendadas no encontradas: {', '.join(missing_recommended)}")
+    print(f"⚠️ Variables recomendadas no encontradas: {', '.join(missing_recommended)}")
 
-# ==========================================
-# CONFIGURACIÓN DE RECUPERACIÓN DE ERRORES
-# ==========================================
-
-DATABASE_RETRY_ATTEMPTS = 3
-DATABASE_RETRY_DELAY = 5
-AI_RETRY_ATTEMPTS = 2
-AI_RETRY_DELAY = 3
-
-# ==========================================
-# CONFIGURACIÓN FINAL DE DEBUG
-# ==========================================
-
-print("🚀 Configuración Azure Production cargada:")
-print(f"  • Database: SQLite temporal")
-print(f"  • Storage: {'Azure Blob' if AZURE_STORAGE_CONNECTION_STRING else 'Local'}")
+print("🚀 Sistema Educativo - Configuración de Producción:")
+print(f"  • Base de datos: PostgreSQL ({DB_HOST})")
 print(f"  • Cache: {'Redis' if REDIS_URL else 'Local Memory'}")
-print(f"  • AI Provider: {AI_CONFIG['provider'] if AI_CONFIG else 'None'}")
-print(f"  • Website: {WEBSITE_HOSTNAME or 'No configurado'}")
+print(f"  • Storage: {'Azure Blob' if AZURE_STORAGE_CONNECTION_STRING else 'Local'}")
+print(f"  • Email: {'SMTP' if EMAIL_HOST_USER else 'Console'}")
+print(f"  • IA: {AI_CONFIG['provider'] if AI_CONFIG else 'No configurada'}")
+print(f"  • Hostname: {website_hostname or 'No configurado'}")
+print(f"  • SSL: {'Habilitado (Azure)' if not SECURE_SSL_REDIRECT else 'Manual'}")
