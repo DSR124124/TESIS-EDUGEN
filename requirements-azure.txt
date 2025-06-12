@@ -16,7 +16,7 @@ requests>=2.30.0
 
 # Formularios mejorados
 django-crispy-forms>=2.0
-crispy-bootstrap4>=2022.1
+crispy-bootstrap5>=0.7
 
 # Autenticación social (versiones más ligeras)
 django-allauth==0.57.0
