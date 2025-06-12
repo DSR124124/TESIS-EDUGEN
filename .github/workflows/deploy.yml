@@ -84,15 +84,17 @@ jobs:
         
     - name: 🗂️ Prepare deployment
       run: |
-        # Limpiar archivos innecesarios
-        rm -rf .git
-        rm -rf .github
-        rm -rf __pycache__
+        # Limpiar archivos innecesarios usando comandos compatibles
+        echo "🧹 Cleaning unnecessary files..."
+        rm -rf .git .github
         find . -name "*.pyc" -delete
         find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
         
         # Asegurar permisos del startup script
+        echo "🔧 Setting permissions for startup script..."
         chmod +x startup.sh
+        
+        echo "✅ Deployment preparation completed"
         
     - name: 🚀 Deploy to Azure Web App
       uses: azure/webapps-deploy@v3
