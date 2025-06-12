@@ -4,22 +4,45 @@ echo "🚀 Iniciando EduGen en Azure App Service"
 
 # Configurar variables de entorno
 export DJANGO_SETTINGS_MODULE="config.settings.azure_production"
-export PYTHONPATH="/home/site/wwwroot"
 export PYTHONUNBUFFERED=1
 
 # Obtener puerto de Azure
 PORT=${PORT:-8000}
 echo "🌐 Puerto: $PORT"
 
-# Verificar que estamos en el directorio correcto
-cd /home/site/wwwroot
+# Detectar el directorio correcto donde están los archivos
+WORK_DIR="/home/site/wwwroot"
+
+# Si manage.py no está en wwwroot, buscar en el directorio que Azure usa
+if [ ! -f "$WORK_DIR/manage.py" ]; then
+    echo "⚠️ manage.py no encontrado en $WORK_DIR, buscando..."
+    
+    # Buscar en directorios temporales de Oryx
+    for dir in /tmp/*/; do
+        if [ -f "$dir/manage.py" ]; then
+            WORK_DIR="$dir"
+            echo "✅ Encontrado manage.py en: $WORK_DIR"
+            break
+        fi
+    done
+fi
+
+# Cambiar al directorio de trabajo correcto
+cd "$WORK_DIR"
 echo "📁 Directorio de trabajo: $(pwd)"
+
+# Configurar PYTHONPATH
+export PYTHONPATH="$WORK_DIR"
 
 # Verificar que manage.py existe
 if [ ! -f "manage.py" ]; then
-    echo "❌ manage.py no encontrado"
+    echo "❌ manage.py no encontrado en $(pwd)"
+    echo "📂 Archivos disponibles:"
+    ls -la
     exit 1
 fi
+
+echo "✅ manage.py encontrado"
 
 # Instalar dependencias
 echo "📦 Instalando dependencias..."
@@ -50,13 +73,14 @@ echo "🔍 Información del sistema:"
 python --version
 echo "DJANGO_SETTINGS_MODULE: $DJANGO_SETTINGS_MODULE"
 echo "PYTHONPATH: $PYTHONPATH"
-echo "Archivos en directorio:"
-ls -la
+echo "Directorio actual: $(pwd)"
+echo "Archivos principales:"
+ls -la manage.py config/ apps/ 2>/dev/null || echo "Algunos directorios no encontrados"
 
 # Ejecutar migraciones (opcional)
 echo "🔄 Migraciones..."
 python manage.py migrate --noinput --settings=config.settings.azure_production || echo "⚠️ Error en migraciones (continuando)"
 
 # Iniciar aplicación
-echo "🌐 Iniciando aplicación..."
+echo "🌐 Iniciando aplicación en $(pwd)..."
 exec python manage.py runserver 0.0.0.0:$PORT --settings=config.settings.azure_production
