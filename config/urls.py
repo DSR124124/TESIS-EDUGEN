@@ -24,8 +24,11 @@ from apps.accounts.views import CustomLoginView, CustomLogoutView
 from django.contrib.auth import views as auth_views
 from django.views.generic.base import TemplateView
 from django.contrib.staticfiles.storage import staticfiles_storage
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import django.utils.timezone
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Define simple error handlers directly in urls.py
 def handler404(request, exception):
@@ -101,6 +104,24 @@ def test_view(request):
 def test_base_view(request):
     return render(request, 'test_base.html')
 
+def health_check(request):
+    """Simple health check endpoint"""
+    try:
+        from django.db import connection
+        cursor = connection.cursor()
+        cursor.execute("SELECT 1")
+        db_status = "OK"
+    except Exception as e:
+        logger.error(f"Database error: {e}")
+        db_status = f"ERROR: {str(e)}"
+    
+    return JsonResponse({
+        'status': 'OK',
+        'database': db_status,
+        'debug': settings.DEBUG,
+        'allowed_hosts': settings.ALLOWED_HOSTS
+    })
+
 urlpatterns = [
     # Vista de prueba para diagnosticar problemas
     path('test/', test_view, name='test'),
@@ -108,8 +129,8 @@ urlpatterns = [
     # Vista para probar base.html
     path('test-base/', test_base_view, name='test_base'),
     
-    # Página principal redirige a login
-    path('', RedirectView.as_view(url='/dashboard/'), name='home'),
+    # Página principal redirige a test temporalmente
+    path('', test_view, name='home'),
     
     # Favicon
     path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('img/favicon.ico')), name='favicon'),
@@ -166,6 +187,7 @@ urlpatterns = [
              template_name='accounts/password_reset_complete.html'
          ),
          name='password_reset_complete'),
+    path('health/', health_check, name='health_check'),
 ]
 
 if settings.DEBUG:

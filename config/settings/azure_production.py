@@ -261,7 +261,7 @@ MAX_AI_REQUESTS_PER_HOUR = 50
 MAX_AI_REQUESTS_PER_DAY = 200
 
 # ==========================================
-# LOGGING
+# LOGGING CONFIGURATION
 # ==========================================
 
 LOGGING = {
@@ -279,7 +279,14 @@ LOGGING = {
     },
     'handlers': {
         'console': {
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': '/tmp/django_errors.log',
             'formatter': 'verbose',
         },
     },
@@ -289,13 +296,18 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['console'],
+            'handlers': ['console', 'file'],
             'level': 'INFO',
             'propagate': False,
         },
-        'sistema_educativo': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
+        'django.request': {
+            'handlers': ['console', 'file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'apps': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
             'propagate': False,
         },
     },
