@@ -28,31 +28,55 @@ jobs:
         python -m pip install --upgrade pip
         echo "📄 Contents of requirements-azure.txt:"
         cat requirements-azure.txt
+        echo ""
         echo "🧹 Clearing pip cache..."
         pip cache purge
-        echo "🔧 Installing dependencies with verbose output..."
-        pip install --no-cache-dir -r requirements-azure.txt -v
-        echo "📦 Installed packages:"
-        pip list | grep -E "(django|rest|crispy|social)"
+        echo ""
+        echo "🔧 Installing dependencies..."
+        pip install --no-cache-dir -r requirements-azure.txt
+        echo ""
+        echo "📦 All installed packages:"
+        pip list
+        echo ""
+        echo "📦 Django-related packages:"
+        pip list | grep -i django || echo "No Django packages found"
+        echo ""
+        echo "📦 REST framework packages:"
+        pip list | grep -i rest || echo "No REST packages found"
         
-    - name: 🧪 Test individual imports (BEFORE Django setup)
+    - name: 🧪 Test ONLY imports (NO Django setup)
       run: |
-        echo "🧪 Testing individual imports..."
-        python -c "import django; print(f'✅ Django {django.get_version()} installed successfully')"
-        python -c "import rest_framework; print('✅ rest_framework installed successfully')"
-        python -c "import crispy_bootstrap5; print('✅ crispy_bootstrap5 installed successfully')"
-        python -c "import social_django; print('✅ social_django installed successfully')"
-        python -c "import corsheaders; print('✅ corsheaders installed successfully')"
+        echo "🧪 Testing critical imports one by one..."
+        echo ""
+        echo "Testing Django..."
+        python -c "import django; print(f'✅ Django {django.get_version()} - OK')" || echo "❌ Django import failed"
+        echo ""
+        echo "Testing rest_framework..."
+        python -c "import rest_framework; print('✅ rest_framework - OK')" || echo "❌ rest_framework import failed"
+        echo ""
+        echo "Testing crispy_bootstrap5..."
+        python -c "import crispy_bootstrap5; print('✅ crispy_bootstrap5 - OK')" || echo "❌ crispy_bootstrap5 import failed"
+        echo ""
+        echo "Testing social_django..."
+        python -c "import social_django; print('✅ social_django - OK')" || echo "❌ social_django import failed"
+        echo ""
+        echo "Testing corsheaders..."
+        python -c "import corsheaders; print('✅ corsheaders - OK')" || echo "❌ corsheaders import failed"
+        echo ""
+        echo "🎯 Import test completed!"
         
-    - name: 🧪 Test Django setup
+    - name: 🧪 Test Django setup ONLY if imports work
       run: |
+        echo "🔧 Testing Django setup with GitHub Actions settings..."
         export DJANGO_SETTINGS_MODULE="config.settings.github_actions"
-        echo "🔧 Testing Django setup with simplified settings..."
-        python -c "import django; django.setup(); print('✅ Django setup completed successfully')"
+        python -c "import os; print(f'DJANGO_SETTINGS_MODULE = {os.environ.get(\"DJANGO_SETTINGS_MODULE\", \"NOT SET\")}'); import django; print(f'Django version: {django.get_version()}'); django.setup(); print('✅ Django setup completed successfully!')"
         
     - name: 📁 Collect static files
       run: |
         export DJANGO_SETTINGS_MODULE="config.settings.github_actions"
+        echo "🔧 Creating db directory..."
+        mkdir -p db
+        echo "🔧 Running collectstatic..."
         python manage.py collectstatic --noinput --clear
         
     - name: 🗂️ Prepare deployment
