@@ -8,9 +8,17 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
 import os
+import sys
+import logging
 from django.core.wsgi import get_wsgi_application
 
-# Configuración para Azure App Service
+# Establecer configuración de entorno
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.azure_production')
 
-application = get_wsgi_application()
+# Opcional: log simple al iniciar el servidor
+try:
+    application = get_wsgi_application()
+    logging.info("✅ WSGI application cargada correctamente.")
+except Exception as e:
+    logging.error(f"❌ Error al iniciar WSGI: {e}")
+    raise
