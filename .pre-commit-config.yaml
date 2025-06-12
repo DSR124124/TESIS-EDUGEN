@@ -1,17 +1,22 @@
+# .pre-commit-config.yaml
+# Configuración para validar código automáticamente antes de hacer commits
+
 repos:
+  # 🔧 Hooks estándar útiles para cualquier proyecto
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
-      - id: check-yaml
-      - id: check-added-large-files
-      - id: check-merge-conflict
-      - id: debug-statements
-      - id: check-json
-      - id: pretty-format-json
+      - id: trailing-whitespace         # Elimina espacios al final de línea
+      - id: end-of-file-fixer           # Asegura una línea nueva al final del archivo
+      - id: check-yaml                  # Valida sintaxis de archivos YAML
+      - id: check-added-large-files     # Evita archivos muy grandes en commits
+      - id: check-merge-conflict        # Detecta conflictos de merge no resueltos
+      - id: debug-statements            # Detecta prints o debuggers olvidados
+      - id: check-json                  # Verifica sintaxis JSON
+      - id: pretty-format-json          # Formatea JSON automáticamente
         args: ['--autofix']
 
+  # 🖤 Black: formateador automático de Python
   - repo: https://github.com/psf/black
     rev: 24.4.2
     hooks:
@@ -19,12 +24,14 @@ repos:
         language_version: python3.11
         args: [--line-length=88]
 
+  # 🔀 isort: organiza los imports para que sean compatibles con Black
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2
     hooks:
       - id: isort
         args: [--profile=black]
 
+  # 🧪 flake8: linter para detectar errores de estilo y documentación
   - repo: https://github.com/pycqa/flake8
     rev: 7.1.0
     hooks:
@@ -32,6 +39,7 @@ repos:
         additional_dependencies: [flake8-docstrings]
         args: [--max-line-length=88, --extend-ignore=E203,W503]
 
+  # 🎨 Prettier: formatea frontend (JS, CSS, HTML, YAML, Markdown)
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
     hooks:
@@ -39,8 +47,7 @@ repos:
         types_or: [javascript, typescript, css, scss, html, json, yaml, markdown]
         args: [--tab-width=2, --single-quote]
 
-
-
+  # 📦 Poetry: control de dependencias si usas poetry
   - repo: https://github.com/python-poetry/poetry
     rev: 1.8.3
     hooks:
@@ -48,6 +55,7 @@ repos:
       - id: poetry-lock
         args: [--no-update]
 
+  # 🧩 Hooks personalizados locales para Django
   - repo: local
     hooks:
       - id: django-check
@@ -56,6 +64,7 @@ repos:
         language: system
         pass_filenames: false
         files: \.py$
+
       - id: django-migrations-check
         name: Django Migrations Check
         entry: python manage.py makemigrations --check --dry-run
