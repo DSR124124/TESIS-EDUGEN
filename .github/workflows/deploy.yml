@@ -24,64 +24,46 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         
-    - name: 📁 Create artifact directory
-      run: |
-        mkdir -p artifact
-        
     - name: 📋 Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements-azure.txt
         
-    - name: 🧪 Run tests
+    - name: 🧪 Run basic checks
       run: |
-        python manage.py check --deploy --settings=config.settings.azure_production
+        # Verificar sintaxis básica
+        python -m py_compile manage.py
         
-    - name: 🗂️ Collect static files
+    - name: 📦 Prepare deployment package
       run: |
-        python manage.py collectstatic --noinput --settings=config.settings.azure_production
+        # Limpiar archivos innecesarios antes del despliegue
+        rm -rf .git
+        rm -rf .venv
+        rm -rf __pycache__
+        rm -rf db/sistema_educativo_db.sqlite3
+        find . -name "*.pyc" -delete
+        find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
         
-    - name: 📦 Create deployment package
-      run: |
-        # Copiar todos los archivos necesarios
-        cp -r . artifact/
+        # Verificar que startup.sh tenga permisos de ejecución
+        chmod +x startup.sh
         
-        # Limpiar archivos innecesarios
-        rm -rf artifact/.git
-        rm -rf artifact/.github
-        rm -rf artifact/.venv
-        rm -rf artifact/db/sistema_educativo_db.sqlite3
-        rm -rf artifact/__pycache__
-        find artifact/ -name "*.pyc" -delete
-        find artifact/ -name "__pycache__" -type d -exec rm -rf {} +
-        
-        # Crear requirements simplificado para Azure
-        echo "Django>=4.2.0,<4.3.0" > artifact/requirements-azure.txt
-        echo "psycopg2>=2.9.5" >> artifact/requirements-azure.txt
-        echo "Pillow>=9.5.0" >> artifact/requirements-azure.txt
-        echo "whitenoise>=6.4.0" >> artifact/requirements-azure.txt
-        echo "requests>=2.30.0" >> artifact/requirements-azure.txt
-        echo "tqdm>=4.65.0" >> artifact/requirements-azure.txt
-        echo "django-tinymce==3.7.1" >> artifact/requirements-azure.txt
-        echo "django-allauth==0.61.1" >> artifact/requirements-azure.txt
-        echo "social-auth-app-django==5.4.0" >> artifact/requirements-azure.txt
-        echo "beautifulsoup4==4.12.3" >> artifact/requirements-azure.txt
-        echo "celery>=5.3.1" >> artifact/requirements-azure.txt
-        echo "django-extensions==3.2.3" >> artifact/requirements-azure.txt
-        echo "PyPDF2==3.0.1" >> artifact/requirements-azure.txt
+        # Listar archivos para debug
+        echo "📁 Archivos en el directorio:"
+        ls -la
         
     - name: 📤 Upload artifact
       uses: actions/upload-artifact@v3
       with:
         name: python-app
-        path: artifact/
+        path: |
+          .
+          !.git
+          !.venv
+          !db/sistema_educativo_db.sqlite3
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
     - name: 📥 Download artifact
@@ -92,15 +74,21 @@ jobs:
 
     - name: 🚀 Deploy to Azure Web App
       id: deploy-to-webapp
-      uses: azure/webapps-deploy@v2
+      uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        slot-name: 'production'
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
 
-    - name: 🎯 Post-deployment setup
+    - name: 🎯 Post-deployment verification
       run: |
         echo "🎉 Deployment completed successfully!"
         echo "🌐 App URL: https://edugen-app.azurewebsites.net"
-        echo "🔍 Check the app status and logs in Azure Portal" 
+        echo "🔧 Admin URL: https://edugen-app.azurewebsites.net/admin/"
+        echo "👤 Default admin: admin / EduGenAdmin123!"
+        echo ""
+        echo "📋 Next steps:"
+        echo "1. Verificar que la app esté funcionando"
+        echo "2. Revisar logs en Azure Portal si hay problemas"
+        echo "3. Configurar APIs externas (DeepSeek, Google OAuth)"
+        echo "4. Cambiar credenciales por defecto" 

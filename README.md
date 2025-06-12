@@ -4,6 +4,7 @@ Un sistema integral de gestión educativa desarrollado en Django con funcionalid
 
 ## 🚀 Características Principales
 
+
 ### 📚 Gestión Académica
 - **Gestión de Estudiantes**: Perfiles completos, historiales académicos
 - **Gestión de Profesores**: Asignación de materias y seguimiento
