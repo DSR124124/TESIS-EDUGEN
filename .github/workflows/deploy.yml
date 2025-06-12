@@ -96,12 +96,50 @@ jobs:
         
         echo "✅ Deployment preparation completed"
         
+    - name: ⏱️ Pre-deployment wait
+      run: |
+        echo "⏱️ Waiting 30 seconds to avoid Azure SCM conflicts..."
+        sleep 30
+        echo "✅ Wait completed, proceeding with deployment"
+        
     - name: 🚀 Deploy to Azure Web App
       uses: azure/webapps-deploy@v3
       with:
         app-name: ${{ env.AZURE_WEBAPP_NAME }}
         publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
         package: .
+      timeout-minutes: 10
+
+    - name: ⏱️ Post-deployment wait
+      run: |
+        echo "⏱️ Waiting 15 seconds for Azure to process deployment..."
+        sleep 15
+        echo "✅ Post-deployment wait completed"
+
+    - name: 🔍 Verify deployment
+      run: |
+        echo "🔍 Verifying deployment status..."
+        # Intentar acceder al endpoint básico con retry
+        max_attempts=5
+        attempt=1
+        
+        while [ $attempt -le $max_attempts ]; do
+          echo "🔍 Attempt $attempt of $max_attempts"
+          
+          if curl -s -f -o /dev/null "https://edugen-app.azurewebsites.net"; then
+            echo "✅ App is responding!"
+            break
+          else
+            echo "⏱️ App not ready yet, waiting 30 seconds..."
+            sleep 30
+            attempt=$((attempt + 1))
+          fi
+          
+          if [ $attempt -gt $max_attempts ]; then
+            echo "⚠️ App verification failed after $max_attempts attempts"
+            echo "🔧 This doesn't necessarily mean deployment failed - check Azure Portal"
+          fi
+        done
 
     - name: 🎯 Post-deployment verification
       run: |
@@ -114,4 +152,8 @@ jobs:
         echo "1. Verificar que la app esté funcionando"
         echo "2. Revisar logs en Azure Portal si hay problemas"
         echo "3. Configurar APIs externas (DeepSeek, Google OAuth)"
-        echo "4. Cambiar credenciales por defecto" 
+        echo "4. Cambiar credenciales por defecto"
+        echo ""
+        echo "🔗 Enlaces útiles:"
+        echo "- Azure Portal: https://portal.azure.com"
+        echo "- App Service Logs: https://edugen-app.scm.azurewebsites.net/api/logs/docker" 
