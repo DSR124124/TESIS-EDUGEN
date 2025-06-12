@@ -30,14 +30,16 @@ az webapp config appsettings set \
   --settings \
     DJANGO_SETTINGS_MODULE="config.settings.azure_production" \
     DEBUG="False" \
-    SECRET_KEY="tu-secret-key-seguro-aqui" \
-    ALLOWED_HOSTS="edugen-app-service.azurewebsites.net" \
-    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY="tu-google-client-id" \
-    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET="tu-google-secret" \
-    DEEPSEEK_API_KEY="tu-deepseek-api-key" \
+    SECRET_KEY="django-insecure-azure-app-service-key-2024-change-in-production-x9k8j7h6g5" \
+    ALLOWED_HOSTS="edugen-app-service.azurewebsites.net,localhost,127.0.0.1" \
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY="50661052209-7g0jf8e59ea1tme1sqaa80mgouibuj01.apps.googleusercontent.com" \
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET="AIzaSyDbaO4sVGS5_dCMV1r4yizjzqAoakAnME0" \
+    DEEPSEEK_API_KEY="sk-f1bfb13127b14daf97788bb0232a5584" \
     AI_PROVIDER="deepseek" \
     WEBSITE_HOSTNAME="edugen-app-service.azurewebsites.net" \
-    CSRF_TRUSTED_ORIGINS="https://edugen-app-service.azurewebsites.net"
+    CSRF_TRUSTED_ORIGINS="https://edugen-app-service.azurewebsites.net" \
+    SCM_DO_BUILD_DURING_DEPLOYMENT="true" \
+    ENABLE_ORYX_BUILD="true"
 ```
 
 ## 🔧 Paso 3: Configurar Despliegue desde GitHub
