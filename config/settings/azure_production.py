@@ -151,18 +151,19 @@ SESSION_CACHE_ALIAS = 'default'
 SESSION_COOKIE_AGE = 86400  # 24 horas
 SESSION_SAVE_EVERY_REQUEST = False
 
-# Configuración adicional de cookies para Azure
-SESSION_COOKIE_SECURE = True  # Usar HTTPS
+# Configuración de cookies más conservadora para Azure
+SESSION_COOKIE_SECURE = False  # Temporalmente False para debug
 SESSION_COOKIE_HTTPONLY = True  # Prevenir acceso via JavaScript
 SESSION_COOKIE_SAMESITE = 'Lax'  # Permitir navegación normal
 SESSION_COOKIE_NAME = 'edugen_sessionid'  # Nombre personalizado
 
-# Configuración CSRF mejorada para Azure
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_HTTPONLY = True
+# Configuración CSRF conservadora
+CSRF_COOKIE_SECURE = False  # Temporalmente False para debug
+CSRF_COOKIE_HTTPONLY = False  # Temporalmente False para debug
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_TRUSTED_ORIGINS = [
     'https://edugen-app.azurewebsites.net',
+    'http://edugen-app.azurewebsites.net',  # Agregar HTTP también por si acaso
 ]
 
 # Configuración adicional para Azure App Service
