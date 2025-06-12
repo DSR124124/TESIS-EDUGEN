@@ -382,7 +382,7 @@ La comunicación entre capas sigue un patrón de dependencia descendente y princ
    - Refinamiento del modelo de progreso del estudiante
 
 4. **Capa de Infraestructura**
-   - Migración completa a contenedores Docker
+   - Optimización para despliegue en Azure App Service
    - Implementación de CI/CD para despliegue continuo
    - Mejoras en seguridad y auditoría
 

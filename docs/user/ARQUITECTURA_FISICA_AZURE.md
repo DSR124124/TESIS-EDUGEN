@@ -128,15 +128,11 @@ app_service:
 - **Red**: VNet integrada con App Service
 - **Costo estimado**: ~$65 USD/mes
 
-**Docker Configuration:**
-```dockerfile
-# Dockerfile.celery
-FROM python:3.11-slim
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY . /app
-WORKDIR /app
-CMD ["celery", "-A", "proyecto", "worker", "-l", "info"]
+**Configuración de despliegue:**
+```python
+# Para despliegue directo en Azure App Service
+# El servicio se configura automáticamente usando web.config y startup.sh
+# Ver archivos de configuración en la raíz del proyecto
 ```
 
 ### 🗄️ **Capa de Datos**
