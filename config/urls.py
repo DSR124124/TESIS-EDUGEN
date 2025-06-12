@@ -172,7 +172,11 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     
     # Agregar las URLs de debug_toolbar cuando estamos en modo DEBUG
-    import debug_toolbar
-    urlpatterns += [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ]
+    try:
+        import debug_toolbar
+        urlpatterns += [
+            path('__debug__/', include(debug_toolbar.urls)),
+        ]
+    except ImportError:
+        # debug_toolbar no está instalado, continuar sin él
+        pass

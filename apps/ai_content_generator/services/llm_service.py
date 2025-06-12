@@ -14,33 +14,43 @@ logger = logging.getLogger(__name__)
 
 class DeepSeekService:
     def __init__(self):
-        # Cargar explícitamente las variables de entorno
-        load_dotenv()
-        
-        # Configuración para DeepSeek API con manejo de errores
-        self.api_key = os.environ.get("DEEPSEEK_API_KEY") or getattr(settings, "DEEPSEEK_API_KEY", None)
-        self.api_available = bool(self.api_key)
-        
-        if not self.api_key:
-            logger.warning("⚠️ API key de DeepSeek no encontrada. Servicio de IA no disponible.")
-            self.api_available = False
-            return
-
-        logger.info(f"Tipo de clave API DeepSeek: {type(self.api_key)}")
-        logger.info(f"Longitud de clave API: {len(self.api_key) if self.api_key else 0}")
-        logger.info(f"Primeros 8 caracteres: {self.api_key[:8] if self.api_key and len(self.api_key) > 8 else 'N/A'}")
-        logger.info(f"Últimos 4 caracteres: {self.api_key[-4:] if self.api_key and len(self.api_key) > 4 else 'N/A'}")
-
-        # Configuración específica de DeepSeek OPTIMIZADA para contenido extenso
+        # Inicialización segura que no falla
+        self.api_key = None
+        self.api_available = False
         self.base_url = "https://api.deepseek.com/v1"
-        self.model = os.environ.get("DEEPSEEK_MODEL") or getattr(settings, "DEEPSEEK_MODEL", "deepseek-chat")
+        self.model = "deepseek-chat"
         
-        logger.info(f"URL base DeepSeek: {self.base_url}")
-        logger.info(f"Modelo configurado: {self.model}")
-        logger.info("✅ Servicio HTML directo configurado")
-        
-        # Verificar conexión a la API
-        self._test_api_connection()
+        try:
+            # Cargar explícitamente las variables de entorno
+            load_dotenv()
+            
+            # Configuración para DeepSeek API con manejo de errores
+            self.api_key = os.environ.get("DEEPSEEK_API_KEY") or getattr(settings, "DEEPSEEK_API_KEY", None)
+            self.api_available = bool(self.api_key)
+            
+            if not self.api_key:
+                logger.warning("⚠️ API key de DeepSeek no encontrada. Servicio de IA no disponible.")
+                self.api_available = False
+                return
+
+            logger.info(f"Tipo de clave API DeepSeek: {type(self.api_key)}")
+            logger.info(f"Longitud de clave API: {len(self.api_key) if self.api_key else 0}")
+            logger.info(f"Primeros 8 caracteres: {self.api_key[:8] if self.api_key and len(self.api_key) > 8 else 'N/A'}")
+            logger.info(f"Últimos 4 caracteres: {self.api_key[-4:] if self.api_key and len(self.api_key) > 4 else 'N/A'}")
+
+            # Configuración específica de DeepSeek OPTIMIZADA para contenido extenso
+            self.model = os.environ.get("DEEPSEEK_MODEL") or getattr(settings, "DEEPSEEK_MODEL", "deepseek-chat")
+            
+            logger.info(f"URL base DeepSeek: {self.base_url}")
+            logger.info(f"Modelo configurado: {self.model}")
+            logger.info("✅ Servicio HTML directo configurado")
+            
+            # Verificar conexión a la API
+            self._test_api_connection()
+            
+        except Exception as e:
+            logger.error(f"❌ Error durante inicialización de DeepSeekService: {e}")
+            self.api_available = False
 
     def _test_api_connection(self):
         """Prueba la conexión a la API de DeepSeek"""

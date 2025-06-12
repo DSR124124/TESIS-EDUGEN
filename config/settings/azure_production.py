@@ -98,12 +98,22 @@ else:
 # ARCHIVOS ESTÁTICOS Y MEDIA
 # ==========================================
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Configuración simplificada de archivos estáticos para Azure
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-WHITENOISE_USE_FINDERS = True
-WHITENOISE_AUTOREFRESH = False
-WHITENOISE_MANIFEST_STRICT = False
+# Usar configuración básica de archivos estáticos
+try:
+    # Intentar usar whitenoise si está disponible
+    import whitenoise
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    WHITENOISE_USE_FINDERS = True
+    WHITENOISE_AUTOREFRESH = False
+    WHITENOISE_MANIFEST_STRICT = False
+    print("🔧 Archivos estáticos: Usando Whitenoise")
+except ImportError:
+    # Fallback a configuración básica de Django
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+    print("🔧 Archivos estáticos: Usando configuración básica de Django")
 
 AZURE_STORAGE_CONNECTION_STRING = os.environ.get('AZURE_STORAGE_CONNECTION_STRING')
 AZURE_CONTAINER = os.environ.get('AZURE_STORAGE_CONTAINER_NAME', 'media')
