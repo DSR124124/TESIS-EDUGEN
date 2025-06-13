@@ -3,6 +3,8 @@ Entry point for Azure App Service
 This file helps Azure detect and run the Django application
 """
 
+# Azure App Service entry point for Django
+# Force redeploy - 2025-06-13
 import os
 import sys
 from pathlib import Path
