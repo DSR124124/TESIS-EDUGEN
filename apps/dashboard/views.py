@@ -145,6 +145,7 @@ class DirectorCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     fields = ['dni', 'phone']
     success_url = reverse_lazy('dashboard:admin')
 
+
     def test_func(self):
         return self.request.user.is_superuser
 
