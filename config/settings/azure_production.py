@@ -98,22 +98,35 @@ else:
 # ARCHIVOS ESTÁTICOS Y MEDIA
 # ==========================================
 
-# Configuración simplificada de archivos estáticos para Azure
+# Configuración de archivos estáticos para Azure con Whitenoise
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Usar configuración básica de archivos estáticos
-try:
-    # Intentar usar whitenoise si está disponible
-    import whitenoise
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-    WHITENOISE_USE_FINDERS = True
-    WHITENOISE_AUTOREFRESH = False
-    WHITENOISE_MANIFEST_STRICT = False
-    print("🔧 Archivos estáticos: Usando Whitenoise")
-except ImportError:
-    # Fallback a configuración básica de Django
-    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-    print("🔧 Archivos estáticos: Usando configuración básica de Django")
+# Directorios adicionales de archivos estáticos
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+# Configuración de Whitenoise para servir archivos estáticos
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Configuración de Whitenoise
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = False
+WHITENOISE_MANIFEST_STRICT = False
+WHITENOISE_SKIP_COMPRESS_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'zip', 'gz', 'tgz', 'bz2', 'tbz', 'xz', 'br']
+
+# Asegurar que Whitenoise esté en el middleware
+if 'whitenoise.middleware.WhiteNoiseMiddleware' not in MIDDLEWARE:
+    # Insertar después de SecurityMiddleware
+    try:
+        security_index = MIDDLEWARE.index('django.middleware.security.SecurityMiddleware')
+        MIDDLEWARE.insert(security_index + 1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    except ValueError:
+        # Si no encuentra SecurityMiddleware, agregar al principio
+        MIDDLEWARE.insert(0, 'whitenoise.middleware.WhiteNoiseMiddleware')
+
+print("🔧 Archivos estáticos: Usando Whitenoise")
 
 AZURE_STORAGE_CONNECTION_STRING = os.environ.get('AZURE_STORAGE_CONNECTION_STRING')
 AZURE_CONTAINER = os.environ.get('AZURE_STORAGE_CONTAINER_NAME', 'media')
