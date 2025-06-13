@@ -349,5 +349,28 @@ TINYMCE_DEFAULT_CONFIG = {
     'statusbar': True,
 }
 
-# Aumentar el límite de carga de datos para formularios grandes (20MB)
-DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 20MB en bytes
+# Configuraciones para manejar contenido grande (especialmente contenido AI generado)
+# Aumentar límites de carga de datos para formularios grandes
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB en bytes
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000  # Aumentar número máximo de campos
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB para archivos en memoria
+
+# Configuraciones adicionales para contenido AI
+# Aumentar límites de request body para contenido generado por IA
+import sys
+if hasattr(sys, '_getframe'):
+    # Solo aplicar en desarrollo/testing
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+    
+# Configuración de cache para contenido grande
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutos
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,
+        }
+    }
+}

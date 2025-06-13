@@ -146,6 +146,56 @@ def download_scorm_package(request, pk):
         return redirect('scorm_packager:scorm_package_detail', pk=package.id)
 
 @login_required
+def delete_scorm_package(request, pk):
+    """Vista para eliminar un paquete SCORM"""
+    package = get_object_or_404(SCORMPackage, pk=pk)
+    
+    # Verificar que el usuario tenga permisos para eliminar este paquete
+    if request.user != package.generated_content.request.teacher and not request.user.is_staff:
+        messages.error(request, "No tiene permisos para eliminar este paquete SCORM.")
+        return redirect('scorm_packager:scorm_package_list')
+    
+    if request.method == 'POST':
+        try:
+            # Obtener información del paquete antes de eliminarlo
+            package_title = package.title
+            package_file_path = package.package_file.path if package.package_file else None
+            
+            # Verificar si hay materiales de portafolio que usan este paquete SCORM
+            portfolio_materials = PortfolioMaterial.objects.filter(scorm_package=package)
+            if portfolio_materials.exists():
+                # Mostrar advertencia pero permitir eliminación
+                material_count = portfolio_materials.count()
+                messages.warning(
+                    request, 
+                    f"Este paquete SCORM está siendo usado en {material_count} material(es) de portafolio. "
+                    f"Al eliminarlo, esos materiales perderán la referencia al paquete SCORM."
+                )
+                # Limpiar las referencias
+                portfolio_materials.update(scorm_package=None)
+            
+            # Eliminar el archivo físico del paquete SCORM si existe
+            if package_file_path and os.path.exists(package_file_path):
+                try:
+                    os.remove(package_file_path)
+                    logger.info(f"Archivo físico eliminado: {package_file_path}")
+                except OSError as e:
+                    logger.warning(f"No se pudo eliminar el archivo físico {package_file_path}: {str(e)}")
+            
+            # Eliminar el registro de la base de datos
+            package.delete()
+            
+            logger.info(f"Usuario {request.user.username} eliminó paquete SCORM: {package_title}")
+            messages.success(request, f"El paquete SCORM '{package_title}' ha sido eliminado correctamente.")
+            
+        except Exception as e:
+            logger.exception(f"Error al eliminar paquete SCORM {package.id}: {str(e)}")
+            messages.error(request, f"Error al eliminar el paquete SCORM: {str(e)}")
+            return redirect('scorm_packager:scorm_package_detail', pk=package.id)
+    
+    return redirect('scorm_packager:scorm_package_list')
+
+@login_required
 def generate_from_ai_content(request, content_id):
     """Generate a SCORM package from AI generated content"""
     try:

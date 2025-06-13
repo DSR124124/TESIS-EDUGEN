@@ -7,6 +7,7 @@ urlpatterns = [
     path('packages/', views.SCORMPackageListView.as_view(), name='scorm_package_list'),
     path('packages/<int:pk>/', views.SCORMPackageDetailView.as_view(), name='scorm_package_detail'),
     path('packages/<int:pk>/download/', views.download_scorm_package, name='download_scorm_package'),
+    path('packages/<int:pk>/delete/', views.delete_scorm_package, name='delete_scorm_package'),
     path('packages/<int:pk>/execute/', views.student_scorm_execute, name='student_scorm_execute'),
     path('packages/<int:pk>/viewer/', views.scorm_content_viewer, name='scorm_content_viewer'),
     path('packages/<int:pk>/resource/<path:resource_path>', views.scorm_resource_viewer, name='scorm_resource_viewer'),

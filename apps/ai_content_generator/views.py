@@ -96,7 +96,9 @@ class ContentRequestListView(LoginRequiredMixin, ListView):
                             }
                             
                             # Crear paquete SCORM
-                            packager = SCORMPackager(content.formatted_content, metadata)
+                            # Usar el contenido más actualizado para el paquete SCORM
+                            scorm_content = content.formatted_content or content.raw_content or ""
+                            packager = SCORMPackager(scorm_content, metadata)
                             package_path = packager.create_package()
                             
                             # Guardar referencia en la base de datos
@@ -302,6 +304,14 @@ class ContentRequestCreateView(LoginRequiredMixin, CreateView):
             except Course.DoesNotExist:
                 print(f"No se encontró el curso con ID {course_id}")
                 pass
+        
+        # Establecer tipo de contenido por defecto si no está especificado
+        if not initial.get('content_type'):
+            from .models import ContentType
+            material_didactico = ContentType.objects.filter(name='Material didáctico').first()
+            if material_didactico:
+                initial['content_type'] = material_didactico.id
+                print(f"Tipo de contenido por defecto: {material_didactico.name}")
         
         return initial
     
@@ -1410,8 +1420,9 @@ def create_scorm_package(request, content_id):
 
         # Crear paquete SCORM usando el servicio
         try:
-            # Crear nuevo paquete
-            packager = SCORMPackager(content.formatted_content, metadata)
+            # Crear nuevo paquete usando el contenido más actualizado
+            scorm_content = content.formatted_content or content.raw_content or ""
+            packager = SCORMPackager(scorm_content, metadata)
             package_path = packager.create_package()
             
             # Convertir la ruta del paquete a una ruta relativa
@@ -2455,9 +2466,12 @@ def assign_to_portfolio_api(request):
         if not content_id:
             return JsonResponse({"success": False, "error": "ID de contenido requerido"}, status=400)
         
-        # Obtener el contenido
+        # Obtener el contenido (forzar refresh desde la base de datos)
         try:
-            content = GeneratedContent.objects.get(id=content_id)
+            content = GeneratedContent.objects.select_related('request', 'request__course').get(id=content_id)
+            # Forzar refresh para asegurar que tenemos la versión más reciente
+            content.refresh_from_db()
+            logger.info(f"📊 Contenido obtenido - raw_content: {len(content.raw_content or '')} chars, formatted_content: {len(content.formatted_content or '')} chars")
         except GeneratedContent.DoesNotExist:
             return JsonResponse({"success": False, "error": f"Contenido con ID {content_id} no encontrado"}, status=404)
         
@@ -2542,8 +2556,9 @@ def assign_to_portfolio_api(request):
                     'standard': 'scorm_2004_4th'
                 }
                 
-                # Crear el paquete SCORM
-                packager = SCORMPackager(content.formatted_content, metadata)
+                # Crear el paquete SCORM usando el contenido más actualizado
+                scorm_content = content.formatted_content or content.raw_content or ""
+                packager = SCORMPackager(scorm_content, metadata)
                 package_path = packager.create_package()
                 
                 # Convertir a ruta relativa
@@ -2584,12 +2599,16 @@ def assign_to_portfolio_api(request):
         # if scorm_package:
         #     material_title = f"{material_title} [SCORM_ID:{scorm_package.id}]"
         
-        # Crear descripción limpia sin HTML/CSS
+        # Crear descripción limpia sin HTML/CSS usando el contenido más actualizado
         from django.utils.html import strip_tags
         import re
         
+        # Usar el contenido más actualizado (priorizar formatted_content)
+        source_content = content.formatted_content or content.raw_content or ""
+        logger.info(f"📝 Creando descripción desde contenido de {len(source_content)} caracteres")
+        
         # Limpiar el contenido de HTML y CSS
-        clean_content = strip_tags(content.formatted_content)
+        clean_content = strip_tags(source_content)
         # Remover CSS extra que pueda quedar
         clean_content = re.sub(r'<style[^>]*>.*?</style>', '', clean_content, flags=re.DOTALL)
         clean_content = re.sub(r':\s*root\s*{[^}]*}', '', clean_content)
@@ -2599,6 +2618,8 @@ def assign_to_portfolio_api(request):
         clean_description = ' '.join(words)
         if len(words) == 200:
             clean_description += '...'
+        
+        logger.info(f"📝 Descripción limpia creada: {len(clean_description)} caracteres")
         
         # Crear el material en el portafolio
         material = PortfolioMaterial.objects.create(
@@ -2679,6 +2700,10 @@ def handle_class_material_assignment(request, content, data):
         
         logger.info(f"🎯 INICIANDO asignación de material de clase para contenido {content.id} en secciones: {target_sections}")
         
+        # Forzar refresh del contenido para asegurar que tenemos la versión más reciente
+        content.refresh_from_db()
+        logger.info(f"📊 Contenido refrescado - raw_content: {len(content.raw_content or '')} chars, formatted_content: {len(content.formatted_content or '')} chars")
+        
         # ========== PASO 1: EMPAQUETAR EN SCORM (OBLIGATORIO PARA MATERIAL DE CLASE) ==========
         scorm_package = SCORMPackage.objects.filter(generated_content=content).first()
         
@@ -2697,8 +2722,9 @@ def handle_class_material_assignment(request, content, data):
                     'standard': 'scorm_2004_4th'
                 }
                 
-                # Crear el paquete SCORM
-                packager = SCORMPackager(content.formatted_content, metadata)
+                # Crear el paquete SCORM usando el contenido más actualizado
+                scorm_content = content.formatted_content or content.raw_content or ""
+                packager = SCORMPackager(scorm_content, metadata)
                 package_path = packager.create_package()
                 
                 # Convertir a ruta relativa
@@ -2788,8 +2814,12 @@ def handle_class_material_assignment(request, content, data):
                         from django.utils.html import strip_tags
                         import re
                         
+                        # Usar el contenido más actualizado (priorizar formatted_content)
+                        source_content = content.formatted_content or content.raw_content or ""
+                        logger.info(f"📝 Creando descripción principal desde contenido de {len(source_content)} caracteres")
+                        
                         # Limpiar el contenido de HTML y CSS
-                        clean_content = strip_tags(content.formatted_content)
+                        clean_content = strip_tags(source_content)
                         clean_content = re.sub(r'<style[^>]*>.*?</style>', '', clean_content, flags=re.DOTALL)
                         clean_content = re.sub(r':\s*root\s*{[^}]*}', '', clean_content)
                         clean_content = re.sub(r'--[a-zA-Z-]+:\s*[^;]+;', '', clean_content)
@@ -2864,8 +2894,12 @@ def handle_class_material_assignment(request, content, data):
                                 from django.utils.html import strip_tags
                                 import re
                                 
+                                # Usar el contenido más actualizado (priorizar formatted_content)
+                                source_content = content.formatted_content or content.raw_content or ""
+                                logger.info(f"📝 Creando descripción de clase desde contenido de {len(source_content)} caracteres")
+                                
                                 # Limpiar el contenido de HTML y CSS
-                                clean_content = strip_tags(content.formatted_content)
+                                clean_content = strip_tags(source_content)
                                 clean_content = re.sub(r'<style[^>]*>.*?</style>', '', clean_content, flags=re.DOTALL)
                                 clean_content = re.sub(r':\s*root\s*{[^}]*}', '', clean_content)
                                 clean_content = re.sub(r'--[a-zA-Z-]+:\s*[^;]+;', '', clean_content)
@@ -2969,6 +3003,10 @@ def handle_personal_material_assignment(request, content, data):
         
         logger.info(f"Iniciando asignación personalizada para {len(target_students)} estudiantes en tema '{topic_title}'")
         
+        # Forzar refresh del contenido para asegurar que tenemos la versión más reciente
+        content.refresh_from_db()
+        logger.info(f"📊 Contenido refrescado para asignación personalizada - raw_content: {len(content.raw_content or '')} chars, formatted_content: {len(content.formatted_content or '')} chars")
+        
         # Verificar si hay un paquete SCORM para este contenido
         scorm_package = SCORMPackage.objects.filter(generated_content=content).first()
         
@@ -2988,7 +3026,9 @@ def handle_personal_material_assignment(request, content, data):
                     'standard': 'scorm_2004_4th'
                 }
                 
-                packager = SCORMPackager(content.formatted_content, metadata)
+                # Usar el contenido más actualizado para el paquete SCORM
+                scorm_content = content.formatted_content or content.raw_content or ""
+                packager = SCORMPackager(scorm_content, metadata)
                 package_path = packager.create_package()
                 relative_path = os.path.relpath(package_path, settings.MEDIA_ROOT)
                 
@@ -3013,8 +3053,11 @@ def handle_personal_material_assignment(request, content, data):
         else:
             material_type = 'LECTURA'
         
-        # Crear descripción limpia
-        clean_content = strip_tags(content.formatted_content)
+        # Crear descripción limpia usando el contenido más actualizado
+        source_content = content.formatted_content or content.raw_content or ""
+        logger.info(f"📝 Creando descripción personalizada desde contenido de {len(source_content)} caracteres")
+        
+        clean_content = strip_tags(source_content)
         clean_content = re.sub(r'<style[^>]*>.*?</style>', '', clean_content, flags=re.DOTALL)
         clean_content = re.sub(r':\s*root\s*{[^}]*}', '', clean_content)
         clean_content = re.sub(r'--[a-zA-Z-]+:\s*[^;]+;', '', clean_content)
@@ -3022,6 +3065,8 @@ def handle_personal_material_assignment(request, content, data):
         clean_description = ' '.join(words)
         if len(words) == 200:
             clean_description += '...'
+        
+        logger.info(f"📝 Descripción personalizada creada: {len(clean_description)} caracteres")
         
         # Procesar cada estudiante
         materials_created = 0

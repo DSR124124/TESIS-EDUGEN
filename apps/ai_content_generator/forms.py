@@ -76,6 +76,13 @@ class ContentRequestForm(forms.ModelForm):
         self.fields['content_type'].empty_label = "-- Seleccione un tipo de contenido --"
         self.fields['content_type'].label = "Tipo de Contenido"
         
+        # Si hay tipos de contenido disponibles, seleccionar "Material didáctico" por defecto
+        if not self.initial.get('content_type'):
+            material_didactico = ContentType.objects.filter(name='Material didáctico').first()
+            if material_didactico:
+                self.initial['content_type'] = material_didactico.id
+                self.fields['content_type'].initial = material_didactico.id
+        
         # Mostrar información de diagnóstico
         print(f"Opciones de grado disponibles: {grade_choices}")
         print(f"Tipos de contenido disponibles: {list(ContentType.objects.values_list('name', flat=True))}")

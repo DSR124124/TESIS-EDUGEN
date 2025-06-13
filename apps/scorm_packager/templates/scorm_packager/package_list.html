@@ -375,6 +375,22 @@
         transform: scale(1.1);
     }
 
+    .action-btn.btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+
+    .action-btn.btn-danger:hover {
+        background-color: #c82333;
+        border-color: #bd2130;
+        color: white;
+    }
+
+    .delete-form {
+        display: inline-block;
+    }
+
     /* Empty State */
     .empty-state {
         text-align: center;
@@ -668,6 +684,18 @@
                                        data-package-id="{{ package.id }}">
                                     <i class="fas fa-download"></i>
                                 </a>
+                                <form method="post" action="{% url 'scorm_packager:delete_scorm_package' package.id %}" 
+                                      style="display: inline;" 
+                                      class="delete-form">
+                                    {% csrf_token %}
+                                    <button type="button" 
+                                            class="btn btn-danger action-btn delete-btn" 
+                                            title="Eliminar paquete SCORM"
+                                            data-package-title="{{ package.title }}"
+                                            data-package-id="{{ package.id }}">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
@@ -863,6 +891,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             performSort();
+        });
+    });
+    
+    // Delete button with confirmation
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const packageTitle = this.dataset.packageTitle;
+            const packageId = this.dataset.packageId;
+            const form = this.closest('.delete-form');
+            
+            // Show confirmation dialog
+            if (confirm(`¿Estás seguro de que deseas eliminar el paquete SCORM "${packageTitle}"?\n\nEsta acción no se puede deshacer y eliminará tanto el archivo como el registro de la base de datos.`)) {
+                // Show loading state
+                const icon = this.querySelector('i');
+                const originalIcon = icon.className;
+                
+                icon.className = 'fas fa-spinner fa-spin';
+                this.disabled = true;
+                
+                // Submit the form
+                form.submit();
+            }
         });
     });
     

@@ -49,6 +49,9 @@ class EnhancedTextProcessor:
             # Crear estructura HTML moderna
             html = self._create_modern_html_structure(elements, topic, course, grade)
             
+            # Post-procesamiento final para limpiar etiquetas restantes
+            html = self._final_tag_cleanup(html)
+            
             return html
             
         except Exception as e:
@@ -207,12 +210,31 @@ class EnhancedTextProcessor:
     
     def _is_marker(self, line: str) -> bool:
         """Verifica si una línea contiene un marcador"""
-        return re.match(r'\[([A-ZÁÉÍÓÚÜ\s]+)\]', line) is not None
+        # Mejorado para detectar mejor las etiquetas con acentos y sin acentos
+        return re.match(r'\[([A-ZÁÉÍÓÚÜ\sÑ]+)\]', line) is not None or \
+               re.match(r'\[(SECCION|EJEMPLO|ACTIVIDAD|TITULO|INTRODUCCION|OBJETIVOS|DESARROLLO|EVALUACION|CONCLUSION|MATERIALES|RECURSOS)\]', line, re.IGNORECASE) is not None
     
     def _extract_marker_type(self, line: str) -> str:
         """Extrae el tipo de marcador de una línea"""
-        match = re.match(r'\[([A-ZÁÉÍÓÚÜ\s]+)\]', line)
-        return match.group(1).strip() if match else ''
+        # Primero intentar con acentos
+        match = re.match(r'\[([A-ZÁÉÍÓÚÜ\sÑ]+)\]', line)
+        if match:
+            return match.group(1).strip()
+        
+        # Luego intentar sin acentos
+        match = re.match(r'\[(SECCION|EJEMPLO|ACTIVIDAD|TITULO|INTRODUCCION|OBJETIVOS|DESARROLLO|EVALUACION|CONCLUSION|MATERIALES|RECURSOS)\]', line, re.IGNORECASE)
+        if match:
+            # Convertir a versión con acentos si es necesario
+            marker = match.group(1).upper()
+            accent_map = {
+                'SECCION': 'SECCIÓN',
+                'INTRODUCCION': 'INTRODUCCIÓN', 
+                'EVALUACION': 'EVALUACIÓN',
+                'CONCLUSION': 'CONCLUSIÓN'
+            }
+            return accent_map.get(marker, marker)
+        
+        return ''
     
     def _add_to_elements(self, elements: Dict, section_type: str, content: str):
         """Agrega contenido a la estructura de elementos con manejo mejorado de tipos"""
@@ -1021,4 +1043,249 @@ class EnhancedTextProcessor:
         <div data-gjs-type="text">{self._process_paragraphs(raw_text)}</div>
     </div>
 </body>
-</html>''' 
+</html>'''
+    
+    def _final_tag_cleanup(self, html_content: str) -> str:
+        """
+        Realiza una limpieza final de cualquier etiqueta de marcado que no haya sido procesada
+        """
+        if not html_content:
+            return html_content
+        
+        # Diccionario de reemplazos para las etiquetas problemáticas restantes
+        tag_replacements = {
+            r'\[SECCIÓN\]': '<div class="ai-section-marker"><h2 class="ai-section-title"><i class="fas fa-bookmark"></i> Sección</h2></div>',
+            r'\[SECCION\]': '<div class="ai-section-marker"><h2 class="ai-section-title"><i class="fas fa-bookmark"></i> Sección</h2></div>',
+            r'\[EJEMPLO\]': '<div class="ai-example-marker"><h3 class="ai-example-title"><i class="fas fa-lightbulb"></i> Ejemplo Práctico</h3></div>',
+            r'\[ACTIVIDAD\]': '<div class="ai-activity-marker"><h3 class="ai-activity-title"><i class="fas fa-tasks"></i> Actividad</h3></div>',
+            r'\[TÍTULO\]': '<div class="ai-title-marker"><h1 class="ai-main-title"><i class="fas fa-heading"></i> ',
+            r'\[TITULO\]': '<div class="ai-title-marker"><h1 class="ai-main-title"><i class="fas fa-heading"></i> ',
+            r'\[SUBTÍTULO\]': '<div class="ai-subtitle-marker"><h2 class="ai-subtitle"><i class="fas fa-align-left"></i> ',
+            r'\[INTRODUCCIÓN\]': '<div class="ai-introduction-marker"><h2 class="ai-introduction-title"><i class="fas fa-play-circle"></i> Introducción</h2></div>',
+            r'\[INTRODUCCION\]': '<div class="ai-introduction-marker"><h2 class="ai-introduction-title"><i class="fas fa-play-circle"></i> Introducción</h2></div>',
+            r'\[OBJETIVOS\]': '<div class="ai-objectives-marker"><h2 class="ai-objectives-title"><i class="fas fa-bullseye"></i> Objetivos</h2></div>',
+            r'\[DESARROLLO\]': '<div class="ai-development-marker"><h2 class="ai-development-title"><i class="fas fa-cogs"></i> Desarrollo</h2></div>',
+            r'\[EVALUACIÓN\]': '<div class="ai-evaluation-marker"><h2 class="ai-evaluation-title"><i class="fas fa-chart-bar"></i> Evaluación</h2></div>',
+            r'\[EVALUACION\]': '<div class="ai-evaluation-marker"><h2 class="ai-evaluation-title"><i class="fas fa-chart-bar"></i> Evaluación</h2></div>',
+            r'\[CONCLUSIÓN\]': '<div class="ai-conclusion-marker"><h2 class="ai-conclusion-title"><i class="fas fa-flag-checkered"></i> Conclusión</h2></div>',
+            r'\[CONCLUSION\]': '<div class="ai-conclusion-marker"><h2 class="ai-conclusion-title"><i class="fas fa-flag-checkered"></i> Conclusión</h2></div>',
+            r'\[MATERIALES\]': '<div class="ai-materials-marker"><h3 class="ai-materials-title"><i class="fas fa-tools"></i> Materiales</h3></div>',
+            r'\[RECURSOS\]': '<div class="ai-resources-marker"><h3 class="ai-resources-title"><i class="fas fa-folder-open"></i> Recursos</h3></div>',
+        }
+        
+        # Aplicar reemplazos
+        cleaned_html = html_content
+        tags_found = []
+        
+        for pattern, replacement in tag_replacements.items():
+            if re.search(pattern, cleaned_html, re.IGNORECASE):
+                cleaned_html = re.sub(pattern, replacement, cleaned_html, flags=re.IGNORECASE)
+                tags_found.append(pattern)
+        
+        # Agregar estilos CSS modulares para las nuevas clases si se encontraron etiquetas
+        if tags_found:
+            css_styles = """
+            <style>
+            /* ===========================================
+               ESTILOS MODULARES PARA ETIQUETAS DE IA
+               =========================================== */
+            
+            /* Variables CSS para consistencia */
+            :root {
+                --ai-primary: #2c3e50;
+                --ai-secondary: #3498db;
+                --ai-success: #27ae60;
+                --ai-warning: #f39c12;
+                --ai-danger: #e74c3c;
+                --ai-info: #8e44ad;
+                --ai-light: #ecf0f1;
+                --ai-border-radius: 8px;
+                --ai-spacing: 16px;
+                --ai-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                --ai-shadow-hover: 0 4px 16px rgba(0,0,0,0.15);
+            }
+            
+            /* Contenedores base para marcadores */
+            .ai-section-marker, .ai-example-marker, .ai-activity-marker, 
+            .ai-title-marker, .ai-subtitle-marker, .ai-introduction-marker,
+            .ai-objectives-marker, .ai-development-marker, .ai-evaluation-marker,
+            .ai-conclusion-marker, .ai-materials-marker, .ai-resources-marker {
+                margin: var(--ai-spacing) 0;
+                padding: var(--ai-spacing);
+                border-radius: var(--ai-border-radius);
+                border-left: 4px solid;
+                box-shadow: var(--ai-shadow);
+                transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            /* Hover effects */
+            .ai-section-marker:hover, .ai-example-marker:hover, .ai-activity-marker:hover, 
+            .ai-introduction-marker:hover, .ai-objectives-marker:hover, .ai-development-marker:hover,
+            .ai-evaluation-marker:hover, .ai-conclusion-marker:hover, .ai-materials-marker:hover, 
+            .ai-resources-marker:hover {
+                transform: translateY(-2px);
+                box-shadow: var(--ai-shadow-hover);
+            }
+            
+            /* Sección principal */
+            .ai-section-marker {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-left-color: var(--ai-secondary);
+            }
+            
+            /* Ejemplos */
+            .ai-example-marker {
+                background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+                border-left-color: var(--ai-warning);
+            }
+            
+            /* Actividades */
+            .ai-activity-marker {
+                background: linear-gradient(135deg, #d4edda 0%, #a8e6a3 100%);
+                border-left-color: var(--ai-success);
+            }
+            
+            /* Títulos */
+            .ai-title-marker, .ai-subtitle-marker {
+                background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                border-left-color: var(--ai-secondary);
+            }
+            
+            /* Secciones educativas */
+            .ai-introduction-marker, .ai-objectives-marker, .ai-development-marker {
+                background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+                border-left-color: var(--ai-success);
+            }
+            
+            /* Evaluación */
+            .ai-evaluation-marker, .ai-conclusion-marker {
+                background: linear-gradient(135deg, #fdeaea 0%, #f5b7b1 100%);
+                border-left-color: var(--ai-danger);
+            }
+            
+            /* Materiales y recursos */
+            .ai-materials-marker, .ai-resources-marker {
+                background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+                border-left-color: var(--ai-info);
+            }
+            
+            /* Títulos de los marcadores */
+            .ai-section-title, .ai-example-title, .ai-activity-title,
+            .ai-main-title, .ai-subtitle, .ai-introduction-title, 
+            .ai-objectives-title, .ai-development-title, .ai-evaluation-title,
+            .ai-conclusion-title, .ai-materials-title, .ai-resources-title {
+                margin: 0;
+                padding: 0;
+                color: var(--ai-primary);
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+            
+            /* Tamaños de fuente específicos */
+            .ai-main-title {
+                font-size: 1.8rem;
+            }
+            
+            .ai-section-title, .ai-subtitle, .ai-introduction-title, 
+            .ai-objectives-title, .ai-development-title, .ai-evaluation-title,
+            .ai-conclusion-title {
+                font-size: 1.4rem;
+            }
+            
+            .ai-example-title, .ai-activity-title, .ai-materials-title, .ai-resources-title {
+                font-size: 1.2rem;
+            }
+            
+            /* Iconos */
+            .ai-section-title i, .ai-example-title i, .ai-activity-title i,
+            .ai-main-title i, .ai-subtitle i, .ai-introduction-title i, 
+            .ai-objectives-title i, .ai-development-title i, .ai-evaluation-title i,
+            .ai-conclusion-title i, .ai-materials-title i, .ai-resources-title i {
+                margin-right: 8px;
+                font-size: 1em;
+                opacity: 0.8;
+            }
+            
+            /* Efectos decorativos */
+            .ai-section-marker::before, .ai-example-marker::before, .ai-activity-marker::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 50px;
+                height: 50px;
+                background: rgba(255,255,255,0.1);
+                border-radius: 0 var(--ai-border-radius) 0 50px;
+            }
+            
+            /* Responsive design */
+            @media (max-width: 768px) {
+                .ai-section-marker, .ai-example-marker, .ai-activity-marker, 
+                .ai-title-marker, .ai-subtitle-marker, .ai-introduction-marker,
+                .ai-objectives-marker, .ai-development-marker, .ai-evaluation-marker,
+                .ai-conclusion-marker, .ai-materials-marker, .ai-resources-marker {
+                    margin: 12px 0;
+                    padding: 12px;
+                }
+                
+                .ai-main-title {
+                    font-size: 1.5rem;
+                }
+                
+                .ai-section-title, .ai-subtitle, .ai-introduction-title, 
+                .ai-objectives-title, .ai-development-title, .ai-evaluation-title,
+                .ai-conclusion-title {
+                    font-size: 1.2rem;
+                }
+                
+                .ai-example-title, .ai-activity-title, .ai-materials-title, .ai-resources-title {
+                    font-size: 1.1rem;
+                }
+            }
+            
+            /* Integración con contenido existente */
+            .ai-section-marker + p, .ai-example-marker + p, .ai-activity-marker + p,
+            .ai-introduction-marker + p, .ai-objectives-marker + p, .ai-development-marker + p,
+            .ai-evaluation-marker + p, .ai-conclusion-marker + p, .ai-materials-marker + p, 
+            .ai-resources-marker + p {
+                margin-top: var(--ai-spacing);
+            }
+            
+            /* Dark mode support */
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --ai-primary: #ecf0f1;
+                    --ai-light: #2c3e50;
+                }
+                
+                .ai-section-marker, .ai-example-marker, .ai-activity-marker, 
+                .ai-title-marker, .ai-subtitle-marker, .ai-introduction-marker,
+                .ai-objectives-marker, .ai-development-marker, .ai-evaluation-marker,
+                .ai-conclusion-marker, .ai-materials-marker, .ai-resources-marker {
+                    background: rgba(255,255,255,0.05);
+                    color: var(--ai-primary);
+                }
+            }
+            </style>
+            """
+            
+            # Insertar los estilos en el lugar correcto
+            if '<head>' in cleaned_html:
+                # Si hay un head, insertar antes del cierre
+                cleaned_html = cleaned_html.replace('</head>', css_styles + '\n</head>')
+            elif '<style>' in cleaned_html:
+                # Si ya hay estilos, agregar al final del primer bloque de estilos
+                first_style_end = cleaned_html.find('</style>')
+                if first_style_end != -1:
+                    style_content = css_styles.replace('<style>', '').replace('</style>', '')
+                    cleaned_html = cleaned_html[:first_style_end] + style_content + cleaned_html[first_style_end:]
+            else:
+                # Si no hay head ni estilos, agregar al principio del contenido
+                cleaned_html = css_styles + '\n' + cleaned_html
+        
+        return cleaned_html 

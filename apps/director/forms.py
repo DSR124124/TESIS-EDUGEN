@@ -315,9 +315,15 @@ class EnrollmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Filtrar secciones activas
-        self.fields['section'].queryset = Section.objects.filter(is_active=True)
+        self.fields['section'].queryset = Section.objects.filter(is_active=True).select_related('grade')
         # Filtrar estudiantes activos
-        self.fields['student'].queryset = Student.objects.filter(is_active=True)
+        self.fields['student'].queryset = Student.objects.filter(is_active=True).select_related('user')
+        
+        # Debug: Mostrar información de las secciones
+        sections = Section.objects.filter(is_active=True)
+        print(f"DEBUG EnrollmentForm: {sections.count()} secciones activas encontradas")
+        for s in sections[:5]:  # Mostrar primeras 5
+            print(f"  - {s.id}: {s}")
         
     def clean(self):
         cleaned_data = super().clean()

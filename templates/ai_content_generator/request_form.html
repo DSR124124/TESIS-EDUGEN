@@ -756,7 +756,7 @@
                     
                     // Formatear el tamaño del archivo
                     const fileSizeInKB = file.size / 1024;
-                    const fileSizeInMB = fileSizeInKB / 1024;
+                    const fileSizeInMB = file.size / 1024 / 1024;
                     let fileSizeStr = '';
                     
                     if (fileSizeInMB >= 1) {
@@ -920,6 +920,25 @@
                 submitBtn.style.cursor = 'not-allowed';
                 
                 console.log('Formulario enviado correctamente');
+                
+                // MEJORADO: Después del envío, inicializar seguimiento real del progreso
+                setTimeout(() => {
+                    // Si el formulario se envía exitosamente, redirigirá automáticamente
+                    // pero mientras tanto, podemos mostrar mensajes realistas
+                    const loadingMessages = [
+                        { text: '🧠 Analizando el tema con inteligencia artificial...', delay: 2000, color: '#28a745' },
+                        { text: '🎓 Adaptando contenido para estudiantes...', delay: 4000, color: '#ffc107' },
+                        { text: '📚 Construyendo estructura pedagógica...', delay: 6000, color: '#e67e22' },
+                        { text: '💡 Generando ejemplos creativos...', delay: 8000, color: '#8e44ad' },
+                        { text: '🎯 Diseñando actividades interactivas...', delay: 10000, color: '#17a2b8' }
+                    ];
+                    
+                    loadingMessages.forEach((msg) => {
+                        setTimeout(() => {
+                            updateLoadingMessage(msg.text, msg.color);
+                        }, msg.delay);
+                    });
+                }, 1000);
             });
             
             // Asegurar que el botón funcione al hacer clic
@@ -1274,20 +1293,8 @@
                 document.head.appendChild(style);
             }
             
-            // Al mostrar el overlay de carga, inicia el temporizador de progreso simulado
-            let simulatedProgress = 0;
-            let simulatedMax = 95;
-            let simulatedDuration = 270; // 4.5 minutos en segundos
-            let simulatedStartTime = Date.now();
-            let simulatedTimer = setInterval(() => {
-                const elapsed = (Date.now() - simulatedStartTime) / 1000;
-                let percent = Math.min(simulatedMax, (elapsed / simulatedDuration) * simulatedMax);
-                simulatedProgress = percent;
-                updateLoadingProgress(percent);
-                if (percent >= simulatedMax) {
-                    clearInterval(simulatedTimer);
-                }
-            }, 1000);
+            // En su lugar, solo mostramos el mensaje inicial y dejamos que el backend maneje el progreso
+            updateLoadingMessage('🚀 Iniciando generación de contenido educativo...', '#3e82fc');
         }
         
         function updateLoadingMessage(message, color = '#2c3e50') {
@@ -1457,4 +1464,8 @@
         
     });
 </script>
+
+<!-- Script para seguimiento de progreso real -->
+<script src="{% static 'ai_content_generator/js/progress_tracker.js' %}"></script>
+
 {% endblock %} 

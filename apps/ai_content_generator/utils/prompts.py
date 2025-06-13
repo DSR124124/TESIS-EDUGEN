@@ -4,279 +4,410 @@ Utilidades para crear prompts para generación de contenido
 
 def create_content_prompt(content_type_id, topic, grade_level, course, additional_instructions=''):
     """
-    Crea un prompt ULTRA ESPECÍFICO para generar contenido educativo COMPLETO
+    Crea prompts específicos y estructurados para cada tipo de contenido educativo
     """
     
-    # Mapear el content_type_id
-    content_type_map = {
-        1: 'plan_sesion',
-        2: 'material_apoyo',
-        3: 'guia_ejercicios',
-        4: 'evaluacion_completa',
-        5: 'material_didactico'
+    # Mapear content_type_id a nombres específicos
+    content_types = {
+        1: 'Explicación de tema',
+        2: 'Ejercicios prácticos', 
+        3: 'Evaluación',
+        4: 'Material didáctico',
+        5: 'Resumen'
     }
     
-    if isinstance(content_type_id, str):
-        if content_type_id.lower() == 'plan de sesión de clase':
-            content_type_id = 1
-        elif content_type_id.lower() == 'material de apoyo integrado':
-            content_type_id = 2
-        elif content_type_id.lower() == 'guía de ejercicios y problemas':
-            content_type_id = 3
-        elif content_type_id.lower() == 'evaluación completa':
-            content_type_id = 4
-        elif content_type_id.lower() == 'material didáctico interactivo':
-            content_type_id = 5
+    # Obtener el nombre del tipo de contenido
+    content_type_name = content_types.get(content_type_id, 'Material didáctico')
     
-    content_type_key = content_type_map.get(content_type_id, 'material_apoyo')
-    
-    # Prompt súper específico y directo
-    prompt = f"""GENERADOR DE CONTENIDO EDUCATIVO PROFESIONAL
+    # Prompts específicos según el tipo de contenido
+    if content_type_id == 1:  # Explicación de tema
+        return create_explanation_prompt(topic, grade_level, course, additional_instructions)
+    elif content_type_id == 2:  # Ejercicios prácticos
+        return create_exercises_prompt(topic, grade_level, course, additional_instructions)
+    elif content_type_id == 3:  # Evaluación
+        return create_evaluation_prompt(topic, grade_level, course, additional_instructions)
+    elif content_type_id == 4:  # Material didáctico
+        return create_didactic_material_prompt(topic, grade_level, course, additional_instructions)
+    elif content_type_id == 5:  # Resumen
+        return create_summary_prompt(topic, grade_level, course, additional_instructions)
+    else:
+        return create_didactic_material_prompt(topic, grade_level, course, additional_instructions)
 
-TEMA: {topic}
-CURSO: {course} 
-GRADO: {grade_level}
-TIPO: {"Plan de Sesión" if content_type_key == "plan_sesion" else "Material de Apoyo"}
+def create_explanation_prompt(topic, grade_level, course, additional_instructions=''):
+    """Prompt específico para generar explicaciones de tema"""
+    return f"""
+GENERA UNA EXPLICACIÓN COMPLETA SOBRE: {topic}
+CURSO: {course} | GRADO: {grade_level}
 
-REGLAS CRÍTICAS DE CONTENIDO:
-❌ PROHIBIDO ABSOLUTO: Código JavaScript, HTML con <script>, programación, iframes
-❌ PROHIBIDO: Frases como "Aquí están las secciones faltantes", "para alcanzar los requisitos"
-❌ PROHIBIDO: Elementos técnicos de desarrollo web, APIs, código de programación
-❌ PROHIBIDO: Contenido meta-educativo (referencias al proceso de creación)
+ESTRUCTURA OBLIGATORIA:
 
-✅ GENERAR ÚNICAMENTE:
-- Contenido educativo directo sobre {topic}
-- Material pedagógico apropiado para {grade_level}
-- Ejemplos prácticos y actividades educativas
-- Recursos multimedia educativos (descripciones, NO código)
+[SECCIÓN]
+Introducción al tema
+Explica qué es {topic}, por qué es importante en {course} y cómo se conecta con la vida cotidiana de estudiantes de {grade_level}. Incluye objetivos de aprendizaje claros y motivación inicial. (200-250 palabras)
 
-INSTRUCCIONES OBLIGATORIAS - SEGUIR AL PIE DE LA LETRA:
-
-1. USA EXACTAMENTE ESTOS MARCADORES: [TÍTULO], [SUBTÍTULO], [PÁRRAFO], [EJEMPLO], [ACTIVIDAD], [MULTIMEDIA], [EVALUACIÓN]
-
-2. ESTRUCTURA EXACTA A SEGUIR:
-
-[TÍTULO]
-{topic} - {"Plan de Sesión" if content_type_key == "plan_sesion" else "Material de Apoyo"} para {grade_level}
-
-[SUBTÍTULO]
-Introducción y Contextualización
-
-[PÁRRAFO]
-Escribe aquí una explicación EXTENSA de 300+ palabras sobre {topic}, incluyendo: definición completa, importancia en {course}, aplicaciones en la vida real, conexiones con otros temas, metodología de enseñanza, y objetivos específicos. Incluye ejemplos cotidianos que los estudiantes de {grade_level} puedan relacionar fácilmente...
-
-[SUBTÍTULO]
-Conceptos Fundamentales
-
-[PÁRRAFO]
-Desarrolla aquí los conceptos clave de {topic} en 300+ palabras, incluyendo: definiciones técnicas, propiedades principales, características distintivas, clasificación si aplica, terminología específica del tema. Usa lenguaje apropiado para {grade_level} pero mantén rigor académico...
+[SECCIÓN]
+Conceptos fundamentales
+Desarrolla los conceptos clave de {topic} de forma clara y ordenada. Define términos importantes, explica propiedades principales y establece relaciones entre conceptos. Usa lenguaje apropiado para {grade_level}. (300-400 palabras)
 
 [EJEMPLO]
-**Ejemplo Práctico 1: Situación Cotidiana**
-- **Contexto:** Presenta una situación real donde se aplique {topic}
-- **Datos:** Lista los datos conocidos del problema
-- **Proceso:** Muestra paso a paso la solución (mínimo 5 pasos)
-- **Resultado:** Explica el resultado y su significado práctico
-- **Reflexión:** Conecta este ejemplo con la vida diaria del estudiante
+Situación cotidiana
+Presenta un ejemplo real y cercano donde los estudiantes puedan ver {topic} en acción. Incluye:
+- Contexto familiar para el estudiante
+- Explicación paso a paso
+- Conexión clara con los conceptos teóricos
+- Reflexión sobre la aplicación práctica
 
 [EJEMPLO]
-**Ejemplo Práctico 2: Aplicación Tecnológica**
-- **Contexto:** Situación donde {topic} se use en tecnología o ciencia
-- **Desarrollo:** Proceso completo de resolución
-- **Análisis:** Interpretación de resultados
-- **Aplicación:** Cómo se usa en el mundo real
+Aplicación académica
+Muestra cómo {topic} se aplica en problemas típicos de {course}:
+- Problema claramente planteado
+- Método de resolución explicado
+- Solución desarrollada paso a paso
+- Verificación del resultado
+
+[SECCIÓN]
+Aspectos importantes a recordar
+Destaca los puntos clave que los estudiantes deben recordar sobre {topic}. Incluye consejos para evitar errores comunes y estrategias de estudio. (150-200 palabras)
+
+[ACTIVIDAD]
+Verificación de comprensión
+Diseña una actividad simple donde los estudiantes puedan comprobar si entendieron los conceptos:
+- Instrucciones claras
+- 3-4 preguntas o ejercicios breves
+- Respuestas esperadas
+- Criterios de autoevaluación
+
+INSTRUCCIONES ADICIONALES: {additional_instructions}
+
+GENERAR CONTENIDO EDUCATIVO DIRECTO - NO META-COMENTARIOS
+"""
+
+def create_exercises_prompt(topic, grade_level, course, additional_instructions=''):
+    """Prompt específico para generar ejercicios prácticos"""
+    return f"""
+GENERA EJERCICIOS PRÁCTICOS SOBRE: {topic}
+CURSO: {course} | GRADO: {grade_level}
+
+ESTRUCTURA OBLIGATORIA:
+
+[SECCIÓN]
+Introducción a los ejercicios
+Explica el propósito de estos ejercicios y cómo ayudan a dominar {topic}. Incluye consejos generales para resolverlos exitosamente. (100-150 palabras)
 
 [EJEMPLO]
-**Ejemplo Práctico 3: Problema Académico**
-- **Enunciado:** Problema típico de {course} nivel {grade_level}
-- **Estrategia:** Método de resolución recomendado
-- **Solución:** Desarrollo completo paso a paso
-- **Verificación:** Comprobación del resultado
-
-[SUBTÍTULO]
-Desarrollo Metodológico
-
-[PÁRRAFO]
-Explica en 300+ palabras las estrategias metodológicas para enseñar {topic}, incluyendo: técnicas didácticas específicas, recursos recomendados, secuencia de actividades, adaptaciones para diferentes estilos de aprendizaje, evaluación formativa durante el proceso...
+Ejercicio modelo resuelto
+Presenta un ejercicio completo con solución detallada:
+- Enunciado claro del problema
+- Análisis de los datos
+- Método de resolución elegido
+- Desarrollo paso a paso
+- Resultado final con interpretación
+- Verificación de la respuesta
 
 [ACTIVIDAD]
-**Actividad 1: Exploración Inicial**
-- **Objetivo:** Despertar interés y explorar conocimientos previos sobre {topic}
-- **Duración:** 15-20 minutos
-- **Modalidad:** Individual/Grupal
-- **Materiales:** Lista específica de materiales necesarios
-- **Desarrollo:** Instrucciones paso a paso detalladas (mínimo 8 pasos)
-- **Evaluación:** Criterios específicos de evaluación
-- **Adaptaciones:** Sugerencias para estudiantes con necesidades especiales
+Ejercicios de práctica básica
+**Nivel inicial** (3 ejercicios)
+Diseña ejercicios que apliquen directamente los conceptos fundamentales de {topic}:
+- Ejercicio 1: [Enunciado y tipo de problema]
+- Ejercicio 2: [Enunciado y tipo de problema]  
+- Ejercicio 3: [Enunciado y tipo de problema]
+*Incluye las respuestas al final*
 
 [ACTIVIDAD]
-**Actividad 2: Práctica Guiada**
-- **Objetivo:** Aplicar conceptos básicos de {topic} con acompañamiento
-- **Duración:** 25-30 minutos
-- **Modalidad:** Parejas
-- **Recursos:** Materiales y herramientas necesarias
-- **Instrucciones:** Pasos detallados para realizar la actividad
-- **Seguimiento:** Cómo monitorear el progreso
-- **Retroalimentación:** Estrategias de feedback inmediato
+Ejercicios de aplicación intermedia
+**Nivel intermedio** (3 ejercicios)
+Crea ejercicios que requieran análisis y aplicación de múltiples conceptos:
+- Ejercicio 4: [Problema contextualizado]
+- Ejercicio 5: [Problema con análisis]
+- Ejercicio 6: [Problema de síntesis]
+*Incluye las respuestas al final*
 
 [ACTIVIDAD]
-**Actividad 3: Aplicación Independiente**
-- **Objetivo:** Demostrar dominio autónomo de {topic}
-- **Duración:** 20-25 minutos
-- **Modalidad:** Individual
-- **Desafío:** Problema o situación desafiante
-- **Criterios:** Estándares de calidad esperados
-- **Extensión:** Actividades adicionales para estudiantes avanzados
+Desafíos avanzados
+**Nivel avanzado** (2 ejercicios)
+Propone problemas que requieran pensamiento crítico y creatividad:
+- Desafío 1: [Problema complejo o abierto]
+- Desafío 2: [Problema de investigación]
+*Incluye orientaciones para la solución*
 
-[SUBTÍTULO]
-Recursos Multimedia y Tecnológicos
+[SECCIÓN]
+Solucionario y explicaciones
+Proporciona todas las respuestas con explicaciones breves del proceso de solución para cada ejercicio.
 
-[MULTIMEDIA]
-**Video Tutorial 1:** "Fundamentos de {topic}"
-- **Plataforma:** YouTube/Khan Academy
-- **Duración:** 8-12 minutos
-- **Descripción:** Video explicativo que cubre conceptos básicos de {topic} con animaciones y ejemplos visuales apropiados para estudiantes de {grade_level}
-- **Uso sugerido:** Introducción al tema o repaso individual
-- **Enlace sugerido:** Buscar "{topic} básico {grade_level}" en YouTube
+[SECCIÓN]
+Consejos para el estudio
+Ofrece estrategias específicas para practicar {topic} de manera efectiva y evitar errores comunes.
 
-[MULTIMEDIA]
-**Simulación Interactiva 1:** "Laboratorio Virtual de {topic}"
-- **Plataforma:** PhET/GeoGebra
-- **Tipo:** Simulación interactiva
-- **Descripción:** Herramienta que permite a los estudiantes experimentar con variables de {topic} y observar cambios en tiempo real
-- **Aplicación:** Exploración de conceptos y verificación de hipótesis
-- **Instrucciones:** Pasos específicos para usar la simulación en clase
+INSTRUCCIONES ADICIONALES: {additional_instructions}
+"""
 
-[MULTIMEDIA]
-**App Educativa 1:** "Ejercicios de {topic}"
-- **Plataforma:** Móvil/Tablet
-- **Funcionalidad:** Aplicación con ejercicios graduados y retroalimentación inmediata
-- **Beneficios:** Práctica personalizada y seguimiento del progreso
-- **Recomendación:** Uso en casa para refuerzo
-- **Características:** Ejercicios adaptativos, reportes de progreso, gamificación
+def create_evaluation_prompt(topic, grade_level, course, additional_instructions=''):
+    """Prompt específico para generar evaluaciones"""
+    return f"""
+GENERA UNA EVALUACIÓN COMPLETA SOBRE: {topic}
+CURSO: {course} | GRADO: {grade_level}
 
-[MULTIMEDIA]
-**Podcast Educativo:** "{topic} en la Vida Real"
-- **Duración:** 15-20 minutos
-- **Contenido:** Entrevistas con profesionales que usan {topic} en su trabajo
-- **Objetivo:** Mostrar aplicaciones prácticas y motivar el aprendizaje
-- **Uso:** Actividad de escucha y reflexión
-- **Seguimiento:** Preguntas de comprensión y debate
+ESTRUCTURA OBLIGATORIA:
 
-[MULTIMEDIA]
-**Juego Interactivo:** "Desafío {topic}"
-- **Plataforma:** Kahoot/Quizizz
-- **Modalidad:** Competencia grupal
-- **Descripción:** Preguntas de opción múltiple sobre {topic} con elementos de gamificación
-- **Duración:** 10-15 minutos
-- **Propósito:** Evaluación formativa divertida y revisión de conceptos
+[SECCIÓN]
+Información de la evaluación
+**Datos generales:**
+- Asignatura: {course}
+- Tema: {topic}
+- Grado: {grade_level}
+- Duración: 60 minutos
+- Puntaje total: 100 puntos
+- Competencias evaluadas: [Listar 3-4 competencias específicas]
+
+[SECCIÓN]
+Instrucciones para el estudiante
+Explica claramente cómo desarrollar la evaluación, criterios de calificación, recomendaciones importantes y distribución del tiempo.
+
+[ACTIVIDAD]
+Parte I: Preguntas de selección múltiple
+**Valor: 30 puntos (10 preguntas x 3 puntos)**
+
+Desarrolla 10 preguntas de opción múltiple que evalúen:
+- Conceptos fundamentales (4 preguntas)
+- Aplicación de procedimientos (3 preguntas)
+- Análisis de situaciones (3 preguntas)
+
+Cada pregunta debe tener 4 alternativas (a, b, c, d) con una sola respuesta correcta.
+
+[ACTIVIDAD]
+Parte II: Preguntas de desarrollo corto
+**Valor: 35 puntos**
+
+Crea 5 preguntas que requieran respuestas de 3-5 líneas:
+1. [Pregunta sobre definición o concepto] (5 puntos)
+2. [Pregunta sobre procedimiento] (7 puntos)
+3. [Pregunta sobre aplicación] (8 puntos)
+4. [Pregunta sobre análisis] (8 puntos)
+5. [Pregunta sobre evaluación/síntesis] (7 puntos)
+
+[ACTIVIDAD]
+Parte III: Resolución de problemas
+**Valor: 35 puntos**
+
+Diseña 2 problemas complejos que integren múltiples aspectos de {topic}:
+- Problema 1: [Situación contextualizada] (15 puntos)
+- Problema 2: [Aplicación práctica] (20 puntos)
+
+Cada problema debe incluir criterios específicos de evaluación.
+
+[SECCIÓN]
+Solucionario completo
+Proporciona las respuestas correctas para todas las preguntas:
+- Respuestas de selección múltiple con justificación
+- Respuestas modelo para preguntas de desarrollo
+- Soluciones paso a paso para los problemas
+- Criterios de evaluación específicos
+
+[SECCIÓN]
+Rúbrica de calificación
+Establece niveles de desempeño:
+- Excelente (90-100 puntos)
+- Bueno (80-89 puntos)
+- Regular (70-79 puntos)
+- Insuficiente (0-69 puntos)
+
+Con descriptores específicos para cada nivel.
+
+INSTRUCCIONES ADICIONALES: {additional_instructions}
+"""
+
+def create_didactic_material_prompt(topic, grade_level, course, additional_instructions=''):
+    """Prompt específico para generar material didáctico"""
+    return f"""
+GENERA MATERIAL DIDÁCTICO INTERACTIVO SOBRE: {topic}
+CURSO: {course} | GRADO: {grade_level}
+
+ESTRUCTURA OBLIGATORIA:
+
+[SECCIÓN]
+Presentación del material
+**Título:** Material Didáctico - {topic}
+**Dirigido a:** Estudiantes de {grade_level}
+**Asignatura:** {course}
+**Objetivos:** 
+- [3-4 objetivos específicos de aprendizaje]
+**Duración estimada:** 90 minutos
+**Modalidad:** Individual y grupal
+
+[SECCIÓN]
+Conocimientos previos
+Identifica qué deben saber los estudiantes antes de usar este material y cómo conectar con sus experiencias previas sobre {topic}.
+
+[ACTIVIDAD]
+Actividad de inicio: "Descubriendo el tema"
+**Duración:** 15 minutos
+Diseña una actividad motivadora que despierte curiosidad sobre {topic}:
+- Pregunta detonante interesante
+- Situación problemática o enigma
+- Predicciones sobre el tema
+- Lluvia de ideas grupal
+
+[SECCIÓN]
+Desarrollo del contenido principal
+Explica {topic} de manera clara y estructurada:
+- Conceptos fundamentales explicados paso a paso
+- Definiciones importantes destacadas
+- Propiedades y características principales
+- Relaciones con otros conceptos de {course}
+(400-500 palabras)
 
 [EJEMPLO]
-**Ejemplo Integrador 4: Proyecto Interdisciplinario**
-- **Conexión:** Cómo {topic} se relaciona con otras materias
-- **Desarrollo:** Proyecto que integra {topic} con ciencias/historia/arte
-- **Duración:** Proyecto de varias semanas
-- **Producto:** Entregable concreto (informe, presentación, modelo)
-- **Evaluación:** Rúbrica específica para el proyecto
+Ejemplo interactivo 1: Situación real
+Presenta un caso práctico donde {topic} sea relevante:
+- Contexto familiar para estudiantes de {grade_level}
+- Desarrollo paso a paso del ejemplo
+- Participación activa del estudiante
+- Conexión clara con la teoría
 
 [EJEMPLO]
-**Ejemplo Evaluativo 5: Situación de Examen**
-- **Tipo:** Problema típico de evaluación formal
-- **Complejidad:** Nivel apropiado para {grade_level}
-- **Solución:** Desarrollo completo con justificación
-- **Variantes:** Diferentes formas de plantear el mismo concepto
-- **Criterios:** Cómo evaluar la respuesta del estudiante
-
-[SUBTÍTULO]
-Estrategias de Evaluación
-
-[EVALUACIÓN]
-**Evaluación Formativa Continua:**
-- **Técnicas:** Observación directa, preguntas orales, revisión de ejercicios
-- **Frecuencia:** Durante toda la sesión/unidad
-- **Instrumentos:** Listas de cotejo, escalas de valoración, rúbricas simples
-- **Retroalimentación:** Inmediata y específica sobre fortalezas y áreas de mejora
-- **Ajustes:** Modificaciones en tiempo real según necesidades observadas
-
-**Evaluación Sumativa:**
-- **Instrumentos:** Prueba escrita, proyecto final, presentación oral
-- **Criterios:** Comprensión conceptual, aplicación práctica, resolución de problemas
-- **Ponderación:** Sugerencias de peso para cada componente
-- **Rúbrica:** Niveles de desempeño (excelente, bueno, satisfactorio, necesita mejora)
-- **Remediales:** Estrategias para estudiantes que no alcancen el estándar
+Ejemplo interactivo 2: Experimento o demostración
+Diseña una actividad práctica o experimento simple:
+- Materiales necesarios (accesibles)
+- Procedimiento claro
+- Observaciones esperadas
+- Conclusiones guiadas
 
 [ACTIVIDAD]
-**Actividad 4: Síntesis y Metacognición**
-- **Objetivo:** Reflexionar sobre el aprendizaje de {topic}
-- **Estrategia:** Diario de aprendizaje, mapas conceptuales, discusión grupal
-- **Preguntas guía:** ¿Qué aprendí? ¿Cómo lo aprendí? ¿Para qué me sirve?
-- **Tiempo:** 15 minutos
-- **Producto:** Reflexión escrita o oral sobre el proceso de aprendizaje
+Taller práctico: "Aplicamos lo aprendido"
+**Duración:** 25 minutos
+**Modalidad:** Trabajo en parejas
+Crea una actividad donde los estudiantes apliquen {topic}:
+- Instrucciones paso a paso
+- Materiales o recursos necesarios
+- Guía de trabajo estructurada
+- Criterios de evaluación
+
+[MULTIMEDIA]
+Recursos digitales sugeridos
+**Video explicativo:**
+- Descripción: Video de 8-10 minutos sobre {topic}
+- Plataforma sugerida: YouTube Educativo
+- Uso: Refuerzo visual del contenido
+- Momento de uso: Después de la explicación inicial
+
+**Simulación interactiva:**
+- Herramienta digital que permita explorar {topic}
+- Función: Experimentar con variables
+- Beneficio: Visualización de conceptos abstractos
+
+**Juego educativo:**
+- Actividad lúdica relacionada con {topic}
+- Objetivo: Reforzar aprendizaje de manera divertida
+- Modalidad: Individual o grupal
 
 [ACTIVIDAD]
-**Actividad 5: Aplicación Creativa**
-- **Objetivo:** Demostrar comprensión de {topic} de manera creativa
-- **Opciones:** Crear un cómic, video, canción, o infografía sobre {topic}
-- **Criterios:** Precisión conceptual, creatividad, claridad comunicativa
-- **Tiempo:** 30-45 minutos
-- **Presentación:** Compartir creaciones con la clase para retroalimentación
+Proyecto creativo: "Mi propia creación"
+**Duración:** 30 minutos
+Propone un proyecto donde los estudiantes creen algo original aplicando {topic}:
+- Opciones de proyecto (3 alternativas diferentes)
+- Recursos y materiales necesarios
+- Criterios de evaluación creativos
+- Tiempo para presentación grupal
 
-[SUBTÍTULO]
-Recursos Adicionales y Profundización
+[SECCIÓN]
+Consolidación y reflexión
+Actividades para cerrar el aprendizaje:
+- Síntesis de lo aprendido
+- Reflexión personal sobre la utilidad de {topic}
+- Conexión con la vida cotidiana
+- Preguntas para seguir investigando
 
-[MULTIMEDIA]
-**Documentos PDF:** "Guías de Estudio de {topic}"
-- **Contenido:** Resúmenes, esquemas, ejercicios adicionales
-- **Acceso:** Repositorio digital de la institución
-- **Uso:** Estudio independiente y repaso
-- **Actualización:** Revisión semestral de contenidos
+[ACTIVIDAD]
+Autoevaluación interactiva
+Diseña un sistema para que los estudiantes evalúen su propio aprendizaje:
+- 5 preguntas de comprensión
+- 3 preguntas de aplicación
+- 2 preguntas de reflexión personal
+- Guía de respuestas para autoverificación
 
-[MULTIMEDIA]
-**Plataforma LMS:** "Aula Virtual de {course}"
-- **Funciones:** Foros de discusión, tareas en línea, recursos digitales
-- **Actividades:** Debates sobre aplicaciones de {topic}, proyectos colaborativos
-- **Seguimiento:** Analíticas de participación y progreso
-- **Comunicación:** Mensajería directa con el docente
+[SECCIÓN]
+Recursos adicionales para profundizar
+- 3 sitios web educativos recomendados
+- 2 videos complementarios
+- 1 libro o artículo de consulta
+- Apps educativas relacionadas con {topic}
+- Sugerencias para proyectos de investigación
 
-[MULTIMEDIA]
-**Canal YouTube:** "Matemáticas para {grade_level}"
-- **Contenido:** Tutoriales específicos, resolución de ejercicios tipo
-- **Organización:** Playlists por tema y nivel de dificultad
-- **Interacción:** Comentarios para resolver dudas
-- **Actualización:** Videos nuevos semanalmente
+INSTRUCCIONES ADICIONALES: {additional_instructions}
+"""
 
-[MULTIMEDIA]
-**Biblioteca Digital:** "Recursos de {topic}"
-- **Acceso:** E-books, artículos académicos adaptados, investigaciones recientes
-- **Organización:** Por nivel de complejidad y área de aplicación
-- **Citas:** APA format para fomentar investigación académica
-- **Multilengua:** Recursos en español e inglés para ampliar perspectivas
+def create_summary_prompt(topic, grade_level, course, additional_instructions=''):
+    """Prompt específico para generar resúmenes"""
+    return f"""
+GENERA UN RESUMEN COMPLETO SOBRE: {topic}
+CURSO: {course} | GRADO: {grade_level}
 
-[MULTIMEDIA]
-**Realidad Aumentada:** "Visualizador de {topic}"
-- **Tecnología:** Apps de AR para smartphones/tablets
-- **Funcionalidad:** Modelos 3D, visualizaciones interactivas
-- **Aplicación:** Hacer tangible conceptos abstractos de {topic}
-- **Requisitos:** Dispositivos compatibles, descarga de apps específicas
+ESTRUCTURA OBLIGATORIA:
 
-[SUBTÍTULO]
-Extensión y Conexiones Curriculares
+[SECCIÓN]
+Introducción al resumen
+Explica brevemente qué es {topic}, su importancia en {course} y qué aprenderán los estudiantes con este resumen. (100-120 palabras)
 
-[PÁRRAFO]
-{topic} se conecta profundamente con múltiples áreas del conocimiento, creando oportunidades de aprendizaje interdisciplinario. En ciencias naturales, se aplica en el análisis de fenómenos físicos y químicos. En ciencias sociales, ayuda a interpretar datos estadísticos y tendencias económicas. En arte, se utiliza para crear proporciones y diseños armónicos. Esta transversalidad permite a los estudiantes de {grade_level} comprender que {topic} no es una materia aislada, sino una herramienta fundamental para entender y transformar el mundo. Las conexiones curriculares incluyen proyectos que integran {topic} con literatura (análisis de textos mediante patrones), educación física (cálculos de rendimiento), y tecnología (programación de algoritmos). Estas conexiones fortalecen la comprensión conceptual y demuestran la relevancia práctica del conocimiento matemático en la vida cotidiana y profesional...
+[SECCIÓN]
+Conceptos clave
+**Definiciones fundamentales:**
+Presenta los 5-7 conceptos más importantes de {topic} de forma clara y concisa:
+- Concepto 1: [Definición y explicación breve]
+- Concepto 2: [Definición y explicación breve]
+- Concepto 3: [Definición y explicación breve]
+[...continuar según corresponda]
 
-INSTRUCCIONES ADICIONALES:
-{additional_instructions}
+[SECCIÓN]
+Ideas principales
+Organiza las ideas más importantes sobre {topic} en puntos claros:
+- Punto principal 1: [Idea central con explicación breve]
+- Punto principal 2: [Idea central con explicación breve]
+- Punto principal 3: [Idea central con explicación breve]
+- Punto principal 4: [Idea central con explicación breve]
 
-RECORDATORIOS FINALES:
-- Genera TODO el contenido usando EXACTAMENTE los marcadores mostrados
-- Cada [PÁRRAFO] debe tener MÍNIMO 250 palabras
-- Cada [EJEMPLO] debe ser COMPLETO y DETALLADO
-- Cada [ACTIVIDAD] debe tener INSTRUCCIONES PASO A PASO
-- Cada [MULTIMEDIA] debe tener DESCRIPCIÓN COMPLETA de uso
-- NO omitas ninguna sección, genera TODO el contenido solicitado"""
-    
-    return prompt
+[EJEMPLO]
+Ejemplo representativo
+Presenta un ejemplo que ilustre claramente los conceptos principales de {topic}:
+- Situación o problema típico
+- Aplicación de los conceptos
+- Resultado o solución
+- Por qué este ejemplo es representativo
+
+[SECCIÓN]
+Puntos importantes a recordar
+Lista los aspectos críticos que los estudiantes deben memorizar sobre {topic}:
+- 5-7 puntos clave ordenados por importancia
+- Consejos para recordar mejor la información
+- Errores comunes a evitar
+
+[SECCIÓN]
+Aplicaciones prácticas
+Menciona 3-4 situaciones donde {topic} se aplica en la vida real o en otras materias:
+- Aplicación 1: [Descripción breve]
+- Aplicación 2: [Descripción breve]
+- Aplicación 3: [Descripción breve]
+
+[ACTIVIDAD]
+Repaso rápido
+Crea 5 preguntas cortas para que los estudiantes verifiquen si comprendieron el resumen:
+1. [Pregunta sobre concepto básico]
+2. [Pregunta sobre aplicación]
+3. [Pregunta sobre relación entre conceptos]
+4. [Pregunta sobre ejemplo práctico]
+5. [Pregunta de síntesis]
+
+*Incluye las respuestas al final*
+
+[SECCIÓN]
+Para seguir aprendiendo
+Sugiere recursos adicionales para profundizar en {topic}:
+- 2 sitios web educativos
+- 1 video explicativo recomendado
+- 1 libro de consulta
+- Temas relacionados para investigar
+
+INSTRUCCIONES ADICIONALES: {additional_instructions}
+"""
 
 def get_enhanced_content_prompts():
     """

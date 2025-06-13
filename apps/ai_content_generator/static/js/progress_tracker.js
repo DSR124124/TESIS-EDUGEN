@@ -4,7 +4,7 @@ const progressTracker = {
     progressUrl: null,
     updateInterval: 3000,  // 3 segundos entre actualizaciones
     retryCount: 0,
-    maxRetries: 30,     // Máximo de reintentos (30 * 3 segundos = hasta ~1.5 minutos)
+    maxRetries: 40,     // Máximo de reintentos (40 * 3 segundos = hasta ~2 minutos)
     statusElement: null,
     progressElement: null,
     timer: null,
@@ -13,11 +13,13 @@ const progressTracker = {
     completedCallback: null,
     consecutiveErrors: 0,
     maxConsecutiveErrors: 5,
-    // NUEVO: Progreso simulado para tiempos largos
+    // NUEVO: Progreso simulado más realista
     simulatedProgress: 0,
-    simulatedMax: 95, // No pasar de 95% hasta que el backend confirme
-    simulatedDuration: 300, // 5 minutos en segundos
+    simulatedMax: 85, // No pasar de 85% hasta que el backend confirme (más conservador)
+    simulatedDuration: 240, // 4 minutos en segundos (más realista)
     simulatedStartTime: null,
+    backendProgress: 0,
+    hasBackendControl: false,
     
     init: function(requestId, progressUrl, statusSelector, progressSelector, completedCallback) {
         this.requestId = requestId;
@@ -27,9 +29,11 @@ const progressTracker = {
         this.completedCallback = completedCallback || function() { 
             window.location.reload();
         };
-        this.updateInterval = 2000;
+        this.updateInterval = 2000; // Verificar más frecuentemente
         this.simulatedProgress = 0;
         this.simulatedStartTime = Date.now();
+        this.backendProgress = 0;
+        this.hasBackendControl = false;
         this.startSimulatedProgress();
         this.startTracking();
     },
@@ -49,6 +53,10 @@ const progressTracker = {
             clearInterval(this.timer);
             this.timer = null;
         }
+        if (this.simTimer) {
+            clearInterval(this.simTimer);
+            this.simTimer = null;
+        }
     },
     
     checkProgress: function() {
@@ -57,31 +65,11 @@ const progressTracker = {
             return;
         }
         
-        const url = this.progressUrl.replace('REQUEST_ID', this.requestId);
-        
-        fetch(url, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            },
-            credentials: 'same-origin'
-        })
+        fetch(this.progressUrl)
             .then(response => {
                 if (!response.ok) {
-                    // Reset de errores consecutivos si hay respuesta (aunque sea error)
-                    this.consecutiveErrors = 0;
-                    
-                    if (response.status === 403) {
-                        throw new Error('No tienes permiso para acceder a esta solicitud');
-                    } else if (response.status === 404) {
-                        throw new Error('Solicitud no encontrada');
-                    } else {
-                        throw new Error('Error al obtener progreso: ' + response.status);
-                    }
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
-                // Reset de errores consecutivos si hay respuesta ok
-                this.consecutiveErrors = 0;
                 return response.json();
             })
             .then(data => {
@@ -102,46 +90,55 @@ const progressTracker = {
                 this.resetTimer();
             })
             .catch(error => {
-                this.retryCount++;
-                this.consecutiveErrors++;
-                
-                // Aumentar intervalo para evitar sobrecarga
-                this.updateInterval = Math.min(10000, this.updateInterval * 1.5);
-                
-                // Mostrar error en UI después de varios errores consecutivos
-                if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
-                    this.updateStatus('Error de conexión: ' + error.message);
-                    // Agregar botón para reintentar manualmente
-                    const errorContainer = document.getElementById('error-container');
-                    if (errorContainer) {
-                        errorContainer.innerHTML = `
-                            <div class="alert alert-warning">
-                                <strong>Error de conexión:</strong> ${error.message}
-                                <button class="btn btn-sm btn-outline-primary mt-2" onclick="progressTracker.manualRetry()">Reintentar ahora</button>
-                            </div>
-                        `;
-                        errorContainer.style.display = 'block';
-                    }
-                }
-                
-                // Detener después de demasiados reintentos
-                if (this.retryCount >= this.maxRetries) {
-                    this.stopTracking();
-                    this.handleFailure('Se agotó el tiempo de espera. Por favor, intente nuevamente.');
-                } else {
-                    // Actualizar el temporizador con el nuevo intervalo
-                    this.resetTimer();
-                }
+                console.error('Error obteniendo progreso:', error);
+                this.handleError(error);
             });
     },
     
     resetTimer: function() {
-        // Reiniciar el temporizador con el nuevo intervalo
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = setInterval(() => {
                 this.checkProgress();
             }, this.updateInterval);
+        }
+    },
+    
+    handleError: function(error) {
+        this.consecutiveErrors++;
+        this.retryCount++;
+        
+        console.warn(`Error de progreso #${this.consecutiveErrors}: ${error.message}`);
+        
+        if (this.consecutiveErrors >= this.maxConsecutiveErrors) {
+            this.showErrorMessage('Error de conexión', 'No se puede obtener el estado de la generación. Verifica tu conexión.');
+            this.stopTracking();
+            return;
+        }
+        
+        if (this.retryCount >= this.maxRetries) {
+            this.showErrorMessage('Tiempo agotado', 'La generación está tardando más de lo esperado.');
+            this.stopTracking();
+            return;
+        }
+        
+        // Aumentar el intervalo después de errores
+        this.updateInterval = Math.min(this.updateInterval * 1.5, 10000);
+    },
+    
+    showErrorMessage: function(title, message) {
+        console.error(`${title}: ${message}`);
+        const errorContainer = document.getElementById('error-container');
+        if (errorContainer) {
+            errorContainer.innerHTML = `
+                <div class="alert alert-warning mt-3">
+                    <strong>${title}:</strong> ${message}
+                    <button class="btn btn-sm btn-outline-primary ms-2" onclick="progressTracker.manualRetry()">
+                        Reintentar
+                    </button>
+                </div>
+            `;
+            errorContainer.style.display = 'block';
         }
     },
     
@@ -162,21 +159,53 @@ const progressTracker = {
     },
     
     startSimulatedProgress: function() {
-        // Avanza el progreso simulado cada segundo
+        // Progreso simulado más conservador y realista
         if (this.simTimer) clearInterval(this.simTimer);
         this.simTimer = setInterval(() => {
-            if (this.isCompleted) {
+            if (this.isCompleted || this.hasBackendControl) {
                 clearInterval(this.simTimer);
                 return;
             }
+            
             const elapsed = (Date.now() - this.simulatedStartTime) / 1000;
-            let percent = Math.min(this.simulatedMax, (elapsed / this.simulatedDuration) * this.simulatedMax);
-            if (percent > this.simulatedProgress) {
+            
+            // Curva de progreso más realista:
+            // - Primeros 30 segundos: 0-20% (rápido al inicio)
+            // - Siguientes 60 segundos: 20-40% (medio)
+            // - Siguientes 90 segundos: 40-70% (proceso principal)
+            // - Últimos 60 segundos: 70-85% (finalización, más lento)
+            
+            let percent = 0;
+            if (elapsed <= 30) {
+                // Primeros 30 segundos: 0-20%
+                percent = (elapsed / 30) * 20;
+            } else if (elapsed <= 90) {
+                // Segundos 30-90: 20-40%
+                percent = 20 + ((elapsed - 30) / 60) * 20;
+            } else if (elapsed <= 180) {
+                // Segundos 90-180: 40-70%
+                percent = 40 + ((elapsed - 90) / 90) * 30;
+            } else {
+                // Después de 180 segundos: 70-85% (más lento)
+                percent = 70 + ((elapsed - 180) / 60) * 15;
+            }
+            
+            percent = Math.min(this.simulatedMax, percent);
+            
+            // Solo actualizar si el progreso aumenta y el backend no tiene control
+            if (percent > this.simulatedProgress && !this.hasBackendControl) {
                 this.simulatedProgress = percent;
-                if (this.progressElement && (!this.lastProgress || this.lastProgress < percent)) {
+                if (this.progressElement) {
                     this.progressElement.style.width = percent + '%';
                     this.progressElement.setAttribute('aria-valuenow', percent);
+                    
+                    // Actualizar también el elemento de porcentaje si existe
+                    const progressPercentage = document.getElementById('progress-percentage');
+                    if (progressPercentage) {
+                        progressPercentage.textContent = Math.round(percent) + '%';
+                    }
                 }
+                this.lastProgress = percent;
             }
         }, 1000);
     },
@@ -189,20 +218,57 @@ const progressTracker = {
         if (this.statusElement && isImportantUpdate) {
             this.updateStatus(data.message || data.status);
         }
+        
         if (this.progressElement) {
-            // Si el backend reporta progreso, usarlo, pero nunca retroceder
+            // Si el backend reporta progreso válido
             const newProgress = data.progress || 0;
-            if (newProgress > this.lastProgress) {
+            
+            // Si el backend reporta progreso significativo, tomar control
+            if (newProgress >= 10 && newProgress > this.simulatedProgress) {
+                this.hasBackendControl = true;
+                this.backendProgress = newProgress;
+                
+                // Detener progreso simulado
+                if (this.simTimer) {
+                    clearInterval(this.simTimer);
+                    this.simTimer = null;
+                }
+                
+                // Actualizar progreso
                 this.lastProgress = newProgress;
                 this.progressElement.style.width = newProgress + '%';
                 this.progressElement.setAttribute('aria-valuenow', newProgress);
+                
+                // Actualizar también el elemento de porcentaje
+                const progressPercentage = document.getElementById('progress-percentage');
+                if (progressPercentage) {
+                    progressPercentage.textContent = Math.round(newProgress) + '%';
+                }
+                
                 // Si el backend llega a 100%, marcar como completado
+                if (newProgress >= 100) {
+                    this.isCompleted = true;
+                    if (this.simTimer) clearInterval(this.simTimer);
+                }
+            } else if (this.hasBackendControl && newProgress > this.backendProgress) {
+                // Solo actualizar si el backend ya tiene control y el progreso aumentó
+                this.backendProgress = newProgress;
+                this.lastProgress = newProgress;
+                this.progressElement.style.width = newProgress + '%';
+                this.progressElement.setAttribute('aria-valuenow', newProgress);
+                
+                const progressPercentage = document.getElementById('progress-percentage');
+                if (progressPercentage) {
+                    progressPercentage.textContent = Math.round(newProgress) + '%';
+                }
+                
                 if (newProgress >= 100) {
                     this.isCompleted = true;
                     if (this.simTimer) clearInterval(this.simTimer);
                 }
             }
         }
+        
         // Verificar si debe detener el seguimiento
         if (data.status === 'completed') {
             this.handleCompletion();
@@ -219,64 +285,38 @@ const progressTracker = {
         }
     },
     
-    updateProgressBar: function(progress) {
-        if (this.progressElement) {
-            const width = Math.max(5, Math.min(100, progress)); // Mínimo 5%, máximo 100%
-            this.progressElement.style.width = width + '%';
-            this.progressElement.setAttribute('aria-valuenow', width);
-            
-            // Usar colores para indicar progreso
-            if (width < 20) {
-                this.progressElement.classList.remove('bg-info', 'bg-warning', 'bg-success');
-                this.progressElement.classList.add('bg-secondary');
-            } else if (width < 50) {
-                this.progressElement.classList.remove('bg-secondary', 'bg-warning', 'bg-success');
-                this.progressElement.classList.add('bg-info');
-            } else if (width < 100) {
-                this.progressElement.classList.remove('bg-secondary', 'bg-info', 'bg-success');
-                this.progressElement.classList.add('bg-warning');
-            } else {
-                this.progressElement.classList.remove('bg-secondary', 'bg-info', 'bg-warning');
-                this.progressElement.classList.add('bg-success');
-            }
-        }
-    },
-    
     handleCompletion: function() {
         this.isCompleted = true;
-        this.updateProgressBar(100);
-        this.updateStatus('¡Completado con éxito!');
         this.stopTracking();
         
-        // Dar tiempo para mostrar el mensaje de éxito antes de recargar
+        // Asegurar que el progreso esté al 100%
+        if (this.progressElement) {
+            this.progressElement.style.width = '100%';
+            this.progressElement.setAttribute('aria-valuenow', 100);
+            
+            const progressPercentage = document.getElementById('progress-percentage');
+            if (progressPercentage) {
+                progressPercentage.textContent = '100%';
+            }
+        }
+        
+        // Ejecutar callback de completado después de una breve pausa
         setTimeout(() => {
-            if (typeof this.completedCallback === 'function') {
+            if (this.completedCallback) {
                 this.completedCallback();
             }
         }, 1000);
     },
     
-    handleFailure: function(errorMessage) {
+    handleFailure: function(error) {
         this.isCompleted = true;
-        this.updateProgressBar(100);
-        this.progressElement.classList.remove('bg-info', 'bg-warning', 'bg-success');
-        this.progressElement.classList.add('bg-danger');
-        this.updateStatus('Error: ' + errorMessage);
         this.stopTracking();
         
-        // Mostrar algún mensaje de error o UI para reintentar
-        const errorContainer = document.getElementById('error-container');
-        if (errorContainer) {
-            errorContainer.innerHTML = `
-                <div class="alert alert-danger">
-                    <strong>Error en la generación:</strong> ${errorMessage}
-                    <div class="mt-2">
-                        <button class="btn btn-sm btn-outline-danger me-2" onclick="window.location.reload()">Reintentar</button>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="window.location.href='/ai/requests/'">Volver a la lista</button>
-                    </div>
-                </div>
-            `;
-            errorContainer.style.display = 'block';
+        this.showErrorMessage('Error en la generación', error);
+        
+        // Opcional: ejecutar callback de fallo si existe
+        if (this.failureCallback) {
+            this.failureCallback(error);
         }
     }
 }; 

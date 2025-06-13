@@ -41,6 +41,12 @@ DATABASES = {
 
 print(f"Base de datos ubicada en: {DB_PATH}")
 
+# Configuraciones adicionales para contenido grande (override de base.py)
+# Aumentar límites para manejar contenido AI generado extenso
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000  # Más campos permitidos
+FILE_UPLOAD_MAX_MEMORY_SIZE = 50 * 1024 * 1024  # 50MB para archivos
+
 # Configuración de logging para ver errores en consola
 LOGGING = {
     'version': 1,

@@ -115,10 +115,11 @@ def generate_content_sync(request_id):
         
         update_progress(request_id, 30, '✨ Iniciando generación de contenido ultra-estructurado...')
         update_progress(request_id, 35, '📝 La IA está creando material educativo extenso...')
-        update_progress(request_id, 40, '🎯 Generando secciones principales del contenido...')
+        update_progress(request_id, 45, '🎯 Generando secciones principales del contenido...')
         
         # Usar el método DIRECTO para generar HTML completo sin plantillas
         try:
+            update_progress(request_id, 50, '🚀 Enviando solicitud a DeepSeek AI...')
             # Usar el método directo que genera HTML adaptativo automáticamente
             response = llm_service.generate_content_for_grapesjs(
                 content_type_id=content_type_id,
@@ -127,6 +128,7 @@ def generate_content_sync(request_id):
                 course=course,
                 additional_instructions=enhanced_instructions
             )
+            update_progress(request_id, 60, '🧠 IA procesando solicitud...')
             
             # Verificar si la respuesta es un string (nuevo formato) o dict (formato anterior)
             if isinstance(response, str):
@@ -190,7 +192,7 @@ def generate_content_sync(request_id):
             return False
         
         # Progreso con análisis
-        update_progress(request_id, 50, '🔍 Analizando calidad del contenido generado...')
+        update_progress(request_id, 65, '🔍 Analizando calidad del contenido generado...')
         
         # VERIFICAR COMPLETITUD DEL CONTENIDO GENERADO
         from apps.ai_content_generator.services.content_completeness_checker import ContentCompletenessChecker
@@ -202,11 +204,11 @@ def generate_content_sync(request_id):
         word_count = completeness_analysis.get('word_count', 0)
         completion_score = completeness_analysis.get('completion_score', 0)
         
-        update_progress(request_id, 60, f'📊 Contenido: {word_count} palabras, calidad: {completion_score}%')
+        update_progress(request_id, 70, f'📊 Contenido: {word_count} palabras, calidad: {completion_score}%')
         
         # Si el contenido está incompleto, intentar extenderlo
         if not completeness_analysis['is_complete'] and completion_score < 70:
-            update_progress(request_id, 65, '🔧 Contenido incompleto, extendiendo automáticamente...')
+            update_progress(request_id, 72, '🔧 Contenido incompleto, extendiendo automáticamente...')
             
             # Crear prompt de extensión
             extension_prompt = ContentCompletenessChecker.create_extension_prompt(
@@ -214,7 +216,7 @@ def generate_content_sync(request_id):
             )
             
             try:
-                update_progress(request_id, 70, '✨ IA generando contenido adicional...')
+                update_progress(request_id, 75, '✨ IA generando contenido adicional...')
                 # Intentar extender el contenido
                 extension_response = llm_service.generate_content(extension_prompt, max_tokens=8000, temperature=0.7)
                 
@@ -225,21 +227,21 @@ def generate_content_sync(request_id):
                     # Re-analizar completitud
                     final_analysis = ContentCompletenessChecker.analyze_content_completeness(content_text, topic)
                     new_word_count = final_analysis.get('word_count', 0)
-                    update_progress(request_id, 75, f'📈 Contenido extendido a {new_word_count} palabras')
+                    update_progress(request_id, 78, f'📈 Contenido extendido a {new_word_count} palabras')
                     
             except Exception as extension_error:
-                update_progress(request_id, 75, '⚠️ No se pudo extender, usando contenido original')
+                update_progress(request_id, 78, '⚠️ No se pudo extender, usando contenido original')
         else:
-            update_progress(request_id, 70, f'✅ Contenido completo y de alta calidad ({completion_score}%)')
+            update_progress(request_id, 75, f'✅ Contenido completo y de alta calidad ({completion_score}%)')
         
-        update_progress(request_id, 80, '🎨 Aplicando diseño y formato profesional...')
+        update_progress(request_id, 82, '🎨 Aplicando diseño y formato profesional...')
         
         # Extraer título y contenido
         title = extract_title(content_text, topic)
         
         # El contenido ya es HTML completo, no necesita procesamiento adicional
         try:
-            update_progress(request_id, 85, '💅 Validando HTML generado...')
+            update_progress(request_id, 88, '💅 Validando HTML generado...')
             # Verificar que el contenido es HTML válido
             if content_text.strip().startswith('<!DOCTYPE') or content_text.strip().startswith('<html'):
                 formatted_content = content_text  # Ya es HTML completo
@@ -264,7 +266,7 @@ def generate_content_sync(request_id):
             # Fallback simple
             formatted_content = content_text
         
-        update_progress(request_id, 90, '💾 Guardando en base de datos...')
+        update_progress(request_id, 95, '💾 Guardando en base de datos...')
         
         # Guardar el contenido generado
         # Manejar campos opcionales según el tipo de response
