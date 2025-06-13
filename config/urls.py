@@ -46,33 +46,27 @@ def handler400(request, exception):
 # Vista de prueba simple
 def test_view(request):
     try:
-        import datetime
-        current_time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        user_info = request.user.username if request.user.is_authenticated else 'Anónimo'
-        
-        html = f"""
+        html = """
         <!DOCTYPE html>
         <html>
         <head>
             <title>Prueba Django</title>
             <style>
-                body {{ 
+                body { 
                     font-family: Arial; 
-                    background: linear-gradient(45deg, #005CFF, #A142F5);
+                    background: #005CFF;
                     color: white;
                     text-align: center;
                     padding: 50px;
                     margin: 0;
-                }}
-                .container {{
+                }
+                .container {
                     background: rgba(255,255,255,0.1);
                     padding: 30px;
                     border-radius: 15px;
                     display: inline-block;
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255,255,255,0.2);
-                }}
-                a {{
+                }
+                a {
                     color: #00CFFF;
                     font-weight: bold;
                     text-decoration: none;
@@ -81,22 +75,17 @@ def test_view(request):
                     border-radius: 5px;
                     margin: 10px;
                     display: inline-block;
-                }}
-                a:hover {{
-                    background: rgba(255,255,255,0.2);
-                }}
+                }
             </style>
         </head>
         <body>
             <div class="container">
-                <h1>¡Django Funciona!</h1>
-                <p>El servidor está funcionando correctamente</p>
-                <p>Timestamp: {current_time}</p>
-                <p>Usuario: {user_info}</p>
+                <h1>Django Funciona!</h1>
+                <p>El servidor esta funcionando correctamente</p>
+                <p>Version: Simple Test</p>
                 <div>
                     <a href="/login/">Ir a Login</a>
                     <a href="/admin/">Admin</a>
-                    <a href="/dashboard/">Dashboard</a>
                     <a href="/health/">Health Check</a>
                 </div>
             </div>
@@ -105,8 +94,7 @@ def test_view(request):
         """
         return HttpResponse(html)
     except Exception as e:
-        logger.error(f"Error en test_view: {str(e)}")
-        return HttpResponse(f"<h1>Error en test_view</h1><p>{str(e)}</p>", status=500)
+        return HttpResponse(f"<h1>Error Simple</h1><p>{str(e)}</p>", status=500)
 
 # Vista para probar base.html
 def test_base_view(request):
