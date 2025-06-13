@@ -5,7 +5,6 @@ import logging
 import requests
 import traceback
 from django.conf import settings
-from dotenv import load_dotenv
 # Importar el prompt mejorado  
 from apps.ai_content_generator.utils.prompts import create_content_prompt, get_enhanced_content_prompts
 # Procesador optimizado removido - ahora generamos HTML directo
@@ -21,9 +20,6 @@ class DeepSeekService:
         self.model = "deepseek-chat"
         
         try:
-            # Cargar explícitamente las variables de entorno
-            load_dotenv()
-            
             # Configuración para DeepSeek API con manejo de errores
             self.api_key = os.environ.get("DEEPSEEK_API_KEY") or getattr(settings, "DEEPSEEK_API_KEY", None)
             self.api_available = bool(self.api_key)
