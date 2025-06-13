@@ -47,7 +47,13 @@ class ContentRequestListView(LoginRequiredMixin, ListView):
     paginate_by = 12  # Show 12 items per page for better grid layout
     
     def get_queryset(self):
-        return ContentRequest.objects.filter(teacher=self.request.user).order_by('-created_at')
+        return ContentRequest.objects.filter(
+            teacher=self.request.user
+        ).select_related(
+            'course', 'content_type'
+        ).prefetch_related(
+            'contents'
+        ).order_by('-created_at')
     
     def get(self, request, *args, **kwargs):
         # Verificar si hay contenido pendiente para agregar al portafolio
@@ -162,15 +168,22 @@ class ContentRequestListView(LoginRequiredMixin, ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Pass the full queryset for stats calculation
-        all_requests = self.get_queryset()
-        context['all_requests'] = all_requests
-        context['completed_count'] = all_requests.filter(status='completed').count()
-        context['pending_count'] = all_requests.filter(status='pending').count()
-        context['processing_count'] = all_requests.filter(status='processing').count()
-        context['failed_count'] = all_requests.filter(status='failed').count()
-        context['cancelled_count'] = all_requests.filter(status='cancelled').count()
-        context['total_count'] = all_requests.count()
+        
+        # Optimizar estadísticas con una sola consulta usando agregación
+        from django.db.models import Count, Case, When, IntegerField
+        
+        stats = ContentRequest.objects.filter(
+            teacher=self.request.user
+        ).aggregate(
+            total_count=Count('id'),
+            completed_count=Count(Case(When(status='completed', then=1), output_field=IntegerField())),
+            pending_count=Count(Case(When(status='pending', then=1), output_field=IntegerField())),
+            processing_count=Count(Case(When(status='processing', then=1), output_field=IntegerField())),
+            failed_count=Count(Case(When(status='failed', then=1), output_field=IntegerField())),
+            cancelled_count=Count(Case(When(status='cancelled', then=1), output_field=IntegerField()))
+        )
+        
+        context.update(stats)
         return context
 
 class ContentRequestCreateView(LoginRequiredMixin, CreateView):
