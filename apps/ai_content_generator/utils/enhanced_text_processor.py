@@ -1043,7 +1043,7 @@ class EnhancedTextProcessor:
         <div data-gjs-type="text">{self._process_paragraphs(raw_text)}</div>
     </div>
 </body>
-</html>'''
+</html>''' 
     
     def _final_tag_cleanup(self, html_content: str) -> str:
         """
