@@ -101,22 +101,7 @@ def test_base_view(request):
     return render(request, 'test_base.html')
 
 def health_check(request):
-    """Simple health check endpoint"""
-    try:
-        from django.db import connection
-        cursor = connection.cursor()
-        cursor.execute("SELECT 1")
-        db_status = "OK"
-    except Exception as e:
-        logger.error(f"Database error: {e}")
-        db_status = f"ERROR: {str(e)}"
-    
-    return JsonResponse({
-        'status': 'OK',
-        'database': db_status,
-        'debug': settings.DEBUG,
-        'allowed_hosts': settings.ALLOWED_HOSTS
-    })
+    return HttpResponse("OK", content_type="text/plain")
 
 urlpatterns = [
     # Vista de prueba para diagnosticar problemas
