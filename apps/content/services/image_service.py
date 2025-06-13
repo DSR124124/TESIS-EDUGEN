@@ -1,11 +1,7 @@
 import requests
 import logging
 import os
-from dotenv import load_dotenv
 from django.conf import settings
-
-# Cargar variables de entorno
-load_dotenv()
 
 logger = logging.getLogger(__name__)
 
