@@ -110,8 +110,8 @@ urlpatterns = [
     # Vista para probar base.html
     path('test-base/', test_base_view, name='test_base'),
     
-    # Página principal redirige a test temporalmente
-    path('', test_view, name='home'),
+    # Página principal redirige al login
+    path('', RedirectView.as_view(url='/login/', permanent=False), name='home'),
     
     # Favicon
     path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('img/favicon.ico')), name='favicon'),
