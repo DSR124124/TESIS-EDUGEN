@@ -239,14 +239,61 @@ def generate_content_sync(request_id):
         # Extraer título y contenido
         title = extract_title(content_text, topic)
         
-        # El contenido ya es HTML completo, no necesita procesamiento adicional
+        # Procesar contenido con EnhancedTextProcessor para eliminar tags problemáticos
         try:
-            update_progress(request_id, 88, '💅 Validando HTML generado...')
-            # Verificar que el contenido es HTML válido
+            update_progress(request_id, 88, '💅 Procesando contenido y eliminando tags...')
+            
+            # Importar y usar el EnhancedTextProcessor
+            from apps.ai_content_generator.utils.enhanced_text_processor import EnhancedTextProcessor
+            processor = EnhancedTextProcessor()
+            
+            # Verificar si el contenido ya es HTML completo
             if content_text.strip().startswith('<!DOCTYPE') or content_text.strip().startswith('<html'):
-                formatted_content = content_text  # Ya es HTML completo
+                # Si es HTML completo, extraer el contenido del body para procesarlo
+                import re
+                body_match = re.search(r'<body[^>]*>(.*?)</body>', content_text, re.DOTALL)
+                if body_match:
+                    body_content = body_match.group(1)
+                    # Procesar solo el contenido del body
+                    formatted_content = processor.process_to_structured_html(
+                        raw_text=body_content,
+                        topic=topic,
+                        course=course,
+                        grade=grade_level
+                    )
+                else:
+                    # Si no se encuentra body, procesar todo el contenido
+                    formatted_content = processor.process_to_structured_html(
+                        raw_text=content_text,
+                        topic=topic,
+                        course=course,
+                        grade=grade_level
+                    )
             else:
-                # Si por alguna razón no es HTML, crear HTML básico
+                # Procesar contenido que contiene tags [EJEMPLO], [SECCIÓN], etc.
+                formatted_content = processor.process_to_structured_html(
+                    raw_text=content_text,
+                    topic=topic,
+                    course=course,
+                    grade=grade_level
+                )
+        except Exception as content_error:
+            logger.warning(f"Error procesando contenido con EnhancedTextProcessor: {str(content_error)}")
+            # Fallback: aplicar limpieza básica de tags
+            formatted_content = content_text
+            # Limpiar tags básicos problemáticos
+            import re
+            tag_replacements = {
+                r'\[SECCIÓN\]': '<div class="ai-section-marker"><h2><i class="fas fa-bookmark"></i> Sección</h2></div>',
+                r'\[SECCION\]': '<div class="ai-section-marker"><h2><i class="fas fa-bookmark"></i> Sección</h2></div>',
+                r'\[EJEMPLO\]': '<div class="ai-example-marker"><h3><i class="fas fa-lightbulb"></i> Ejemplo</h3></div>',
+                r'\[ACTIVIDAD\]': '<div class="ai-activity-marker"><h3><i class="fas fa-tasks"></i> Actividad</h3></div>',
+            }
+            for pattern, replacement in tag_replacements.items():
+                formatted_content = re.sub(pattern, replacement, formatted_content)
+            
+            # Si no es HTML completo, envolver en estructura básica
+            if not (formatted_content.strip().startswith('<!DOCTYPE') or formatted_content.strip().startswith('<html')):
                 formatted_content = f"""<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -256,15 +303,18 @@ def generate_content_sync(request_id):
     <style>
         body {{ font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }}
         .content {{ max-width: 1200px; margin: 0 auto; }}
+        .ai-section-marker, .ai-example-marker, .ai-activity-marker {{ 
+            margin: 20px 0; padding: 15px; border-radius: 8px; 
+        }}
+        .ai-section-marker {{ background: #e3f2fd; border-left: 4px solid #2196f3; }}
+        .ai-example-marker {{ background: #fff3e0; border-left: 4px solid #ff9800; }}
+        .ai-activity-marker {{ background: #e8f5e8; border-left: 4px solid #4caf50; }}
     </style>
 </head>
 <body>
-    <div class="content">{content_text}</div>
+    <div class="content">{formatted_content}</div>
 </body>
 </html>"""
-        except Exception as content_error:
-            # Fallback simple
-            formatted_content = content_text
         
         update_progress(request_id, 95, '💾 Guardando en base de datos...')
         
