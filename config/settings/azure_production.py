@@ -198,8 +198,7 @@ if REDIS_URL:
                 }
             }
         }
-        SESSION_ENGINE = 'django.contrib.sessions.backends.file'
-        SESSION_FILE_PATH = '/tmp/sessions'
+        SESSION_ENGINE = 'django.contrib.sessions.backends.db'
         print("🔧 Cache: Fallback a memoria local")
 else:
     CACHES = {
@@ -212,8 +211,7 @@ else:
             }
         }
     }
-    SESSION_ENGINE = 'django.contrib.sessions.backends.file'
-    SESSION_FILE_PATH = '/tmp/sessions'
+    SESSION_ENGINE = 'django.contrib.sessions.backends.db'
     print("🔧 Cache: Usando memoria local")
 
 SESSION_COOKIE_AGE = 86400
