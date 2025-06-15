@@ -9,7 +9,8 @@ from .views import (
     delete_request_view, get_grades_for_course, get_sections_for_grade,
     get_course_topics, get_progress, get_portfolio_topics, get_students_for_topic,
     MaterialPreviewView, test_content_styles_view, debug_content_processing_view,
-    debug_line_by_line_view, final_content_test_view, auto_generate_content_view
+    debug_line_by_line_view, final_content_test_view, auto_generate_content_view,
+    regenerate_scorm_package
 )
 
 app_name = 'ai'
@@ -23,6 +24,7 @@ urlpatterns = [
     path('contents/<int:pk>/', ContentDetailView.as_view(), name='content_detail'),
     path('contents/<int:pk>/edit/', ContentEditView.as_view(), name='edit_content'),
     path('contents/<int:pk>/preview/', ContentPreviewView.as_view(), name='content_preview'),
+
     path('contents/<int:pk>/assign/', direct_assign_view, name='direct_assign'),
     path('progress/<int:request_id>/', get_generation_progress_view, name='get_generation_progress'),
     path('requests/progress/<int:request_id>/', get_generation_progress_view, name='get_generation_progress_alt'),
@@ -31,6 +33,7 @@ urlpatterns = [
     path('requests/delete/<int:request_id>/', delete_request_view, name='delete_request'),
     path('add-to-topic/', add_content_to_topic, name='add_content_to_topic'),
     path('api/create-scorm-package/<int:content_id>/', create_scorm_package, name='create_scorm_package'),
+    path('api/regenerate-scorm-package/<int:content_id>/', regenerate_scorm_package, name='regenerate_scorm_package'),
     path('api/generate-scorm/', generate_scorm_api, name='generate_scorm_api'),
     path('api/get-student-topics/<int:student_id>/', get_student_topics, name='get_student_topics'),
     path('api/assign-to-portfolio/', assign_to_portfolio, name='assign_to_portfolio'),

@@ -262,7 +262,7 @@ def student_scorm_execute(request, pk):
         # Verificar si el usuario es estudiante
         try:
             student = request.user.student_profile
-        except Student.DoesNotExist:
+        except AttributeError:
             messages.error(request, "Solo los estudiantes pueden ejecutar contenido SCORM.")
             return redirect('dashboard:home')
         
@@ -272,7 +272,17 @@ def student_scorm_execute(request, pk):
             topic__portfolio__student=student
         ).first()
         
+        logger.info(f"Verificando acceso para estudiante {student.id} al paquete SCORM {package.id}")
+        logger.info(f"Material accesible encontrado: {accessible_material}")
+        
         if not accessible_material:
+            # Buscar todos los materiales SCORM del estudiante para debug
+            all_student_materials = PortfolioMaterial.objects.filter(
+                topic__portfolio__student=student,
+                scorm_package__isnull=False
+            )
+            logger.info(f"Todos los materiales SCORM del estudiante: {list(all_student_materials.values_list('id', 'scorm_package_id'))}")
+            
             messages.error(request, "No tienes acceso a este material SCORM.")
             return redirect('dashboard:student_portfolio')
         
@@ -426,9 +436,13 @@ def scorm_content_viewer(request, pk):
             topic__portfolio__student=student
         ).first()
         
+        logger.info(f"scorm_content_viewer: Verificando acceso para estudiante {student.id} al paquete SCORM {package.id}")
+        logger.info(f"scorm_content_viewer: Material accesible encontrado: {accessible_material}")
+        
         if not accessible_material:
+            logger.warning(f"scorm_content_viewer: Estudiante {student.id} no tiene acceso al paquete SCORM {package.id}")
             return HttpResponse("No tienes acceso a este contenido.", status=403)
-    except Student.DoesNotExist:
+    except AttributeError:
         # No es estudiante, verificar si es profesor o staff
         if not request.user.is_staff and package.generated_content.request.teacher != request.user:
             return HttpResponse("No tienes acceso a este contenido.", status=403)
@@ -662,7 +676,7 @@ def scorm_resource_viewer(request, pk, resource_path):
         
         if not accessible_material:
             return HttpResponse("No tienes acceso a este contenido.", status=403)
-    except Student.DoesNotExist:
+    except AttributeError:
         if not request.user.is_staff and package.generated_content.request.teacher != request.user:
             return HttpResponse("No tienes acceso a este contenido.", status=403)
     

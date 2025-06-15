@@ -1442,9 +1442,11 @@ def create_scorm_package(request, content_id):
 
         # Crear paquete SCORM usando el servicio
         try:
-            # Crear nuevo paquete usando el contenido más actualizado
-            scorm_content = content.formatted_content or content.raw_content or ""
-            packager = SCORMPackager(scorm_content, metadata)
+            # Usar solo el contenido educativo para SCORM (sin cabecera institucional)
+            source_content = content.formatted_content or content.raw_content or ""
+            
+            # Crear nuevo paquete usando solo el contenido educativo
+            packager = SCORMPackager(source_content, metadata)
             package_path = packager.create_package()
             
             # Convertir la ruta del paquete a una ruta relativa
@@ -2565,7 +2567,7 @@ def assign_to_portfolio_api(request):
         # Si no hay paquete SCORM, intentar crear uno automáticamente
         if not scorm_package:
             try:
-                logger.info(f"No existe paquete SCORM para contenido {content.id}, intentando crear uno automáticamente para clase...")
+                logger.info(f"No existe paquete SCORM para contenido {content.id}, intentando crear uno automáticamente...")
                 
                 # Importar el packager
                 from apps.scorm_packager.services.packager import SCORMPackager
@@ -2578,9 +2580,11 @@ def assign_to_portfolio_api(request):
                     'standard': 'scorm_2004_4th'
                 }
                 
-                # Crear el paquete SCORM usando el contenido más actualizado
-                scorm_content = content.formatted_content or content.raw_content or ""
-                packager = SCORMPackager(scorm_content, metadata)
+                # Usar solo el contenido educativo para SCORM (sin cabecera institucional)
+                source_content = content.formatted_content or content.raw_content or ""
+                
+                # Crear el paquete SCORM usando solo el contenido educativo
+                packager = SCORMPackager(source_content, metadata)
                 package_path = packager.create_package()
                 
                 # Convertir a ruta relativa
@@ -2596,10 +2600,10 @@ def assign_to_portfolio_api(request):
                     created_by=request.user
                 )
                 
-                logger.info(f"Paquete SCORM creado automáticamente para clase: ID={scorm_package.id}")
+                logger.info(f"Paquete SCORM creado automáticamente con cabecera institucional: ID={scorm_package.id}")
                 
             except Exception as scorm_error:
-                logger.warning(f"No se pudo crear paquete SCORM automáticamente para clase: {str(scorm_error)}")
+                logger.warning(f"No se pudo crear paquete SCORM automáticamente: {str(scorm_error)}")
                 scorm_package = None
         
         # Determinar el tipo de material más apropiado
@@ -2643,18 +2647,82 @@ def assign_to_portfolio_api(request):
         
         logger.info(f"📝 Descripción limpia creada: {len(clean_description)} caracteres")
         
+        # Crear contenido con cabecera institucional
+        institutional_header = get_institutional_header(request)
+        institutional_styles = get_institutional_styles()
+        
+        # Crear HTML completo con cabecera institucional
+        content_with_header = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{content.title}</title>
+    {institutional_styles}
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: white;
+        }}
+        .content {{
+            padding: 20px;
+        }}
+        h1, h2, h3, h4, h5, h6 {{
+            color: #005CFF;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }}
+        p {{
+            margin: 1em 0;
+            text-align: justify;
+        }}
+        ul, ol {{
+            margin: 1em 0;
+            padding-left: 2em;
+        }}
+        li {{
+            margin: 0.5em 0;
+        }}
+    </style>
+</head>
+<body>
+    {institutional_header}
+    <div class="content">
+        {source_content}
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {{
+            const dateElement = document.getElementById('generation-date');
+            if (dateElement) {{
+                const now = new Date();
+                dateElement.textContent = now.toLocaleDateString('es-ES', {{
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }});
+            }}
+        }});
+    </script>
+</body>
+</html>"""
+        
         # Crear el material en el portafolio
         material = PortfolioMaterial.objects.create(
             topic=topic,
             title=material_title,
-            description=f"Material generado con IA: {content.title}\n\n{clean_description}",
+            description=content_with_header,  # Usar contenido completo con cabecera
             material_type=material_type,
-            scorm_package=scorm_package if material_type == 'SCORM' else None,
+            scorm_package=scorm_package,  # Siempre usar el paquete SCORM si existe
             ai_generated=True,
             is_class_material=False  # Material personalizado
         )
         
         logger.info(f"Material personalizado creado: ID={material.id}, Título={material.title}, Tipo={material_type}")
+        logger.info(f"Paquete SCORM asignado: {scorm_package.id if scorm_package else 'None'}")
         
         # Preparar respuesta
         response_data = {
@@ -2744,9 +2812,11 @@ def handle_class_material_assignment(request, content, data):
                     'standard': 'scorm_2004_4th'
                 }
                 
-                # Crear el paquete SCORM usando el contenido más actualizado
-                scorm_content = content.formatted_content or content.raw_content or ""
-                packager = SCORMPackager(scorm_content, metadata)
+                # Usar solo el contenido educativo para SCORM (sin cabecera institucional)
+                source_content = content.formatted_content or content.raw_content or ""
+                
+                # Crear el paquete SCORM usando solo el contenido educativo
+                packager = SCORMPackager(source_content, metadata)
                 package_path = packager.create_package()
                 
                 # Convertir a ruta relativa
@@ -2851,12 +2921,75 @@ def handle_class_material_assignment(request, content, data):
                         if len(words) == 150:
                             clean_description += '...'
                         
+                        # Crear contenido con cabecera institucional para material principal
+                        institutional_header = get_institutional_header(request)
+                        institutional_styles = get_institutional_styles()
+                        
+                        # Crear HTML completo con cabecera institucional
+                        content_with_header = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{content.title}</title>
+    {institutional_styles}
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: white;
+        }}
+        .content {{
+            padding: 20px;
+        }}
+        h1, h2, h3, h4, h5, h6 {{
+            color: #005CFF;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }}
+        p {{
+            margin: 1em 0;
+            text-align: justify;
+        }}
+        ul, ol {{
+            margin: 1em 0;
+            padding-left: 2em;
+        }}
+        li {{
+            margin: 0.5em 0;
+        }}
+    </style>
+</head>
+<body>
+    {institutional_header}
+    <div class="content">
+        {source_content}
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {{
+            const dateElement = document.getElementById('generation-date');
+            if (dateElement) {{
+                const now = new Date();
+                dateElement.textContent = now.toLocaleDateString('es-ES', {{
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }});
+            }}
+        }});
+    </script>
+</body>
+</html>"""
+                        
                         # Crear el material principal asociado al CourseTopic
                         main_material = PortfolioMaterial.objects.create(
                             course_topic=course_topic,
                             topic=None,  # Material principal
                             title=material_title,
-                            description=f"📖 Material de clase generado con IA\n🎯 Tema: {course_topic_title}\n📦 Formato: SCORM\n🏫 Sección: {section.name}\n\n{clean_description}",
+                            description=content_with_header,  # Usar contenido completo con cabecera
                             material_type=material_type,  # SCORM
                             scorm_package=scorm_package,
                             ai_generated=True,
@@ -2931,11 +3064,74 @@ def handle_class_material_assignment(request, content, data):
                                 if len(words) == 100:
                                     clean_description += '...'
                                 
+                                # Crear contenido con cabecera institucional para material de clase
+                                institutional_header = get_institutional_header(request)
+                                institutional_styles = get_institutional_styles()
+                                
+                                # Crear HTML completo con cabecera institucional
+                                content_with_header = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{content.title}</title>
+    {institutional_styles}
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: white;
+        }}
+        .content {{
+            padding: 20px;
+        }}
+        h1, h2, h3, h4, h5, h6 {{
+            color: #005CFF;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }}
+        p {{
+            margin: 1em 0;
+            text-align: justify;
+        }}
+        ul, ol {{
+            margin: 1em 0;
+            padding-left: 2em;
+        }}
+        li {{
+            margin: 0.5em 0;
+        }}
+    </style>
+</head>
+<body>
+    {institutional_header}
+    <div class="content">
+        {source_content}
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {{
+            const dateElement = document.getElementById('generation-date');
+            if (dateElement) {{
+                const now = new Date();
+                dateElement.textContent = now.toLocaleDateString('es-ES', {{
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }});
+            }}
+        }});
+    </script>
+</body>
+</html>"""
+                                
                                 # Crear el material de clase en formato SCORM
                                 material = PortfolioMaterial.objects.create(
                                     topic=topic,
                                     title=material_title,
-                                    description=f"📖 Material de clase generado con IA\n🎯 Tema: {course_topic_title}\n📦 Formato: SCORM\n🏫 Sección: {section.name}\n\n{clean_description}",
+                                    description=content_with_header,  # Usar contenido completo con cabecera
                                     material_type=material_type,  # Siempre SCORM para material de clase
                                     scorm_package=scorm_package,  # Siempre debe tener paquete SCORM
                                     ai_generated=True,
@@ -2943,6 +3139,7 @@ def handle_class_material_assignment(request, content, data):
                                 )
                                 materials_created += 1
                                 logger.info(f"✅ Material de clase SCORM creado para {student_name} (Sección {section.name}): ID={material.id}")
+                                logger.info(f"Paquete SCORM asignado al material de clase: {scorm_package.id if scorm_package else 'None'}")
                             else:
                                 logger.info(f"⚠️  Material ya existe para {student_name} en sección {section.name}, omitiendo creación")
                                 
@@ -3048,9 +3245,11 @@ def handle_personal_material_assignment(request, content, data):
                     'standard': 'scorm_2004_4th'
                 }
                 
-                # Usar el contenido más actualizado para el paquete SCORM
-                scorm_content = content.formatted_content or content.raw_content or ""
-                packager = SCORMPackager(scorm_content, metadata)
+                # Usar solo el contenido educativo para SCORM (sin cabecera institucional)
+                source_content = content.formatted_content or content.raw_content or ""
+                
+                # Crear el paquete SCORM usando solo el contenido educativo
+                packager = SCORMPackager(source_content, metadata)
                 package_path = packager.create_package()
                 relative_path = os.path.relpath(package_path, settings.MEDIA_ROOT)
                 
@@ -3117,13 +3316,76 @@ def handle_personal_material_assignment(request, content, data):
                     })
                     continue
                 
+                # Crear contenido con cabecera institucional para material personalizado
+                institutional_header = get_institutional_header(request)
+                institutional_styles = get_institutional_styles()
+                
+                # Crear HTML completo con cabecera institucional
+                content_with_header = f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{content.title}</title>
+    {institutional_styles}
+    <style>
+        body {{
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            background-color: white;
+        }}
+        .content {{
+            padding: 20px;
+        }}
+        h1, h2, h3, h4, h5, h6 {{
+            color: #005CFF;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }}
+        p {{
+            margin: 1em 0;
+            text-align: justify;
+        }}
+        ul, ol {{
+            margin: 1em 0;
+            padding-left: 2em;
+        }}
+        li {{
+            margin: 0.5em 0;
+        }}
+    </style>
+</head>
+<body>
+    {institutional_header}
+    <div class="content">
+        {source_content}
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {{
+            const dateElement = document.getElementById('generation-date');
+            if (dateElement) {{
+                const now = new Date();
+                dateElement.textContent = now.toLocaleDateString('es-ES', {{
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                }});
+            }}
+        }});
+    </script>
+</body>
+</html>"""
+                
                 # Crear el material en el portafolio del estudiante
                 material = PortfolioMaterial.objects.create(
                     topic=topic,
                     title=material_title,
-                    description=f"Material personalizado generado con IA: {content.title}\n\n{clean_description}",
+                    description=content_with_header,  # Usar contenido completo con cabecera
                     material_type=material_type,
-                    scorm_package=scorm_package if material_type == 'SCORM' else None,
+                    scorm_package=scorm_package,  # Siempre usar el paquete SCORM si existe
                     ai_generated=True,
                     is_class_material=False
                 )
@@ -3506,14 +3768,56 @@ class ContentPreviewView(View):
                 # El contenido ya es HTML completo generado por IA, completar estructura si es necesario
                 logger.info(f"Contenido {pk} es HTML completo, completando estructura si es necesario")
                 
+                # Obtener cabecera institucional
+                institutional_header = get_institutional_header(request)
+                
                 # Completar estructura HTML si es necesario
                 if raw_content_clean.startswith('<!DOCTYPE html>'):
-                    # Ya tiene DOCTYPE, usar tal como está SIN procesamiento adicional
-                    logger.info(f"Contenido {pk} tiene DOCTYPE completo, devolviendo sin modificaciones")
-                    return HttpResponse(raw_content)
+                    # Ya tiene DOCTYPE, insertar cabecera después del <body>
+                    import re
+                    body_match = re.search(r'<body[^>]*>', raw_content, re.IGNORECASE)
+                    if body_match:
+                        body_end = body_match.end()
+                        content_with_header = (
+                            raw_content[:body_end] + 
+                            '\n' + institutional_header + '\n' + 
+                            raw_content[body_end:]
+                        )
+                        # Agregar script para fecha
+                        script_tag = '''
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const dateElement = document.getElementById('generation-date');
+                    if (dateElement) {
+                        const now = new Date();
+                        dateElement.textContent = now.toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                    }
+                });
+            </script>
+        </body>'''
+                        content_with_header = content_with_header.replace('</body>', script_tag)
+                        return HttpResponse(content_with_header)
+                    else:
+                        logger.info(f"Contenido {pk} tiene DOCTYPE completo, devolviendo sin modificaciones")
+                        return HttpResponse(raw_content)
                 elif raw_content_clean.startswith('<html'):
-                    # Ya tiene html tag, solo agregar DOCTYPE
-                    complete_html = f"<!DOCTYPE html>\n{raw_content}"
+                    # Ya tiene html tag, agregar DOCTYPE y cabecera
+                    import re
+                    body_match = re.search(r'<body[^>]*>', raw_content, re.IGNORECASE)
+                    if body_match:
+                        body_end = body_match.end()
+                        content_with_header = (
+                            raw_content[:body_end] + 
+                            '\n' + institutional_header + '\n' + 
+                            raw_content[body_end:]
+                        )
+                        complete_html = f"<!DOCTYPE html>\n{content_with_header}"
+                    else:
+                        complete_html = f"<!DOCTYPE html>\n{raw_content}"
                 else:
                     # Necesita estructura completa, detectar dónde está el contenido del body
                     # Buscar dónde termina el head (después de </style> o </head>)
@@ -3840,6 +4144,10 @@ class ContentPreviewView(View):
         
         processed_content = '\n'.join(processed_lines)
         
+        # Obtener cabecera institucional
+        institutional_header = get_institutional_header(request)
+        institutional_styles = get_institutional_styles()
+        
         html_wrapper = f"""
         <!DOCTYPE html>
         <html lang="es">
@@ -3847,6 +4155,7 @@ class ContentPreviewView(View):
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>{generated_content.title}</title>
+            {institutional_styles}
             <style>
                 body {{
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -4060,9 +4369,24 @@ class ContentPreviewView(View):
             </style>
         </head>
         <body>
+            {institutional_header}
             <div class="content">
                 {processed_content}
             </div>
+            <script>
+                // Establecer fecha de generación
+                document.addEventListener('DOMContentLoaded', function() {{
+                    const dateElement = document.getElementById('generation-date');
+                    if (dateElement) {{
+                        const now = new Date();
+                        dateElement.textContent = now.toLocaleDateString('es-ES', {{
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        }});
+                    }}
+                }});
+            </script>
         </body>
         </html>
         """
@@ -4797,96 +5121,185 @@ def debug_line_by_line_view(request):
 @login_required
 def auto_generate_content_view(request):
     """
-    Vista que genera contenido automáticamente basado en parámetros GET
-    sin mostrar un formulario intermedio.
+    Vista para generar contenido automáticamente basado en parámetros de URL
     """
+    # Obtener parámetros de la URL
+    course_topic_id = request.GET.get('course_topic_id')
+    course_id = request.GET.get('course')
+    topic = request.GET.get('topic')
+    grade_level = request.GET.get('grade_level')
+    for_class = request.GET.get('for_class', 'false').lower() == 'true'
+    
+    if not all([course_topic_id, course_id, topic, grade_level]):
+        messages.error(request, 'Faltan parámetros requeridos para la generación automática.')
+        return redirect('ai:generator')
+    
     try:
         # Verificar que el usuario sea profesor
         if not hasattr(request.user, 'teacher_profile'):
-            messages.error(request, "Solo los profesores pueden generar contenido automáticamente.")
-            return redirect('dashboard:teacher')
+            messages.error(request, 'Solo los profesores pueden generar contenido.')
+            return redirect('dashboard:index')
         
-        # Obtener parámetros de la URL
-        topic = request.GET.get('topic', '')
-        course_id = request.GET.get('course', '')
-        grade_level = request.GET.get('grade_level', '')
-        course_topic_id = request.GET.get('course_topic_id', '')
-        for_class = request.GET.get('for_class', 'false').lower() == 'true'
+        # Obtener el curso
+        from apps.academic.models import Course
+        course = get_object_or_404(Course, id=course_id)
         
-        # Validar parámetros mínimos
-        if not topic:
-            messages.error(request, "Se requiere especificar un tema para generar contenido.")
-            return redirect('ai:generator')
+        # Obtener el tipo de contenido por defecto (Material didáctico)
+        content_type = get_object_or_404(ContentType, id=4)  # Material didáctico
         
-        if not grade_level:
-            messages.error(request, "Se requiere especificar un grado para generar contenido.")
-            return redirect('ai:generator')
-        
-        # Obtener curso si se especifica
-        course = None
-        if course_id:
-            try:
-                from apps.academic.models import Course
-                course = Course.objects.get(pk=course_id)
-            except Course.DoesNotExist:
-                messages.error(request, f"No se encontró el curso con ID {course_id}")
-                return redirect('ai:generator')
-        
-        # Obtener tipo de contenido por defecto
-        from .models import ContentType
-        content_type = ContentType.objects.filter(name='Material didáctico').first()
-        if not content_type:
-            content_type = ContentType.objects.first()
-        
-        if not content_type:
-            messages.error(request, "No hay tipos de contenido configurados en el sistema.")
-            return redirect('ai:generator')
-        
-        # Crear ContentRequest automáticamente
+        # Crear la solicitud de contenido
         content_request = ContentRequest.objects.create(
             teacher=request.user,
-            topic=topic,
-            grade_level=grade_level,
             course=course,
             content_type=content_type,
-            additional_instructions="Contenido generado automáticamente."
+            topic=topic,
+            grade_level=grade_level,
+            additional_instructions="Contenido generado automáticamente desde el generador de IA.",
+            status='pending',
+            for_class=for_class,
+            related_topic_id=course_topic_id
         )
         
-        # Si viene course_topic_id, agregar información del curso
-        if course_topic_id:
-            try:
-                from apps.academic.models import CourseTopic
-                course_topic = CourseTopic.objects.get(pk=course_topic_id)
+        # Iniciar la generación de contenido
+        try:
+            llm_service = OpenAIService()
+            
+            # Generar el prompt
+            prompt = f"""
+            Genera material didáctico completo sobre el tema "{topic}" para estudiantes de {grade_level}.
+            
+            El contenido debe incluir:
+            1. Introducción al tema
+            2. Conceptos principales con explicaciones claras
+            3. Ejemplos prácticos y ejercicios
+            4. Actividades interactivas
+            5. Evaluación o preguntas de comprensión
+            
+            Formato el contenido de manera educativa y atractiva para estudiantes de {grade_level}.
+            Usa un lenguaje apropiado para el nivel educativo.
+            """
+            
+            # Generar contenido
+            generated_text = llm_service.generate_content(prompt)
+            
+            if generated_text:
+                # Crear el contenido generado
+                content = GeneratedContent.objects.create(
+                    request=content_request,
+                    title=f"Material Didáctico: {topic}",
+                    raw_content=generated_text,
+                    formatted_content=improve_content_formatting(generated_text, request),
+                    model_used=settings.OPENAI_MODEL,
+                    tokens_used=len(generated_text.split())
+                )
                 
-                # Agregar información del CourseTopic al campo additional_instructions
-                class_info_text = f"\n\nINFORMACIÓN DEL TEMA DE CLASE:\nTema: {course_topic.title}\nCurso: {course_topic.course.name}\nSección: {course_topic.section.grade.name} - Sección {course_topic.section.name}\nProfesor: {course_topic.teacher.user.get_full_name()}\n\nEste contenido será utilizado como material de clase para todos los estudiantes de la sección."
-                
-                if course_topic.description:
-                    class_info_text += f"\nDescripción del tema: {course_topic.description}"
-                
-                content_request.additional_instructions += class_info_text
+                # Actualizar estado de la solicitud
+                content_request.status = 'completed'
                 content_request.save()
                 
-            except Exception as e:
-                logger.warning(f"Error al obtener información del CourseTopic {course_topic_id}: {str(e)}")
-        
-        # Iniciar generación de contenido
-        try:
-            from .tasks import generate_content
-            result = generate_content(content_request.id)
-            
-            messages.success(request, f"🚀 ¡Contenido en generación automática! Tema: '{topic}' para {grade_level}")
-            messages.info(request, "El contenido se está generando automáticamente. Será redirigido cuando esté listo.")
-            
-            # Redirigir a la lista de contenidos con el ID de la nueva solicitud
-            redirect_url = reverse('ai:content_request_list') + f'?auto_generated=true&request_id={content_request.id}'
-            return redirect(redirect_url)
-            
+                messages.success(request, f'Contenido generado exitosamente para el tema "{topic}".')
+                return redirect('ai:content_detail', pk=content.id)
+            else:
+                content_request.status = 'failed'
+                content_request.save()
+                messages.error(request, 'No se pudo generar el contenido. Intenta nuevamente.')
+                
         except Exception as e:
-            messages.error(request, f"Error al iniciar la generación automática: {str(e)}")
-            return redirect('ai:generator')
-            
-    except Exception as e:
-        logger.exception(f"Error en auto_generate_content_view: {str(e)}")
-        messages.error(request, f"Error inesperado: {str(e)}")
+            logger.error(f"Error en generación automática: {str(e)}")
+            content_request.status = 'failed'
+            content_request.save()
+            messages.error(request, f'Error al generar contenido: {str(e)}')
+        
         return redirect('ai:generator')
+        
+    except Exception as e:
+        logger.error(f"Error en auto_generate_content_view: {str(e)}")
+        messages.error(request, f'Error en la generación automática: {str(e)}')
+        return redirect('ai:generator')
+
+@login_required
+def regenerate_scorm_package(request, content_id):
+    """
+    Regenera un paquete SCORM existente con el contenido más actualizado incluyendo cabecera institucional.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Usuario no autenticado'}, status=401)
+    
+    try:
+        # Obtener el contenido
+        content = get_object_or_404(GeneratedContent, pk=content_id)
+        logger.info(f"Regenerando paquete SCORM para contenido {content_id}")
+
+        # Verificar permisos
+        if content.request.teacher != request.user and not request.user.is_staff:
+            return JsonResponse({'success': False, 'error': 'No tiene permisos para regenerar este paquete SCORM'}, status=403)
+
+        # Buscar paquete SCORM existente
+        existing_package = SCORMPackage.objects.filter(generated_content=content).first()
+        
+        if not existing_package:
+            return JsonResponse({'success': False, 'error': 'No existe un paquete SCORM para este contenido'}, status=404)
+
+        # Eliminar el archivo anterior si existe
+        if existing_package.package_file:
+            try:
+                old_file_path = os.path.join(settings.MEDIA_ROOT, str(existing_package.package_file))
+                if os.path.exists(old_file_path):
+                    os.remove(old_file_path)
+                    logger.info(f"Archivo SCORM anterior eliminado: {old_file_path}")
+            except Exception as delete_error:
+                logger.warning(f"No se pudo eliminar archivo anterior: {delete_error}")
+
+        # Preparar metadatos
+        metadata = {
+            'title': content.title,
+            'description': f"Contenido regenerado para {content.request.course.name}",
+            'version': '1.0',
+            'standard': 'scorm_2004_4th'
+        }
+
+        # Usar solo el contenido educativo para SCORM (sin cabecera institucional)
+        source_content = content.formatted_content or content.raw_content or ""
+        
+        logger.info(f"🔄 REGENERANDO SCORM - Content ID: {content.id}")
+        logger.info(f"🔄 REGENERANDO SCORM - Source content length: {len(source_content)}")
+
+        # Crear nuevo paquete SCORM
+        try:
+            from apps.scorm_packager.services.packager import SCORMPackager
+            packager = SCORMPackager(source_content, metadata)
+            package_path = packager.create_package()
+            
+            # Convertir a ruta relativa
+            relative_path = os.path.relpath(package_path, settings.MEDIA_ROOT)
+            
+            # Actualizar el registro existente
+            existing_package.package_file = relative_path
+            existing_package.description = metadata['description']
+            existing_package.save()
+            
+            logger.info(f"Paquete SCORM regenerado exitosamente: ID={existing_package.id}")
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Paquete SCORM regenerado exitosamente con cabecera institucional',
+                'package_id': existing_package.id,
+                'download_url': reverse('scorm_packager:download_scorm_package', args=[existing_package.id]),
+                'view_url': reverse('scorm_packager:scorm_package_detail', args=[existing_package.id])
+            })
+
+        except Exception as e:
+            logger.error(f"Error al regenerar paquete SCORM: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Error al regenerar el paquete SCORM: {str(e)}'
+            }, status=500)
+
+    except Exception as e:
+        logger.error(f"Error general al regenerar paquete SCORM: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': f'Error al procesar la solicitud: {str(e)}'
+        }, status=500)
+
+

@@ -198,6 +198,17 @@
         color: white;
     }
 
+    .step-action.success {
+        background: linear-gradient(135deg, var(--success), #059669);
+        color: white;
+    }
+
+    .step-action.success:hover {
+        background: linear-gradient(135deg, #059669, var(--success));
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
     .step-action.primary:hover {
         box-shadow: 0 4px 15px rgba(0, 92, 255, 0.3);
         transform: translateY(-1px);
@@ -544,7 +555,7 @@
                     Asignar a estudiantes
                 </h4>
                 <p class="step-description">
-                    Entregue el material directamente a los portafolios estudiantiles.
+                    Entregue el material directamente a los portafolios estudiantiles con cabecera institucional.
                 </p>
                 <a href="{% url 'ai:direct_assign' pk=content.id %}" class="step-action success">
                     <i class="fas fa-paper-plane"></i>
@@ -553,6 +564,8 @@
                     </div>
                 </div>
                 
+
+                
         <!-- Tip mejorado -->
         <div class="tip-card">
             <div class="tip-header">
@@ -560,7 +573,7 @@
                 Consejo
                 </div>
             <p class="tip-text">
-                El paquete SCORM se genera automáticamente al asignar el material.
+                El paquete SCORM se genera automáticamente al asignar el material con solo el contenido educativo.
             </p>
             </div>
         </div>
@@ -1290,6 +1303,9 @@
             }
         }, 10000);
     }
+    
+
+    
     });
 </script>
 {% endblock %}
