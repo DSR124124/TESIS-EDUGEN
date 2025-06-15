@@ -1442,10 +1442,23 @@ def create_scorm_package(request, content_id):
 
         # Crear paquete SCORM usando el servicio
         try:
-            # Usar solo el contenido educativo para SCORM (sin cabecera institucional)
-            source_content = content.formatted_content or content.raw_content or ""
+            # Usar el contenido crudo que es el que contiene el contenido educativo real
+            source_content = content.raw_content or content.formatted_content or ""
             
-            # Crear nuevo paquete usando solo el contenido educativo
+            logger.info(f"📋 SCORM Content length: {len(source_content)}")
+            logger.info(f"📋 SCORM Content preview: {source_content[:500]}...")
+            
+            if not source_content.strip():
+                logger.error("⚠️ Contenido vacío para generar SCORM")
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'El contenido está vacío y no se puede generar un paquete SCORM'
+                    }, status=400)
+                messages.error(request, "El contenido está vacío y no se puede generar un paquete SCORM")
+                return redirect('ai:content_detail', pk=content_id)
+            
+            # Crear nuevo paquete usando el contenido educativo completo
             packager = SCORMPackager(source_content, metadata)
             package_path = packager.create_package()
             
@@ -5291,11 +5304,19 @@ def regenerate_scorm_package(request, content_id):
             'standard': 'scorm_2004_4th'
         }
 
-        # Usar solo el contenido educativo para SCORM (sin cabecera institucional)
-        source_content = content.formatted_content or content.raw_content or ""
+        # Usar el contenido crudo que es el que contiene el contenido educativo real
+        source_content = content.raw_content or content.formatted_content or ""
         
         logger.info(f"🔄 REGENERANDO SCORM - Content ID: {content.id}")
         logger.info(f"🔄 REGENERANDO SCORM - Source content length: {len(source_content)}")
+        logger.info(f"🔄 REGENERANDO SCORM - Content preview: {source_content[:500]}...")
+        
+        if not source_content.strip():
+            logger.error("⚠️ Contenido vacío para regenerar SCORM")
+            return JsonResponse({
+                'success': False, 
+                'error': 'El contenido está vacío y no se puede regenerar un paquete SCORM'
+            }, status=400)
 
         # Crear nuevo paquete SCORM
         try:

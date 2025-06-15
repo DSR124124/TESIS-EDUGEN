@@ -198,6 +198,23 @@
         color: white;
     }
 
+    .step-action.warning {
+        background: linear-gradient(135deg, var(--warning), #D97706);
+        color: white;
+    }
+
+    .step-action:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    .btn-loading {
+        display: none;
+        align-items: center;
+        gap: 8px;
+    }
+
     .step-action.success {
         background: linear-gradient(135deg, var(--success), #059669);
         color: white;
@@ -542,11 +559,36 @@
                         </div>
                     </div>
                     
-        <!-- Paso 2: Asignar -->
+        <!-- Paso 2: Generar SCORM -->
+        <div class="workflow-step">
+            <div class="step-header">
+                <span>PASO 2</span>
+                <i class="fas fa-archive"></i>
+            </div>
+            <div class="step-content">
+                <h4 class="step-title">
+                    <i class="fas fa-file-archive text-warning"></i>
+                    Generar paquete SCORM
+                </h4>
+                <p class="step-description">
+                    Cree un paquete SCORM compatible con LMS para distribución externa.
+                </p>
+                <button id="btnGenerateScorm" class="step-action warning" data-content-id="{{ content.id }}">
+                    <i class="fas fa-download"></i>
+                    <span class="btn-text">Generar SCORM</span>
+                    <span class="btn-loading" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        Generando...
+                    </span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Paso 3: Asignar -->
         <div class="workflow-step active">
             <div class="status-indicator"></div>
             <div class="step-header">
-                <span>PASO 2</span>
+                <span>PASO 3</span>
                 <i class="fas fa-check"></i>
                         </div>
             <div class="step-content">
@@ -573,7 +615,7 @@
                 Consejo
                 </div>
             <p class="tip-text">
-                El paquete SCORM se genera automáticamente al asignar el material con solo el contenido educativo.
+                Use el botón "Generar SCORM" para crear un paquete compatible con cualquier LMS, o asigne directamente a estudiantes con cabecera institucional.
             </p>
             </div>
         </div>
@@ -1303,7 +1345,112 @@
             }
         }, 10000);
     }
+    // Funcionalidad del botón SCORM
+    const btnGenerateScorm = document.getElementById('btnGenerateScorm');
+    if (btnGenerateScorm) {
+        btnGenerateScorm.addEventListener('click', function() {
+            const contentId = this.getAttribute('data-content-id');
+            const btnText = this.querySelector('.btn-text');
+            const btnLoading = this.querySelector('.btn-loading');
+            
+            // Cambiar estado a cargando
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline-flex';
+            this.disabled = true;
+            
+            // Realizar petición AJAX
+            fetch(`/ai/api/create-scorm-package/${contentId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mostrar mensaje de éxito
+                    showNotification('¡Paquete SCORM generado exitosamente!', 'success');
+                    
+                    // Iniciar descarga automática
+                    if (data.download_url) {
+                        window.location.href = data.download_url;
+                    }
+                    
+                    // Marcar paso como completado
+                    const scormStep = btnGenerateScorm.closest('.workflow-step');
+                    if (scormStep) {
+                        scormStep.classList.add('active');
+                        scormStep.querySelector('.step-header').innerHTML = '<span>PASO 2</span><i class="fas fa-check"></i>';
+                    }
+                } else {
+                    showNotification(data.message || 'Error al generar el paquete SCORM', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error de conexión al generar SCORM', 'error');
+            })
+            .finally(() => {
+                // Restaurar estado del botón
+                btnText.style.display = 'inline';
+                btnLoading.style.display = 'none';
+                this.disabled = false;
+            });
+        });
+    }
     
+    // Función para obtener cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Función para mostrar notificaciones
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        const colors = {
+            success: '#10B981',
+            error: '#EF4444',
+            info: '#3B82F6',
+            warning: '#F59E0B'
+        };
+        
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${colors[type]};
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            z-index: 10000;
+            max-width: 350px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: slideInRight 0.3s ease-out;
+        `;
+        
+        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : type === 'warning' ? '⚠️' : 'ℹ️';
+        notification.innerHTML = `${icon} ${message}`;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
+    }
 
     
     });
