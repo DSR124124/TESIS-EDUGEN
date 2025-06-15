@@ -1103,6 +1103,8 @@
     init();
     
     function init() {
+        console.log('🚀 Inicializando sistema de actualización automática...');
+        
         updateStatistics();
         attachEventListeners();
         startAutoUpdate();
@@ -1119,6 +1121,15 @@
             showToast('Solicitud de contenido creada exitosamente. El contenido se está generando.', 'success');
             // Limpiar parámetro de la URL
             history.replaceState({}, '', window.location.pathname);
+        }
+        
+        // Verificar que el sistema de actualización esté funcionando
+        const processingCount = document.querySelectorAll('[data-status="processing"], [data-status="pending"]').length;
+        if (processingCount > 0) {
+            console.log(`✅ Sistema de actualización activo - Monitoreando ${processingCount} solicitudes`);
+            showToast(`Sistema de actualización automática activo. Monitoreando ${processingCount} solicitud(es) en proceso.`, 'info');
+        } else {
+            console.log('ℹ️ No hay solicitudes en proceso para monitorear');
         }
     }
     
@@ -1372,42 +1383,83 @@
     }
     
     function updateCardStatus(requestId, newStatus) {
+        // Actualizar tarjeta (vista grid)
         const card = document.querySelector(`[data-request-id="${requestId}"]`);
-        if (!card) return;
-        
-        // Actualizar atributo de estado
-        card.setAttribute('data-status', newStatus);
-        
-        // Actualizar indicador visual
-        const indicator = card.querySelector('.card-status-indicator');
-        indicator.className = `card-status-indicator ${newStatus}`;
-        
-        // Actualizar badge de estado
-        const statusBadge = card.querySelector('.status-badge');
-        statusBadge.className = `status-badge ${newStatus}`;
-        
-        let statusContent = '';
-        switch(newStatus) {
-            case 'pending':
-                statusContent = '<i class="fas fa-hourglass-start"></i> Pendiente';
-                break;
-            case 'processing':
-                statusContent = '<i class="fas fa-spinner fa-spin"></i> En Proceso';
-                break;
-            case 'completed':
-                statusContent = '<i class="fas fa-check-circle"></i> Completado';
-                break;
-            case 'failed':
-                statusContent = '<i class="fas fa-exclamation-triangle"></i> Fallido';
-                break;
-            case 'cancelled':
-                statusContent = '<i class="fas fa-ban"></i> Cancelado';
-                break;
+        if (card) {
+            // Actualizar atributo de estado
+            card.setAttribute('data-status', newStatus);
+            
+            // Actualizar indicador visual
+            const indicator = card.querySelector('.card-status-indicator');
+            if (indicator) {
+                indicator.className = `card-status-indicator ${newStatus}`;
+            }
+            
+            // Actualizar badge de estado
+            const statusBadge = card.querySelector('.status-badge');
+            if (statusBadge) {
+                statusBadge.className = `status-badge ${newStatus}`;
+                
+                let statusContent = '';
+                switch(newStatus) {
+                    case 'pending':
+                        statusContent = '<i class="fas fa-hourglass-start"></i> Pendiente';
+                        break;
+                    case 'processing':
+                        statusContent = '<i class="fas fa-spinner fa-spin"></i> En Proceso';
+                        break;
+                    case 'completed':
+                        statusContent = '<i class="fas fa-check-circle"></i> Completado';
+                        break;
+                    case 'failed':
+                        statusContent = '<i class="fas fa-exclamation-triangle"></i> Fallido';
+                        break;
+                    case 'cancelled':
+                        statusContent = '<i class="fas fa-ban"></i> Cancelado';
+                        break;
+                }
+                statusBadge.innerHTML = statusContent;
+            }
+            
+            // Actualizar acciones
+            updateCardActions(requestId, newStatus);
         }
-        statusBadge.innerHTML = statusContent;
         
-        // Actualizar acciones
-        updateCardActions(requestId, newStatus);
+        // Actualizar fila de tabla (vista table)
+        const tableRow = document.querySelector(`tr[data-request-id="${requestId}"]`);
+        if (tableRow) {
+            // Actualizar atributo de estado
+            tableRow.setAttribute('data-status', newStatus);
+            
+            // Actualizar celda de estado
+            const statusCell = tableRow.querySelector('.table-status-badge');
+            if (statusCell) {
+                statusCell.className = `table-status-badge ${newStatus}`;
+                
+                let statusContent = '';
+                switch(newStatus) {
+                    case 'pending':
+                        statusContent = '<i class="fas fa-hourglass-start"></i> Pendiente';
+                        break;
+                    case 'processing':
+                        statusContent = '<i class="fas fa-spinner fa-spin"></i> En Proceso';
+                        break;
+                    case 'completed':
+                        statusContent = '<i class="fas fa-check-circle"></i> Completado';
+                        break;
+                    case 'failed':
+                        statusContent = '<i class="fas fa-exclamation-triangle"></i> Fallido';
+                        break;
+                    case 'cancelled':
+                        statusContent = '<i class="fas fa-ban"></i> Cancelado';
+                        break;
+                }
+                statusCell.innerHTML = statusContent;
+            }
+            
+            // Actualizar acciones de la tabla
+            updateTableRowActions(requestId, newStatus);
+        }
         
         // Actualizar estadísticas
         updateStatistics();
@@ -1474,32 +1526,137 @@
         });
     }
     
+    function updateTableRowActions(requestId, status) {
+        const actionsCell = document.querySelector(`tr[data-request-id="${requestId}"] .table-actions`);
+        if (!actionsCell) return;
+        
+        let actionsHTML = '';
+        
+        switch(status) {
+            case 'completed':
+                actionsHTML = `
+                    <a href="/ai/contents/${requestId}/" class="btn btn-primary btn-sm">
+                        <i class="fas fa-eye"></i> Ver
+                    </a>
+                    <button class="btn btn-danger btn-sm delete-btn" data-request-id="${requestId}">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                `;
+                break;
+            case 'processing':
+            case 'pending':
+                actionsHTML = `
+                    <button class="btn btn-secondary btn-sm" disabled>
+                        <i class="fas fa-clock"></i> Procesando...
+                    </button>
+                    <button class="btn btn-danger btn-sm cancel-btn" data-request-id="${requestId}">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                `;
+                break;
+            case 'failed':
+            case 'cancelled':
+                actionsHTML = `
+                    <button class="btn btn-primary btn-sm regenerate-btn" data-request-id="${requestId}">
+                        <i class="fas fa-redo"></i> Reintentar
+                    </button>
+                    <button class="btn btn-danger btn-sm delete-btn" data-request-id="${requestId}">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                `;
+                break;
+        }
+        
+        actionsCell.innerHTML = actionsHTML;
+        
+        // Reattach event listeners para la tabla
+        actionsCell.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', handleDelete);
+        });
+        actionsCell.querySelectorAll('.cancel-btn').forEach(btn => {
+            btn.addEventListener('click', handleCancel);
+        });
+        actionsCell.querySelectorAll('.regenerate-btn').forEach(btn => {
+            btn.addEventListener('click', handleRegenerate);
+        });
+    }
+    
     function startAutoUpdate() {
-        updateInterval = setInterval(() => {
+        // Función para actualizar estados
+        const updateStates = () => {
+            console.log('Verificando estados de solicitudes...');
+            
             // Verificar progreso de solicitudes en proceso, pero evitar las que están siendo monitoreadas
             const processingCards = document.querySelectorAll('[data-status="processing"], [data-status="pending"]');
             const monitoringRequestId = localStorage.getItem('monitoring_content_request');
+            
+            console.log(`Encontradas ${processingCards.length} solicitudes en proceso/pendientes`);
+            
+            // Mostrar indicador temporal en la consola del navegador para debugging
+            if (processingCards.length > 0) {
+                console.log('🔄 Actualizando estados automáticamente...');
+            }
             
             processingCards.forEach(card => {
                 const requestId = card.getAttribute('data-request-id');
                 
                 // No actualizar la card que está siendo monitoreada por nuestro sistema de notificaciones
                 if (requestId === monitoringRequestId) {
+                    console.log(`Saltando solicitud ${requestId} (siendo monitoreada)`);
                     return;
                 }
                 
-                fetch(`/ai/progress/${requestId}/`)
-                .then(response => response.json())
+                console.log(`Verificando estado de solicitud ${requestId}`);
+                
+                fetch(`/ai/progress/${requestId}/`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Cache-Control': 'no-cache'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
-                    if (data.status !== card.getAttribute('data-status')) {
+                    console.log(`Estado de solicitud ${requestId}:`, data);
+                    const currentStatus = card.getAttribute('data-status');
+                    
+                    if (data.status && data.status !== currentStatus) {
+                        console.log(`Actualizando estado de ${requestId}: ${currentStatus} -> ${data.status}`);
                         updateCardStatus(requestId, data.status);
+                        
+                        // Si se completó, mostrar notificación
+                        if (data.status === 'completed') {
+                            showToast(`Contenido "${data.topic || 'solicitud'}" completado exitosamente`, 'success');
+                        } else if (data.status === 'failed') {
+                            showToast(`Error al generar contenido "${data.topic || 'solicitud'}"`, 'error');
+                        }
                     }
                 })
                 .catch(error => {
-                    console.error('Error checking progress:', error);
+                    console.error(`Error verificando progreso de solicitud ${requestId}:`, error);
+                    
+                    // Si es un error de red, mostrar notificación solo una vez cada 30 segundos
+                    const now = Date.now();
+                    const lastErrorTime = localStorage.getItem('last_network_error') || 0;
+                    
+                    if (now - lastErrorTime > 30000) { // 30 segundos
+                        console.warn('⚠️ Error de conectividad - reintentando automáticamente...');
+                        localStorage.setItem('last_network_error', now);
+                    }
                 });
             });
-        }, 15000); // Actualizar cada 15 segundos (menos frecuente para evitar conflictos)
+        };
+        
+        // Ejecutar inmediatamente al iniciar
+        updateStates();
+        
+        // Luego ejecutar cada 5 segundos
+        updateInterval = setInterval(updateStates, 5000);
     }
     
     function checkEmptyState() {
@@ -1696,6 +1853,9 @@
         if (updateInterval) {
             clearInterval(updateInterval);
         }
+        // Limpiar errores de red del localStorage
+        localStorage.removeItem('last_network_error');
+        console.log('🧹 Limpieza completada al salir de la página');
     });
     });
 </script>
