@@ -2561,36 +2561,50 @@ def assign_to_portfolio_api(request):
         if not topic.portfolio or not topic.portfolio.student:
             return JsonResponse({"success": False, "error": "El tema seleccionado no tiene un portafolio o estudiante válido"}, status=400)
         
-        # Verificar si hay un paquete SCORM para este contenido
+        # SIEMPRE generar/regenerar paquete SCORM limpio para material personalizado
         scorm_package = SCORMPackage.objects.filter(generated_content=content).first()
         
-        # Si no hay paquete SCORM, intentar crear uno automáticamente
-        if not scorm_package:
-            try:
-                logger.info(f"No existe paquete SCORM para contenido {content.id}, intentando crear uno automáticamente...")
+        try:
+            logger.info(f"📦 Generando/Regenerando paquete SCORM LIMPIO para material personalizado {content.id}...")
+            
+            # Importar el packager
+            from apps.scorm_packager.services.packager import SCORMPackager
+            
+            # Preparar metadatos para el paquete SCORM
+            metadata = {
+                'title': content.title,
+                'description': f"Material personalizado - {content.request.course.name}",
+                'version': '1.0',
+                'standard': 'scorm_2004_4th'
+            }
+            
+            # Obtener contenido educativo LIMPIO (SIN cabecera institucional) para SCORM
+            clean_content = get_clean_educational_content(content)
+            logger.info(f"📚 Usando contenido educativo LIMPIO de {len(clean_content)} caracteres para SCORM")
+            
+            # Crear el paquete SCORM usando solo el contenido educativo limpio
+            packager = SCORMPackager(clean_content, metadata)
+            package_path = packager.create_package()
+            
+            # Convertir a ruta relativa
+            relative_path = os.path.relpath(package_path, settings.MEDIA_ROOT)
+            
+            # Si ya existía un paquete, actualizarlo; si no, crear uno nuevo
+            if scorm_package:
+                # Eliminar archivo anterior si existe
+                old_file_path = os.path.join(settings.MEDIA_ROOT, scorm_package.package_file)
+                if os.path.exists(old_file_path):
+                    os.remove(old_file_path)
+                    logger.info(f"Archivo SCORM anterior eliminado: {old_file_path}")
                 
-                # Importar el packager
-                from apps.scorm_packager.services.packager import SCORMPackager
-                
-                # Preparar metadatos para el paquete SCORM
-                metadata = {
-                    'title': content.title,
-                    'description': f"Contenido generado para {content.request.course.name}",
-                    'version': '1.0',
-                    'standard': 'scorm_2004_4th'
-                }
-                
-                # Usar solo el contenido educativo para SCORM (sin cabecera institucional)
-                source_content = content.formatted_content or content.raw_content or ""
-                
-                # Crear el paquete SCORM usando solo el contenido educativo
-                packager = SCORMPackager(source_content, metadata)
-                package_path = packager.create_package()
-                
-                # Convertir a ruta relativa
-                relative_path = os.path.relpath(package_path, settings.MEDIA_ROOT)
-                
-                # Crear registro en la base de datos
+                # Actualizar paquete existente
+                scorm_package.package_file = relative_path
+                scorm_package.title = content.title
+                scorm_package.description = metadata['description']
+                scorm_package.save()
+                logger.info(f"✅ Paquete SCORM actualizado: ID={scorm_package.id}")
+            else:
+                # Crear nuevo paquete SCORM
                 scorm_package = SCORMPackage.objects.create(
                     generated_content=content,
                     title=content.title,
@@ -2599,12 +2613,14 @@ def assign_to_portfolio_api(request):
                     package_file=relative_path,
                     created_by=request.user
                 )
+                logger.info(f"✅ Nuevo paquete SCORM creado: ID={scorm_package.id}")
                 
-                logger.info(f"Paquete SCORM creado automáticamente con cabecera institucional: ID={scorm_package.id}")
-                
-            except Exception as scorm_error:
-                logger.warning(f"No se pudo crear paquete SCORM automáticamente: {str(scorm_error)}")
+        except Exception as scorm_error:
+            logger.warning(f"No se pudo crear/actualizar paquete SCORM: {str(scorm_error)}")
+            # Si falla la creación, usar paquete existente si lo hay
+            if not scorm_package:
                 scorm_package = None
+
         
         # Determinar el tipo de material más apropiado
         if scorm_package:
@@ -2797,32 +2813,48 @@ def handle_class_material_assignment(request, content, data):
         # ========== PASO 1: EMPAQUETAR EN SCORM (OBLIGATORIO PARA MATERIAL DE CLASE) ==========
         scorm_package = SCORMPackage.objects.filter(generated_content=content).first()
         
-        if not scorm_package:
-            try:
-                logger.info(f"📦 PASO 1: Empaquetando contenido {content.id} en SCORM para material de clase...")
+        # SIEMPRE generar/regenerar paquete SCORM limpio para material de clase
+        try:
+            logger.info(f"📦 PASO 1: Generando/Regenerando paquete SCORM LIMPIO para material de clase {content.id}...")
+            
+            # Importar el packager
+            from apps.scorm_packager.services.packager import SCORMPackager
+            
+            # Preparar metadatos para el paquete SCORM
+            metadata = {
+                'title': content.title,
+                'description': f"Material educativo - {content.request.course.name} - {course_topic_title}",
+                'version': '1.0',
+                'standard': 'scorm_2004_4th'
+            }
+            
+            # Obtener contenido educativo LIMPIO (SIN cabecera institucional) para SCORM
+            clean_content = get_clean_educational_content(content)
+            logger.info(f"📚 Usando contenido educativo LIMPIO de {len(clean_content)} caracteres para SCORM")
+            
+            # Crear el paquete SCORM usando solo el contenido educativo limpio
+            packager = SCORMPackager(clean_content, metadata)
+            package_path = packager.create_package()
+            
+            # Convertir a ruta relativa
+            relative_path = os.path.relpath(package_path, settings.MEDIA_ROOT)
+            
+            # Si ya existía un paquete, actualizarlo; si no, crear uno nuevo
+            if scorm_package:
+                # Eliminar archivo anterior si existe
+                old_file_path = os.path.join(settings.MEDIA_ROOT, scorm_package.package_file)
+                if os.path.exists(old_file_path):
+                    os.remove(old_file_path)
+                    logger.info(f"Archivo SCORM anterior eliminado: {old_file_path}")
                 
-                # Importar el packager
-                from apps.scorm_packager.services.packager import SCORMPackager
-                
-                # Preparar metadatos para el paquete SCORM
-                metadata = {
-                    'title': content.title,
-                    'description': f"Material de clase para {content.request.course.name} - Tema: {course_topic_title}",
-                    'version': '1.0',
-                    'standard': 'scorm_2004_4th'
-                }
-                
-                # Usar solo el contenido educativo para SCORM (sin cabecera institucional)
-                source_content = content.formatted_content or content.raw_content or ""
-                
-                # Crear el paquete SCORM usando solo el contenido educativo
-                packager = SCORMPackager(source_content, metadata)
-                package_path = packager.create_package()
-                
-                # Convertir a ruta relativa
-                relative_path = os.path.relpath(package_path, settings.MEDIA_ROOT)
-                
-                # Crear registro en la base de datos
+                # Actualizar paquete existente
+                scorm_package.package_file = relative_path
+                scorm_package.title = content.title
+                scorm_package.description = metadata['description']
+                scorm_package.save()
+                logger.info(f"✅ Paquete SCORM actualizado para material de clase: ID={scorm_package.id}")
+            else:
+                # Crear nuevo paquete SCORM
                 scorm_package = SCORMPackage.objects.create(
                     generated_content=content,
                     title=content.title,
@@ -2831,17 +2863,18 @@ def handle_class_material_assignment(request, content, data):
                     package_file=relative_path,
                     created_by=request.user
                 )
+                logger.info(f"✅ Nuevo paquete SCORM creado para material de clase: ID={scorm_package.id}")
                 
-                logger.info(f"✅ Paquete SCORM creado exitosamente para material de clase: ID={scorm_package.id}")
-                
-            except Exception as scorm_error:
-                logger.error(f"❌ Error al crear paquete SCORM para material de clase: {str(scorm_error)}")
+        except Exception as scorm_error:
+            logger.error(f"❌ Error al crear/actualizar paquete SCORM para material de clase: {str(scorm_error)}")
+            # Si falla la creación, usar paquete existente si lo hay
+            if not scorm_package:
                 return JsonResponse({
                     "success": False, 
                     "error": f"No se pudo crear el paquete SCORM requerido para material de clase: {str(scorm_error)}"
                 }, status=500)
-        else:
-            logger.info(f"✅ Usando paquete SCORM existente para material de clase: ID={scorm_package.id}")
+            else:
+                logger.warning(f"Usando paquete SCORM existente debido a error: ID={scorm_package.id}")
         
         # ========== PASO 2: CONFIGURAR COMO MATERIAL DE CLASE SCORM ==========
         # Para material de clase SIEMPRE debe ser SCORM
@@ -3246,7 +3279,7 @@ def handle_personal_material_assignment(request, content, data):
                 }
                 
                 # Usar solo el contenido educativo para SCORM (sin cabecera institucional)
-                source_content = content.formatted_content or content.raw_content or ""
+                source_content = get_clean_educational_content(content)
                 
                 # Crear el paquete SCORM usando solo el contenido educativo
                 packager = SCORMPackager(source_content, metadata)
@@ -5301,5 +5334,128 @@ def regenerate_scorm_package(request, content_id):
             'success': False,
             'error': f'Error al procesar la solicitud: {str(e)}'
         }, status=500)
+
+def get_clean_educational_content(content):
+    """
+    Obtiene solo el contenido educativo, sin cabeceras institucionales
+    Para uso en paquetes SCORM
+    """
+    import re
+    from bs4 import BeautifulSoup
+    
+    # Usar el contenido más apropiado
+    source_content = content.formatted_content or content.raw_content or ""
+    
+    if not source_content:
+        return ""
+    
+    try:
+        # Parsear el HTML con Beautiful Soup
+        soup = BeautifulSoup(source_content, 'html.parser')
+        
+        # Remover elementos institucionales específicos
+        institutional_selectors = [
+            '.institutional-header',
+            '.institution-header',
+            '.header-institucional',
+            '.encabezado-institucional',
+            'header.institutional',
+            'div.institutional',
+            '[class*="institutional"]',
+            '[class*="institution"]'
+        ]
+        
+        for selector in institutional_selectors:
+            elements = soup.select(selector)
+            for element in elements:
+                element.decompose()
+        
+        # Remover elementos que contengan texto institucional
+        institutional_texts = [
+            'INSTITUCIÓN EDUCATIVA',
+            'UNIDAD EDUCATIVA',
+            'COLEGIO NACIONAL',
+            'Fecha de generación',
+            '🎓'
+        ]
+        
+        for text in institutional_texts:
+            # Buscar todos los elementos que contengan este texto
+            elements = soup.find_all(text=re.compile(text, re.IGNORECASE))
+            for element in elements:
+                parent = element.parent
+                if parent:
+                    parent.decompose()
+        
+        # Remover imágenes de logos
+        logo_imgs = soup.find_all('img', alt=re.compile(r'logo', re.IGNORECASE))
+        for img in logo_imgs:
+            img.decompose()
+            
+        # Remover scripts relacionados con fecha de generación
+        scripts = soup.find_all('script')
+        for script in scripts:
+            if script.string and 'generation-date' in script.string:
+                script.decompose()
+        
+        # Obtener solo el contenido del body si existe, o todo si no
+        body = soup.find('body')
+        if body:
+            # Extraer contenido del body
+            cleaned_html = str(body)
+            # Remover las etiquetas <body> pero mantener el contenido
+            cleaned_html = re.sub(r'^<body[^>]*>', '', cleaned_html)
+            cleaned_html = re.sub(r'</body>$', '', cleaned_html)
+        else:
+            cleaned_html = str(soup)
+        
+        # Limpiar estilos CSS institucionales
+        cleaned_html = re.sub(r'\.institutional[^{]*{[^}]*}', '', cleaned_html, flags=re.IGNORECASE | re.DOTALL)
+        cleaned_html = re.sub(r'\.institution[^{]*{[^}]*}', '', cleaned_html, flags=re.IGNORECASE | re.DOTALL)
+        
+        # Limpiar espacios excesivos
+        cleaned_html = re.sub(r'\n\s*\n\s*\n', '\n\n', cleaned_html)
+        cleaned_html = re.sub(r'^\s+', '', cleaned_html, flags=re.MULTILINE)
+        
+        # Si el contenido resultante está muy vacío, usar un método más simple
+        if len(cleaned_html.strip()) < 100:
+            # Método de respaldo: usar expresiones regulares más simples
+            cleaned_content = source_content
+            
+            # Patrones para remover cabeceras institucionales
+            patterns_to_remove = [
+                r'<div[^>]*class="[^"]*institutional[^"]*"[^>]*>.*?</div>',
+                r'<header[^>]*>.*?INSTITUCIÓN.*?</header>',
+                r'<div[^>]*>.*?🎓.*?INSTITUCIÓN.*?</div>',
+                r'<div[^>]*>.*?Fecha de generación.*?</div>',
+                r'<img[^>]*alt="[^"]*logo[^"]*"[^>]*/?>'
+            ]
+            
+            for pattern in patterns_to_remove:
+                cleaned_content = re.sub(pattern, '', cleaned_content, flags=re.DOTALL | re.IGNORECASE)
+            
+            return cleaned_content.strip()
+        
+        return cleaned_html.strip()
+        
+    except Exception as e:
+        # Si hay error en el parsing, usar método simple
+        logger.warning(f"Error al limpiar contenido con BeautifulSoup: {e}")
+        
+        cleaned_content = source_content
+        
+        # Patrones básicos para remover cabeceras institucionales
+        patterns_to_remove = [
+            r'<div[^>]*class="[^"]*institutional[^"]*"[^>]*>.*?</div>',
+            r'<header[^>]*>.*?INSTITUCIÓN.*?</header>',
+            r'<div[^>]*>.*?🎓.*?INSTITUCIÓN.*?</div>',
+            r'<div[^>]*>.*?Fecha de generación.*?</div>',
+            r'<img[^>]*alt="[^"]*logo[^"]*"[^>]*/?>'
+        ]
+        
+        for pattern in patterns_to_remove:
+            cleaned_content = re.sub(pattern, '', cleaned_content, flags=re.DOTALL | re.IGNORECASE)
+        
+        return cleaned_content.strip()
 
 
