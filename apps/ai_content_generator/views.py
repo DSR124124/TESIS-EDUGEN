@@ -622,22 +622,33 @@ def create_content_async(request):
             # Enviar la solicitud para procesamiento asíncrono
             try:
                 from .tasks import generate_content
-                result = generate_content.delay(content_request.id)
                 
-                logger.info(f"Tarea de generación de contenido iniciada: {result.id} para request {content_request.id}")
+                # Intentar usar Celery primero
+                try:
+                    result = generate_content.delay(content_request.id)
+                    task_id = result.id
+                    logger.info(f"Tarea Celery iniciada: {task_id} para request {content_request.id}")
+                    
+                except Exception as celery_error:
+                    logger.warning(f"Celery no disponible, usando procesamiento directo: {str(celery_error)}")
+                    # Fallback: usar procesamiento directo en hilo separado
+                    from .tasks import start_content_generation_thread
+                    thread = start_content_generation_thread(content_request.id)
+                    task_id = f"thread_{content_request.id}"
+                    logger.info(f"Hilo de procesamiento iniciado para request {content_request.id}")
                 
                 response_data = {
                     'success': True,
-                    'message': 'Su contenido se está generando',
+                    'message': 'Su contenido se está generando en segundo plano. Será notificado cuando esté listo.',
                     'request_id': content_request.id,
-                    'task_id': result.id,
+                    'task_id': task_id,
                     'redirect_url': reverse('ai:content_request_list')
                 }
                 logger.info(f"Respuesta exitosa: {response_data}")
                 return JsonResponse(response_data)
                 
             except Exception as e:
-                logger.error(f"Error al iniciar tarea asíncrona: {str(e)}")
+                logger.error(f"Error al iniciar generación: {str(e)}")
                 return JsonResponse({
                     'success': False,
                     'error': f'Error al iniciar la generación: {str(e)}'

@@ -293,12 +293,6 @@
                                 Generando...
                             </span>
                         </button>
-                        
-                        <!-- Botón de prueba temporal -->
-                        <button type="button" class="btn btn-secondary ms-2" id="test-notification-btn">
-                            <i class="fas fa-bell"></i>
-                            Probar Notificación
-                        </button>
                     </div>
                 </form>
             </div>
@@ -347,9 +341,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Inicializar envío del formulario
     initFormSubmission();
-    
-    // Inicializar botón de prueba
-    initTestButton();
 
     function initContentTypeSelection() {
         // Marcar la opción seleccionada inicialmente
@@ -512,11 +503,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         form.addEventListener('submit', function(e) {
             e.preventDefault(); // Prevenir envío tradicional
-            console.log('Formulario enviado - iniciando proceso AJAX');
             
             // Validar que se haya seleccionado un tipo de contenido
             if (!contentTypeInput.value) {
-                console.log('Error: No se seleccionó tipo de contenido');
                 showNotification('Por favor selecciona un tipo de contenido.', 'error');
                 return;
             }
@@ -544,22 +533,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('for_class', urlParams.get('for_class'));
             }
             
-            console.log('Enviando solicitud AJAX a:', '{% url "ai:create_content_async" %}');
+            // Verificar CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (!csrfToken) {
+                showNotification('Error: Token de seguridad no encontrado', 'error');
+                btnText.style.display = 'inline-flex';
+                btnLoading.style.display = 'none';
+                generateBtn.disabled = false;
+                return;
+            }
             
             fetch('{% url "ai:create_content_async" %}', {
                 method: 'POST',
                 body: formData,
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-CSRFToken': csrfToken.value,
                 }
             })
             .then(response => {
-                console.log('Respuesta recibida:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 return response.json();
             })
             .then(data => {
-                console.log('Datos de respuesta:', data);
                 if (data.success) {
                     // Mostrar notificación de éxito
                     showNotification(data.message, 'success');
@@ -584,8 +582,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                showNotification('Error de conexión al generar contenido', 'error');
+                let errorMessage = 'Error de conexión al generar contenido';
+                if (error.message.includes('403')) {
+                    errorMessage = 'Error de permisos. Verifica tu sesión.';
+                } else if (error.message.includes('404')) {
+                    errorMessage = 'Servicio no encontrado.';
+                } else if (error.message.includes('500')) {
+                    errorMessage = 'Error interno del servidor.';
+                }
+                
+                showNotification(errorMessage, 'error');
                 
                 // Restaurar botón
                 btnText.style.display = 'inline-flex';
@@ -593,24 +599,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 generateBtn.disabled = false;
             });
         });
-    }
-    
-    function initTestButton() {
-        const testBtn = document.getElementById('test-notification-btn');
-        if (testBtn) {
-            testBtn.addEventListener('click', function() {
-                console.log('Botón de prueba clickeado');
-                showNotification('¡Notificación de prueba exitosa!', 'success');
-                
-                setTimeout(() => {
-                    showNotification('Segunda notificación de prueba', 'warning');
-                }, 2000);
-                
-                setTimeout(() => {
-                    showContentReadyNotification('/test-url/', 'Contenido de Prueba');
-                }, 4000);
-            });
-        }
     }
     
     function startContentStatusMonitoring(requestId) {
@@ -708,11 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
             checkContentStatus(monitoringRequestId);
         }
         
-        // Prueba de notificación al cargar la página (temporal para debugging)
-        console.log('Página cargada - probando notificación');
-        setTimeout(() => {
-            showNotification('Prueba de notificación - Sistema funcionando', 'info');
-        }, 2000);
+        // Sistema de notificaciones inicializado
     });
 
     function showNotification(message, type = 'info') {
