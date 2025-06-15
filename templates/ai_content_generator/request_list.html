@@ -1601,6 +1601,94 @@
         }, 5000);
     }
     
+    // Monitoreo de contenido recién generado
+    function checkContentStatus(requestId) {
+        const checkStatus = () => {
+            fetch(`/ai/api/check-content-status/${requestId}/`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'completed') {
+                    // Contenido listo
+                    showContentReadyNotification(data.content_url, data.content_title);
+                    localStorage.removeItem('monitoring_content_request');
+                    
+                } else if (data.status === 'failed' || data.status === 'cancelled') {
+                    // Error o cancelado
+                    showToast(data.message, 'error');
+                    localStorage.removeItem('monitoring_content_request');
+                    
+                } else if (data.status === 'processing') {
+                    // Seguir monitoreando
+                    setTimeout(checkStatus, 5000); // Verificar cada 5 segundos
+                }
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+                // Seguir intentando en caso de error de red
+                setTimeout(checkStatus, 10000);
+            });
+        };
+        
+        checkStatus();
+    }
+    
+    function showContentReadyNotification(contentUrl, contentTitle) {
+        // Crear notificación especial con botón de acción
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        notification.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 1060;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 12px;
+            border: 1px solid var(--success-color);
+            background: rgba(16, 185, 129, 0.1);
+        `;
+        
+        notification.innerHTML = `
+            <div class="d-flex align-items-center mb-2">
+                <i class="fas fa-check-circle text-success me-2" style="font-size: 1.2rem;"></i>
+                <div class="flex-grow-1">
+                    <strong style="color: var(--success-color);">¡Contenido listo!</strong><br>
+                    <small class="text-muted">${contentTitle || 'Su contenido'} está disponible</small>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="${contentUrl}" class="btn btn-success btn-sm">
+                    <i class="fas fa-eye me-1"></i>Ver contenido
+                </a>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="this.closest('.alert').remove()">
+                    Cerrar
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remover después de 15 segundos
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 15000);
+        
+        // También mostrar un toast regular
+        showToast('Su contenido ya está listo, puede ir a revisarlo', 'success');
+    }
+    
+    // Verificar si hay contenido siendo monitoreado al cargar la página
+    const monitoringRequestId = localStorage.getItem('monitoring_content_request');
+    if (monitoringRequestId) {
+        checkContentStatus(monitoringRequestId);
+    }
+
     // Cleanup al salir de la página
     window.addEventListener('beforeunload', () => {
         if (updateInterval) {

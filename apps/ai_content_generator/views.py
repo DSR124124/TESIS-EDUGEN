@@ -539,6 +539,175 @@ class ContentRequestCreateView(LoginRequiredMixin, CreateView):
         
         return redirect('ai:content_request_list')
 
+@login_required
+def create_content_async(request):
+    """
+    Vista AJAX para crear contenido de forma asíncrona
+    """
+    logger.info(f"create_content_async llamada - Método: {request.method}")
+    
+    if request.method != 'POST':
+        logger.warning(f"Método no permitido: {request.method}")
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+    
+    try:
+        # Crear el formulario con los datos POST
+        logger.info(f"Datos POST recibidos: {list(request.POST.keys())}")
+        form = ContentRequestForm(request.POST, user=request.user)
+        
+        if form.is_valid():
+            logger.info("Formulario válido - procesando...")
+            content_request = form.save(commit=False)
+            content_request.teacher = request.user
+            
+            # Obtener parámetros adicionales
+            topic_id = request.POST.get('topic_id')
+            course_topic_id = request.POST.get('course_topic_id')
+            for_class = request.POST.get('for_class', 'false').lower() == 'true'
+            
+            # Manejar CourseTopic (contenido para toda la clase)
+            if course_topic_id:
+                try:
+                    from apps.academic.models import CourseTopic
+                    course_topic = CourseTopic.objects.get(pk=course_topic_id)
+                    
+                    # Agregar información del CourseTopic al campo additional_instructions
+                    additional_instructions = content_request.additional_instructions or ""
+                    class_info_text = f"\n\nINFORMACIÓN DEL TEMA DE CLASE:\nTema: {course_topic.title}\nCurso: {course_topic.course.name}\nSección: {course_topic.section.grade.name} - Sección {course_topic.section.name}\nProfesor: {course_topic.teacher.user.get_full_name()}\n\nEste contenido será utilizado como material de clase para todos los estudiantes de la sección. Por favor, genera contenido apropiado para el nivel educativo y que pueda ser aplicado a toda la clase."
+                    
+                    if course_topic.description:
+                        class_info_text += f"\nDescripción del tema: {course_topic.description}"
+                    
+                    content_request.additional_instructions = additional_instructions + class_info_text
+                    
+                except Exception as e:
+                    logger.error(f"Error al obtener información del CourseTopic: {str(e)}")
+            
+            # Manejar PortfolioTopic (contenido individual)
+            elif topic_id:
+                try:
+                    topic = PortfolioTopic.objects.get(pk=topic_id)
+                    content_request.related_topic = topic
+                    
+                    # Guardar información del estudiante para el prompt
+                    if topic.portfolio and topic.portfolio.student:
+                        student = topic.portfolio.student
+                        enrollment = Enrollment.objects.filter(
+                            student=student, 
+                            status='ACTIVE'
+                        ).first()
+                        
+                        if enrollment:
+                            student_info = {
+                                'nombre': student.user.get_full_name(),
+                                'grado': enrollment.section.grade.name if enrollment.section and enrollment.section.grade else content_request.grade_level,
+                                'curso': content_request.course.name,
+                                'tema_portafolio': topic.title,
+                                'descripcion_tema': topic.description
+                            }
+                            
+                            additional_instructions = content_request.additional_instructions or ""
+                            student_info_text = f"\n\nINFORMACIÓN DEL ESTUDIANTE:\nNombre: {student_info['nombre']}\nGrado: {student_info['grado']}\nCurso: {student_info['curso']}\nTema del portafolio: {student_info['tema_portafolio']}\nDescripción del tema: {student_info['descripcion_tema']}\n\nPor favor, personaliza el contenido para este estudiante específico considerando su nivel educativo y el tema del portafolio."
+                            
+                            content_request.additional_instructions = additional_instructions + student_info_text
+                            
+                except PortfolioTopic.DoesNotExist:
+                    logger.warning(f"No se encontró el tema de portafolio con ID {topic_id}")
+                except Exception as e:
+                    logger.error(f"Error al procesar tema de portafolio: {str(e)}")
+            
+            # Guardar la solicitud
+            content_request.save()
+            
+            # Enviar la solicitud para procesamiento asíncrono
+            try:
+                from .tasks import generate_content
+                result = generate_content.delay(content_request.id)
+                
+                logger.info(f"Tarea de generación de contenido iniciada: {result.id} para request {content_request.id}")
+                
+                response_data = {
+                    'success': True,
+                    'message': 'Su contenido se está generando',
+                    'request_id': content_request.id,
+                    'task_id': result.id,
+                    'redirect_url': reverse('ai:content_request_list')
+                }
+                logger.info(f"Respuesta exitosa: {response_data}")
+                return JsonResponse(response_data)
+                
+            except Exception as e:
+                logger.error(f"Error al iniciar tarea asíncrona: {str(e)}")
+                return JsonResponse({
+                    'success': False,
+                    'error': f'Error al iniciar la generación: {str(e)}'
+                }, status=500)
+        
+        else:
+            # Errores de validación del formulario
+            logger.warning(f"Errores de validación del formulario: {form.errors}")
+            errors = []
+            for field, field_errors in form.errors.items():
+                for error in field_errors:
+                    errors.append(f"{form.fields.get(field, {}).get('label', field)}: {error}")
+            
+            error_response = {
+                'success': False,
+                'error': 'Errores de validación',
+                'errors': errors
+            }
+            logger.warning(f"Respuesta de error: {error_response}")
+            return JsonResponse(error_response, status=400)
+    
+    except Exception as e:
+        logger.error(f"Error general en create_content_async: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'error': f'Error interno: {str(e)}'
+        }, status=500)
+
+@login_required
+def check_content_status(request, request_id):
+    """
+    Vista AJAX para verificar el estado de generación de contenido
+    """
+    try:
+        content_request = get_object_or_404(ContentRequest, id=request_id, teacher=request.user)
+        
+        # Verificar si hay contenido generado
+        generated_content = content_request.contents.first()
+        
+        if generated_content:
+            return JsonResponse({
+                'status': 'completed',
+                'message': 'Su contenido ya está listo, puede ir a revisarlo',
+                'content_id': generated_content.id,
+                'content_url': reverse('ai:content_detail', args=[generated_content.id]),
+                'content_title': generated_content.title
+            })
+        elif content_request.status == 'failed':
+            return JsonResponse({
+                'status': 'failed',
+                'message': 'Ha ocurrido un error al generar el contenido'
+            })
+        elif content_request.status == 'cancelled':
+            return JsonResponse({
+                'status': 'cancelled',
+                'message': 'La generación fue cancelada'
+            })
+        else:
+            return JsonResponse({
+                'status': 'processing',
+                'message': 'Su contenido se está generando...'
+            })
+            
+    except Exception as e:
+        logger.error(f"Error al verificar estado del contenido {request_id}: {str(e)}")
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error al verificar estado: {str(e)}'
+        }, status=500)
+
 def improve_content_formatting(html_content, request=None):
     """
     Mejora el formato del contenido HTML para una mejor visualización.

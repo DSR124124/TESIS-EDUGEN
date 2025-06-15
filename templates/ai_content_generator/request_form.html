@@ -292,7 +292,13 @@
                                 <i class="fas fa-spinner fa-spin"></i>
                                 Generando...
                             </span>
-                            </button>
+                        </button>
+                        
+                        <!-- Botón de prueba temporal -->
+                        <button type="button" class="btn btn-secondary ms-2" id="test-notification-btn">
+                            <i class="fas fa-bell"></i>
+                            Probar Notificación
+                        </button>
                     </div>
                 </form>
             </div>
@@ -341,6 +347,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Inicializar envío del formulario
     initFormSubmission();
+    
+    // Inicializar botón de prueba
+    initTestButton();
 
     function initContentTypeSelection() {
         // Marcar la opción seleccionada inicialmente
@@ -502,9 +511,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!form || !generateBtn) return;
 
         form.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevenir envío tradicional
+            console.log('Formulario enviado - iniciando proceso AJAX');
+            
             // Validar que se haya seleccionado un tipo de contenido
             if (!contentTypeInput.value) {
-                e.preventDefault();
+                console.log('Error: No se seleccionó tipo de contenido');
                 showNotification('Por favor selecciona un tipo de contenido.', 'error');
                 return;
             }
@@ -517,29 +529,269 @@ document.addEventListener('DOMContentLoaded', function() {
             btnLoading.style.display = 'inline-flex';
             generateBtn.disabled = true;
             
-            showNotification('Iniciando generación de contenido...', 'info');
+            // Enviar solicitud AJAX
+            const formData = new FormData(form);
+            
+            // Agregar parámetros de la URL si existen
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('topic_id')) {
+                formData.append('topic_id', urlParams.get('topic_id'));
+            }
+            if (urlParams.get('course_topic_id')) {
+                formData.append('course_topic_id', urlParams.get('course_topic_id'));
+            }
+            if (urlParams.get('for_class')) {
+                formData.append('for_class', urlParams.get('for_class'));
+            }
+            
+            console.log('Enviando solicitud AJAX a:', '{% url "ai:create_content_async" %}');
+            
+            fetch('{% url "ai:create_content_async" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            })
+            .then(response => {
+                console.log('Respuesta recibida:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Datos de respuesta:', data);
+                if (data.success) {
+                    // Mostrar notificación de éxito
+                    showNotification(data.message, 'success');
+                    
+                    // Iniciar monitoreo del estado del contenido ANTES de redirigir
+                    startContentStatusMonitoring(data.request_id);
+                    
+                    // Redirigir después de un breve delay
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 1500);
+                    
+                } else {
+                    // Mostrar errores
+                    const errorMsg = data.errors ? data.errors.join(', ') : data.error;
+                    showNotification(errorMsg, 'error');
+                    
+                    // Restaurar botón
+                    btnText.style.display = 'inline-flex';
+                    btnLoading.style.display = 'none';
+                    generateBtn.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error de conexión al generar contenido', 'error');
+                
+                // Restaurar botón
+                btnText.style.display = 'inline-flex';
+                btnLoading.style.display = 'none';
+                generateBtn.disabled = false;
+            });
         });
     }
-
-    function showNotification(message, type = 'info') {
-        const toast = document.getElementById('notification-toast');
-        const icon = toast.querySelector('.notification-icon');
-        const messageEl = toast.querySelector('.notification-message');
+    
+    function initTestButton() {
+        const testBtn = document.getElementById('test-notification-btn');
+        if (testBtn) {
+            testBtn.addEventListener('click', function() {
+                console.log('Botón de prueba clickeado');
+                showNotification('¡Notificación de prueba exitosa!', 'success');
+                
+                setTimeout(() => {
+                    showNotification('Segunda notificación de prueba', 'warning');
+                }, 2000);
+                
+                setTimeout(() => {
+                    showContentReadyNotification('/test-url/', 'Contenido de Prueba');
+                }, 4000);
+            });
+        }
+    }
+    
+    function startContentStatusMonitoring(requestId) {
+        // Guardar en localStorage para continuar monitoreando después de la redirección
+        localStorage.setItem('monitoring_content_request', requestId);
         
-        // Configurar icono según el tipo
-        const icons = {
-            success: 'fas fa-check-circle text-success',
-            error: 'fas fa-exclamation-circle text-danger',
-            warning: 'fas fa-exclamation-triangle text-warning',
-            info: 'fas fa-info-circle text-info'
+        // Iniciar monitoreo inmediato si estamos en la página de contenidos
+        if (window.location.pathname.includes('/ai/requests/')) {
+            checkContentStatus(requestId);
+        }
+    }
+    
+    function checkContentStatus(requestId) {
+        const checkStatus = () => {
+            fetch(`{% url "ai:check_content_status" 0 %}`.replace('0', requestId), {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'completed') {
+                    // Contenido listo
+                    showNotification(data.message, 'success');
+                    localStorage.removeItem('monitoring_content_request');
+                    
+                    // Mostrar botón para ir al contenido
+                    showContentReadyNotification(data.content_url, data.content_title);
+                    
+                } else if (data.status === 'failed' || data.status === 'cancelled') {
+                    // Error o cancelado
+                    showNotification(data.message, 'error');
+                    localStorage.removeItem('monitoring_content_request');
+                    
+                } else if (data.status === 'processing') {
+                    // Seguir monitoreando
+                    setTimeout(checkStatus, 5000); // Verificar cada 5 segundos
+                }
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+                // Seguir intentando en caso de error de red
+                setTimeout(checkStatus, 10000);
+            });
         };
         
-        icon.className = icons[type] || icons.info;
-        messageEl.textContent = message;
+        checkStatus();
+    }
+    
+    function showContentReadyNotification(contentUrl, contentTitle) {
+        // Crear notificación especial con botón de acción
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-success alert-dismissible fade show position-fixed';
+        notification.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 1060;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        `;
         
-        // Mostrar toast
-        const bsToast = new bootstrap.Toast(toast);
-        bsToast.show();
+        notification.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle me-2"></i>
+                <div class="flex-grow-1">
+                    <strong>¡Contenido listo!</strong><br>
+                    <small>${contentTitle || 'Su contenido'} está disponible</small>
+                </div>
+            </div>
+            <div class="mt-2">
+                <a href="${contentUrl}" class="btn btn-success btn-sm">
+                    <i class="fas fa-eye me-1"></i>Ver contenido
+                </a>
+                <button type="button" class="btn btn-outline-secondary btn-sm ms-2" data-bs-dismiss="alert">
+                    Cerrar
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remover después de 15 segundos
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 15000);
+    }
+    
+    // Verificar si hay contenido siendo monitoreado al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        const monitoringRequestId = localStorage.getItem('monitoring_content_request');
+        if (monitoringRequestId) {
+            checkContentStatus(monitoringRequestId);
+        }
+        
+        // Prueba de notificación al cargar la página (temporal para debugging)
+        console.log('Página cargada - probando notificación');
+        setTimeout(() => {
+            showNotification('Prueba de notificación - Sistema funcionando', 'info');
+        }, 2000);
+    });
+
+    function showNotification(message, type = 'info') {
+        // Crear notificación personalizada más visible
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-dismissible fade show position-fixed';
+        notification.style.cssText = `
+            top: 20px;
+            right: 20px;
+            z-index: 1060;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-radius: 8px;
+        `;
+        
+        // Configurar clase y colores según el tipo
+        const typeClasses = {
+            success: 'alert-success',
+            error: 'alert-danger',
+            warning: 'alert-warning',
+            info: 'alert-info'
+        };
+        
+        const icons = {
+            success: 'fas fa-check-circle',
+            error: 'fas fa-exclamation-circle',
+            warning: 'fas fa-exclamation-triangle',
+            info: 'fas fa-info-circle'
+        };
+        
+        notification.classList.add(typeClasses[type] || typeClasses.info);
+        
+        notification.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="${icons[type] || icons.info} me-2"></i>
+                <div class="flex-grow-1">
+                    <strong>${message}</strong>
+                </div>
+                <button type="button" class="btn-close" onclick="this.closest('.alert').remove()"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 5000);
+        
+        // También intentar con el toast original como fallback
+        try {
+            const toast = document.getElementById('notification-toast');
+            if (toast) {
+                const icon = toast.querySelector('.notification-icon');
+                const messageEl = toast.querySelector('.notification-message');
+                
+                if (icon && messageEl) {
+                    const iconClasses = {
+                        success: 'fas fa-check-circle text-success',
+                        error: 'fas fa-exclamation-circle text-danger',
+                        warning: 'fas fa-exclamation-triangle text-warning',
+                        info: 'fas fa-info-circle text-info'
+                    };
+                    
+                    icon.className = iconClasses[type] || iconClasses.info;
+                    messageEl.textContent = message;
+                    
+                    // Mostrar toast si Bootstrap está disponible
+                    if (typeof bootstrap !== 'undefined') {
+                        const bsToast = new bootstrap.Toast(toast);
+                        bsToast.show();
+                    }
+                }
+            }
+        } catch (e) {
+            console.log('Toast fallback no disponible:', e);
+        }
     }
 
     // Función para asignar al portafolio (mantenida para compatibilidad)

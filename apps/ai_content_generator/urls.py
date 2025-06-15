@@ -10,7 +10,7 @@ from .views import (
     get_course_topics, get_progress, get_portfolio_topics, get_students_for_topic,
     MaterialPreviewView, test_content_styles_view, debug_content_processing_view,
     debug_line_by_line_view, final_content_test_view, auto_generate_content_view,
-    regenerate_scorm_package
+    regenerate_scorm_package, create_content_async, check_content_status
 )
 
 app_name = 'ai'
@@ -50,4 +50,8 @@ urlpatterns = [
     path('debug-content-processing/', debug_content_processing_view, name='debug_content_processing'),
     path('debug-line-by-line/', debug_line_by_line_view, name='debug_line_by_line'),
     path('final-content-test/', final_content_test_view, name='final_content_test'),
+    
+    # URLs para generación asíncrona
+    path('api/create-content-async/', create_content_async, name='create_content_async'),
+    path('api/check-content-status/<int:request_id>/', check_content_status, name='check_content_status'),
 ] 
