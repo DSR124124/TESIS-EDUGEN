@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ contenido.titulo }} - Detalle del Contenido{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0 text-gray-800">{{ contenido.titulo }}</h1>
+            <p class="text-muted">{{ contenido.descripcion|default:"Contenido educativo generado con IA" }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{% url 'content:dashboard' %}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+            <a href="{% url 'content:editar_contenido' pk=contenido.id %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i> Editar
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="row">
+        <div class="col-12">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Contenido principal -->
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Contenido</h6>
+                </div>
+                <div class="card-body">
+                    {% if contenido.contenido_html %}
+                        {{ contenido.contenido_html|safe }}
+                    {% elif contenido.contenido_ai_original %}
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-info-circle"></i> Contenido original de IA</h5>
+                            <pre class="bg-light p-3 rounded">{{ contenido.contenido_ai_original }}</pre>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> No hay contenido disponible para mostrar.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de información -->
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Información</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-3">
+                            <strong>Estado:</strong>
+                            {% if contenido.estado == 'borrador' %}
+                                <span class="badge bg-warning text-dark">Borrador</span>
+                            {% elif contenido.estado == 'publicado' %}
+                                <span class="badge bg-success">Publicado</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ contenido.estado }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if contenido.nivel_educativo %}
+                        <div class="col-12 mb-3">
+                            <strong>Nivel Educativo:</strong><br>
+                            {{ contenido.nivel_educativo }}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="col-12 mb-3">
+                            <strong>Creado:</strong><br>
+                            {{ contenido.fecha_creacion|date:"d/m/Y H:i" }}
+                        </div>
+                        
+                        <div class="col-12 mb-3">
+                            <strong>Última modificación:</strong><br>
+                            {{ contenido.fecha_modificacion|date:"d/m/Y H:i" }}
+                        </div>
+                        
+                        {% if contenido.etiquetas %}
+                        <div class="col-12 mb-3">
+                            <strong>Etiquetas:</strong><br>
+                            {{ contenido.etiquetas }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Acciones</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'content:editar_contenido' pk=contenido.id %}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Editar contenido
+                        </a>
+                        
+                        {% if not contenido.convertido_scorm %}
+                        <a href="{% url 'content:generar_scorm' pk=contenido.id %}" class="btn btn-warning">
+                            <i class="fas fa-file-archive"></i> Generar SCORM
+                        </a>
+                        {% else %}
+                        <a href="{% url 'content:descargar_scorm' pk=contenido.id %}" class="btn btn-success">
+                            <i class="fas fa-download"></i> Descargar SCORM
+                        </a>
+                        {% endif %}
+                        
+                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminarModal">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del prompt original -->
+            {% if contenido.prompt_original %}
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Prompt Original</h6>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">{{ contenido.prompt_original }}</small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="eliminarModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eliminarModalLabel">Confirmar eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que quieres eliminar este contenido?</p>
+                <p><strong>{{ contenido.titulo }}</strong></p>
+                <p class="text-muted">Esta acción no se puede deshacer.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="post" action="{% url 'content:eliminar_contenido' pk=contenido.id %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

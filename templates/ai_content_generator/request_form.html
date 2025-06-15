@@ -51,29 +51,30 @@
         </ol>
     </nav>
 
-    <!-- Dashboard Header -->
-    <div class="dashboard-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
+    <div class="container py-4">
+        <!-- Formulario Principal Mejorado -->
+        <div class="modern-form-container">
+            <div class="form-header">
                 {% if from_course_dashboard and course_topic %}
-                    <h2 class="mb-1">✨ Generar Material para Clase</h2>
-                    <p class="mb-0">{{ course_topic.title }} - {{ course_name }} ({{ section_name }})</p>
-                    <small class="text-muted">{{ students_count }} estudiante{{ students_count|pluralize:"s" }} recibirá{{ students_count|pluralize:"n," }} este contenido</small>
+                    <div class="header-icon">
+                        <i class="fas fa-magic"></i>
+                    </div>
+                    <div class="header-content">
+                        <h3 class="header-title">Generar Material Educativo</h3>
+                        <p class="header-subtitle">Crea contenido personalizado con inteligencia artificial</p>
+                    </div>
                 {% else %}
-                    <h2 class="mb-1">✨ Crear Contenido con IA</h2>
-                    <p class="mb-0">Genera material educativo personalizado de forma rápida y sencilla</p>
+                    <div class="header-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="header-content">
+                        <h3 class="header-title">Asistente de Creación de Contenido</h3>
+                        <p class="header-subtitle">Genera material educativo de forma inteligente</p>
+                    </div>
                 {% endif %}
             </div>
-        </div>
-    </div>
-
-    <div class="container py-4">
-
-        <div class="portfolio-card animated-card">
-            <div class="portfolio-header">
-                <h5 class="mb-0"><i class="fas fa-robot me-2"></i> Asistente de Creación de Contenido</h5>
-            </div>
-            <div class="portfolio-body">
+            
+            <div class="form-body">
                 <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
                     
@@ -94,1378 +95,891 @@
                     {% endif %}
                     
                     {% if from_course_dashboard and course_topic %}
-                        <!-- Información prellenada desde course-topic -->
-                        <div class="alert alert-success mb-4 d-flex align-items-center">
-                            <i class="fas fa-check-circle text-success me-3" style="font-size: 1.5rem;"></i>
-                            <div>
-                                <strong>Información del tema cargada automáticamente.</strong> 
-                                Los campos ya están configurados para el tema "{{ course_topic.title }}".
-                            </div>
+                        <!-- Información del curso y tema -->
+                        <div class="alert alert-info mb-4">
+                            <h6 class="mb-2">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Generando contenido para: {{ course_topic.course.name }} - {{ course_topic.title }}
+                            </h6>
+                            <small class="text-muted">
+                                {{ section.grade.name }} - Sección {{ section.name }} ({{ students_count }} estudiantes)
+                            </small>
                         </div>
-                        
-                        <!-- Selector de secciones para asignación -->
-                        <div class="card mt-4 border-0 bg-light">
-                            <div class="card-body">
-                                <h5 class="d-flex align-items-center text-primary mb-3">
-                                    <i class="fas fa-chalkboard me-2"></i>
-                                    <span>Asignación por Secciones</span>
-                                </h5>
-                                
-                                <div class="alert alert-info mb-3">
-                                    <div class="d-flex align-items-start">
-                                        <i class="fas fa-info-circle me-2 mt-1"></i>
-                                        <div>
-                                            <strong>Asignación Flexible:</strong> Puedes asignar este material a múltiples secciones del mismo grado.
-                                            <br><small class="text-muted">Selecciona las secciones donde quieres que aparezca este material.</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                {% if available_sections %}
-                                <div class="form-group">
-                                    <label class="form-label mb-3">
-                                        <i class="fas fa-check-square me-2"></i>
-                                        Seleccionar Secciones ({{ section.grade.name }})
-                                    </label>
-                                    
-                                    <div class="section-selector">
-                                        <div class="row g-3">
-                                            {% for avail_section in available_sections %}
-                                            <div class="col-md-6">
-                                                <div class="form-check section-check-card">
-                                                    <input class="form-check-input section-checkbox" 
-                                                           type="checkbox" 
-                                                           value="{{ avail_section.id }}" 
-                                                           id="section_{{ avail_section.id }}"
-                                                           name="target_sections"
-                                                           {% if avail_section.id == section.id %}checked{% endif %}>
-                                                    <label class="form-check-label section-check-label" for="section_{{ avail_section.id }}">
-                                                        <div class="section-info">
-                                                            <div class="section-name">
-                                                                <i class="fas fa-chalkboard me-2"></i>
-                                                                SECCIÓN {{ avail_section.name }}
-                                                            </div>
-                                                            <small class="text-muted">
-                                                                <i class="fas fa-users me-1"></i>
-                                                                {{ avail_section.current_students|default:0 }} estudiantes
-                                                            </small>
-                                                        </div>
-                                                    </label>
-                                                </div>
-                                            </div>
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="mt-3">
-                                        <small class="text-muted">
-                                            <i class="fas fa-lightbulb me-1"></i>
-                                            <strong>Sugerencia:</strong> La sección actual ({{ section.name }}) está preseleccionada. 
-                                            Puedes agregar o quitar otras secciones según necesites.
-                                        </small>
-                                    </div>
-                                </div>
-                                {% else %}
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    Solo tienes asignada una sección para este grado. El material se asignará automáticamente a la sección {{ section.name }}.
-                                </div>
-                                <input type="hidden" name="target_sections" value="{{ section.id }}">
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <!-- Campos ocultos para información prellenada -->
-                        {{ form.course.as_hidden }}
-                        {{ form.topic.as_hidden }}
-                        {{ form.grade_level.as_hidden }}
-                        
-                        <!-- Solo mostrar el tipo de contenido -->
-                        <div class="row g-4 mt-3">
-                            <div class="col-12">
-                                <div class="form-group required-field position-relative">
-                                    <label for="{{ form.content_type.id_for_label }}" class="form-label">
-                                        <i class="fas fa-file-alt me-2 text-primary"></i> {{ form.content_type.label }}
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0">
-                                            <i class="fas fa-list-alt text-primary"></i>
-                                        </span>
-                                        {{ form.content_type }}
-                                    </div>
-                                    {% if form.content_type.help_text %}
-                                    <div class="form-text text-muted mt-1">
-                                        <i class="fas fa-info-circle me-1"></i> {{ form.content_type.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
+                    {% endif %}
+
+                    <!-- Campos ocultos para datos automáticos -->
+                    {% if from_course_dashboard and course_topic %}
+                        <input type="hidden" name="course_topic" value="{{ course_topic.id }}">
+                        <input type="hidden" name="course" value="{{ course_topic.course.id }}">
+                        <input type="hidden" name="topic" value="{{ course_topic.title }}">
+                        <input type="hidden" name="grade_level" value="{{ section.grade.name }}">
+                        <input type="hidden" name="section" value="{{ section.id }}">
+                        <input type="hidden" name="for_class" value="true">
                     {% else %}
-                        <!-- Formulario completo para acceso directo -->
-                        <div class="alert alert-info mb-4 d-flex align-items-center">
-                            <i class="fas fa-lightbulb text-primary me-3" style="font-size: 1.5rem;"></i>
-                            <div>
-                                <strong>Consejo:</strong> Cuanto más específico seas en tu solicitud, mejores resultados obtendrás.
-                            </div>
-                        </div>
-                        
-                        <div class="row g-4">
+                        <!-- Campos manuales cuando no viene del dashboard del curso -->
+                        <div class="row mb-4">
                             <div class="col-md-6">
-                                <div class="form-group required-field position-relative">
-                                    <label for="{{ form.course.id_for_label }}" class="form-label">
-                                        <i class="fas fa-book me-2 text-primary"></i> {{ form.course.label }}
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0">
-                                            <i class="fas fa-graduation-cap text-primary"></i>
-                                        </span>
-                                        {{ form.course }}
-                                    </div>
-                                    {% if form.course.help_text %}
-                                    <div class="form-text text-muted mt-1">
-                                        <i class="fas fa-info-circle me-1"></i> {{ form.course.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <div class="form-group required-field position-relative">
-                                    <label for="{{ form.content_type.id_for_label }}" class="form-label">
-                                        <i class="fas fa-file-alt me-2 text-primary"></i> {{ form.content_type.label }}
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0">
-                                            <i class="fas fa-list-alt text-primary"></i>
-                                        </span>
-                                        {{ form.content_type }}
-                                    </div>
-                                    {% if form.content_type.help_text %}
-                                    <div class="form-text text-muted mt-1">
-                                        <i class="fas fa-info-circle me-1"></i> {{ form.content_type.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row g-4 mt-2">
-                            <div class="col-md-8">
-                                <div class="form-group required-field position-relative">
-                                    <label for="{{ form.topic.id_for_label }}" class="form-label">
-                                        <i class="fas fa-tags me-2 text-primary"></i> {{ form.topic.label }}
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0">
-                                            <i class="fas fa-search text-primary"></i>
-                                        </span>
-                                        {{ form.topic }}
-                                    </div>
-                                    {% if form.topic.help_text %}
-                                    <div class="form-text text-muted mt-1">
-                                        <i class="fas fa-info-circle me-1"></i> {{ form.topic.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <div class="form-group required-field position-relative">
-                                    <label for="{{ form.grade_level.id_for_label }}" class="form-label">
-                                        <i class="fas fa-user-graduate me-2 text-primary"></i> {{ form.grade_level.label }}
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0">
-                                            <i class="fas fa-sort text-primary"></i>
-                                        </span>
-                                        {{ form.grade_level }}
-                                    </div>
-                                    {% if form.grade_level.help_text %}
-                                    <div class="form-text text-muted mt-1">
-                                        <i class="fas fa-info-circle me-1"></i> {{ form.grade_level.help_text }}
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
-                    
-                    <div class="card mt-4 border-0 bg-light">
-                        <div class="card-body">
-                            <h5 class="d-flex align-items-center text-primary mb-3">
-                                <i class="fas fa-file-pdf me-2 text-primary"></i>
-                                <span>Documentos de Apoyo</span>
-                            </h5>
-                            
-                            <div class="form-group">
-                                <label for="{{ form.pdf_file.id_for_label }}" class="form-label mb-2">
-                                    <i class="fas fa-file-upload me-2 text-primary"></i> {{ form.pdf_file.label }}
+                                <label for="{{ form.course.id_for_label }}" class="form-label">
+                                    <i class="fas fa-graduation-cap me-2"></i>Curso
                                 </label>
-                                <div class="input-group">
-                                    {{ form.pdf_file }}
+                                {{ form.course }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.topic.id_for_label }}" class="form-label">
+                                    <i class="fas fa-bookmark me-2"></i>Tema
+                                </label>
+                                {{ form.topic }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.grade_level.id_for_label }}" class="form-label">
+                                    <i class="fas fa-layer-group me-2"></i>Nivel de Grado
+                                </label>
+                                {{ form.grade_level }}
+                            </div>
+                            <div class="col-md-6">
+                                <label for="{{ form.section.id_for_label }}" class="form-label">
+                                    <i class="fas fa-door-open me-2"></i>Sección
+                                </label>
+                                {{ form.section }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Selección de Tipo de Contenido -->
+                    <div class="form-section mb-4">
+                        <h5 class="section-title">
+                            <i class="fas fa-palette me-2"></i>
+                            Tipo de Contenido
+                        </h5>
+                        <p class="section-description">Selecciona el tipo de material educativo que deseas generar</p>
+                        
+                        <div class="content-type-grid">
+                            <div class="content-type-card" data-value="1">
+                                <div class="card-icon">
+                                    <i class="fas fa-chalkboard-teacher"></i>
                                 </div>
-                                <div class="form-text text-muted mt-2">
-                                    <i class="fas fa-info-circle me-1"></i> Sube un PDF (exámenes, resultados, plan de estudio, etc.) para analizarlo e incorporar la información en la generación de contenido.
+                                <div class="card-content">
+                                    <h6 class="card-title">Explicación de tema</h6>
+                                    <p class="card-description">Contenido estructurado para enseñar conceptos</p>
                                 </div>
                             </div>
                             
-                            <!-- Previsualización del PDF -->
-                            <div id="pdf-preview-container" class="mt-3 d-none">
-                                <div class="card border-primary border-opacity-25">
-                                    <div class="card-header bg-primary bg-opacity-10 py-2">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <h6 class="mb-0 text-primary">
-                                                <i class="fas fa-file-pdf me-2"></i>
-                                                <span id="pdf-filename">Documento seleccionado</span>
-                                            </h6>
-                                            <div>
-                                                <button type="button" id="pdf-preview-toggle" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye me-1"></i> Ver documento
-                                                </button>
-                                                <button type="button" id="pdf-preview-close" class="btn btn-sm btn-outline-danger ms-2">
-                                                    <i class="fas fa-times me-1"></i> Quitar
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div id="pdf-preview-content" class="card-body p-0 d-none" style="height: 400px; overflow: hidden;">
-                                        <iframe id="pdf-preview-iframe" style="width: 100%; height: 100%; border: none;"></iframe>
-                                    </div>
-                                    <div class="card-footer bg-light py-2 d-flex align-items-center">
-                                        <i class="fas fa-info-circle text-primary me-2"></i>
-                                        <small id="pdf-filesize" class="text-muted">Tamaño: --</small>
-                                        <span class="mx-2">|</span>
-                                        <small id="pdf-pages" class="text-muted">Páginas: --</small>
-                                    </div>
+                            <div class="content-type-card" data-value="2">
+                                <div class="card-icon">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h6 class="card-title">Ejercicios prácticos</h6>
+                                    <p class="card-description">Actividades prácticas y problemas</p>
+                                </div>
+                            </div>
+                            
+                            <div class="content-type-card" data-value="3">
+                                <div class="card-icon">
+                                    <i class="fas fa-question-circle"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h6 class="card-title">Evaluación</h6>
+                                    <p class="card-description">Evaluaciones y preguntas interactivas</p>
+                                </div>
+                            </div>
+                            
+                            <div class="content-type-card selected" data-value="4">
+                                <div class="card-icon">
+                                    <i class="fas fa-book"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h6 class="card-title">Material didáctico</h6>
+                                    <p class="card-description">Material educativo completo</p>
+                                </div>
+                            </div>
+                            
+                            <div class="content-type-card" data-value="5">
+                                <div class="card-icon">
+                                    <i class="fas fa-list-ul"></i>
+                                </div>
+                                <div class="card-content">
+                                    <h6 class="card-title">Resumen</h6>
+                                    <p class="card-description">Síntesis de conceptos clave</p>
                                 </div>
                             </div>
                         </div>
+                        
+                        <!-- Input oculto para el tipo de contenido -->
+                        <input type="hidden" id="id_content_type" name="content_type" value="{{ form.content_type.value|default:'4' }}">
                     </div>
-                    
-                    <div class="form-group mt-4">
-                        <label for="{{ form.additional_instructions.id_for_label }}" class="form-label">
-                            <i class="fas fa-edit me-2 text-primary"></i> Instrucciones Adicionales
-                        </label>
-                        {{ form.additional_instructions }}
-                        <div class="form-text text-muted mt-1">
-                            <i class="fas fa-info-circle me-1"></i> Proporciona cualquier información adicional que quieras incluir en el contenido generado.
+
+                    <!-- Carga de Archivos -->
+                    <div class="form-section mb-4">
+                        <h5 class="section-title">
+                            <i class="fas fa-file-upload me-2"></i>
+                            Material de Referencia (Opcional)
+                        </h5>
+                        <p class="section-description">Sube un archivo PDF para que la IA lo use como referencia</p>
+                        
+                        <div class="upload-area" id="upload-area">
+                            <div class="upload-icon">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                            </div>
+                            <div class="upload-content">
+                                <h6 class="upload-title">Arrastra tu archivo PDF aquí</h6>
+                                <p class="upload-subtitle">o haz clic para seleccionar</p>
+                                <small class="upload-note">Máximo 10MB • Solo archivos PDF</small>
+                            </div>
+                            <input type="file" class="upload-input" name="pdf_file" accept=".pdf" style="display: none;">
                         </div>
                     </div>
-                    
-                    <!-- Campos ocultos -->
-                    {{ form.topic_id }}
-                    
-                    <div class="card bg-warning bg-opacity-10 border-0 my-4">
-                        <div class="card-body">
-                            <h6 class="mb-3"><i class="fas fa-lightbulb me-2 text-warning"></i> Consejos para mejores resultados</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <ul class="mb-0 ps-3">
-                                        <li class="mb-2"><strong>Sé específico</strong> con el tema y el nivel educativo</li>
-                                        <li class="mb-2"><strong>Incluye objetivos de aprendizaje</strong> claros en las instrucciones</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <ul class="mb-0 ps-3">
-                                        <li class="mb-2"><strong>Menciona habilidades clave</strong> que deseas reforzar</li>
-                                        <li class="mb-2"><strong>Indica preferencias de formato</strong> y estructura</li>
-                                    </ul>
-                                </div>
+
+                    <!-- Instrucciones Específicas -->
+                    <div class="form-section mb-4">
+                        <h5 class="section-title">
+                            <i class="fas fa-edit me-2"></i>
+                            Instrucciones Específicas
+                        </h5>
+                        <p class="section-description">Proporciona detalles adicionales sobre lo que necesitas</p>
+                        
+                        <div class="instructions-container">
+                            <textarea 
+                                class="instructions-textarea" 
+                                name="additional_instructions" 
+                                placeholder="Describe qué tipo de contenido necesitas, el enfoque pedagógico, nivel de dificultad, o cualquier requerimiento específico..."
+                                maxlength="1000"
+                            >{{ form.additional_instructions.value|default:'' }}</textarea>
+                            <div class="char-counter">
+                                <span id="char-count">0</span>/1000 caracteres
+                            </div>
+                        </div>
+                        
+                        <!-- Sugerencias rápidas -->
+                        <div class="suggestions-section mt-3">
+                            <h6 class="suggestions-title">Sugerencias rápidas:</h6>
+                            <div class="suggestions-tags">
+                                <span class="suggestion-tag" data-text="Incluye ejemplos prácticos y ejercicios resueltos">
+                                    <i class="fas fa-lightbulb me-1"></i>
+                                    Ejemplos prácticos
+                                </span>
+                                <span class="suggestion-tag" data-text="Adapta el contenido para estudiantes con diferentes estilos de aprendizaje">
+                                    <i class="fas fa-users me-1"></i>
+                                    Estilos de aprendizaje
+                                </span>
+                                <span class="suggestion-tag" data-text="Incluye actividades interactivas y dinámicas grupales">
+                                    <i class="fas fa-hands-helping me-1"></i>
+                                    Actividades grupales
+                                </span>
+                                <span class="suggestion-tag" data-text="Proporciona material de refuerzo para estudiantes con dificultades">
+                                    <i class="fas fa-heart me-1"></i>
+                                    Material de refuerzo
+                                </span>
+                                <span class="suggestion-tag" data-text="Incluye evaluación formativa y rúbricas de calificación">
+                                    <i class="fas fa-clipboard-check me-1"></i>
+                                    Evaluación formativa
+                                </span>
                             </div>
                         </div>
                     </div>
-                    
-                    {% if portfolio_topic %}
-                    <div class="form-check mb-4">
-                        <input type="checkbox" name="add_to_portfolio" id="id_add_to_portfolio" class="form-check-input" {% if form.add_to_portfolio.value %}checked{% endif %}>
-                        <label for="id_add_to_portfolio" class="form-check-label">
-                            <i class="fas fa-folder-plus me-2 text-primary"></i> Agregar automáticamente al portafolio cuando esté listo
-                        </label>
-                        <div class="form-text text-muted mt-1">
-                            <i class="fas fa-info-circle me-1"></i> Si está desactivado, el contenido solo se generará y podrás agregarlo manualmente más tarde.
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    <div class="mt-4 d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            {% if from_course_dashboard and course_topic %}
-                                <a href="{% url 'dashboard:course_topic_detail' pk=course_topic.id %}" class="btn btn-outline-secondary me-2">
-                                    <i class="fas fa-arrow-left me-1"></i> Volver al Tema
-                                </a>
-                            {% else %}
-                                <a href="{% url 'ai:content_request_list' %}" class="btn btn-outline-secondary me-2">
-                                    <i class="fas fa-arrow-left me-1"></i> Volver
-                                </a>
-                            {% endif %}
-                        </div>
 
-
-                        <div class="d-flex">
-                            {% if not from_course_dashboard %}
-                                <a href="{% url 'ai:content_request_list' %}" class="btn btn-outline-custom me-2">
-                                    <i class="fas fa-times me-1"></i> Cancelar
-                                </a>
-                            {% endif %}
-                            <button type="submit" class="btn btn-primary-custom">
-                                <i class="fas fa-robot me-1"></i> 
-                                {% if from_course_dashboard and course_topic %}
-                                    Generar para Clase con IA Optimizada
-                                {% else %}
-                                    Generar Contenido Optimizado
-                                {% endif %}
-                            </button>
-                        </div>
+                    <!-- Botón de Generación -->
+                    <div class="form-actions">
+                        <button type="submit" class="generate-btn" id="generate-btn">
+                            <span class="btn-icon">
+                                <i class="fas fa-magic"></i>
+                            </span>
+                            <span class="btn-text">Generar Contenido</span>
+                            <span class="btn-loading" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                Generando...
+                            </span>
+                        </button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <!-- Notificaciones Toast -->
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+        <div id="notification-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-body">
+                <div class="notification-content">
+                    <i class="notification-icon"></i>
+                    <span class="notification-message"></span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+{% endblock %}
 
-<style>
-    /* Variables CSS para consistencia */
-    :root {
-        --primary-color: #005cff;
-        --secondary-color: #f8f9fa;
-        --success-color: #28a745;
-        --danger-color: #dc3545;
-        --warning-color: #ffc107;
-        --info-color: #17a2b8;
-        --light-color: #f8f9fa;
-        --dark-color: #343a40;
-        --text-primary: #2c3e50;
-        --text-secondary: #6c757d;
-        --border-color: #e9ecef;
-        --hover-color: #0056e0;
-        --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
-        --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.15);
-        --border-radius: 12px;
-        --transition: all 0.3s ease;
-    }
-
-    /* Breadcrumb Navigation */
-    .dashboard-breadcrumb {
-        margin-bottom: 2rem;
-        padding: 0;
-    }
-
-    .breadcrumb {
-        background: none;
-        padding: 0;
-        margin: 0;
-        font-size: 0.9rem;
-    }
-
-    .breadcrumb-item + .breadcrumb-item::before {
-        content: "›";
-        color: var(--text-secondary);
-        font-weight: 600;
-        margin: 0 0.75rem;
-    }
-
-    .breadcrumb-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--text-secondary);
-        text-decoration: none;
-        padding: 0.5rem 0.75rem;
-        border-radius: 8px;
-        transition: var(--transition);
-        font-weight: 500;
-    }
-
-    .breadcrumb-link:hover {
-        color: var(--primary-color);
-        background-color: rgba(0, 92, 255, 0.1);
-        text-decoration: none;
-    }
-
-    .breadcrumb-item.active {
-        color: var(--primary-color);
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    /* Dashboard Header */
-    .dashboard-header {
-        background: linear-gradient(135deg, var(--primary-color) 0%, #0056e0 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: var(--border-radius);
-        margin-bottom: 2rem;
-        box-shadow: var(--shadow-medium);
-    }
-
-    .dashboard-header h2 {
-        font-weight: 700;
-        font-size: 1.75rem;
-        margin-bottom: 0.5rem;
-    }
-
-    .dashboard-header p {
-        opacity: 0.9;
-        font-size: 1rem;
-        margin-bottom: 0;
-    }
-
-    .dashboard-header small {
-        opacity: 0.8;
-        font-size: 0.875rem;
-    }
-
-    /* Content Container */
-    .content-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-    }
-
-    /* Estilos específicos para la página de solicitud de contenido */
-    .form-control:focus, .form-select:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 0.25rem rgba(0, 92, 255, 0.15);
-    }
-    
-    .form-group {
-        margin-bottom: 1.5rem;
-        transition: all 0.3s ease;
-    }
-    
-    .form-group:hover {
-        transform: translateY(-2px);
-    }
-    
-    .form-control, .form-select {
-        padding: 0.7rem 1rem;
-        border-radius: 8px;
-    }
-    
-    .input-group-text {
-        border-radius: 8px 0 0 8px;
-    }
-    
-    /* Animación para el botón */
-    @keyframes pulse {
-        0% { box-shadow: 0 0 0 0 rgba(0, 92, 255, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(0, 92, 255, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(0, 92, 255, 0); }
-    }
-    
-    .btn-primary-custom {
-        background: linear-gradient(135deg, var(--primary-color) 0%, #0056e0 100%);
-        border: none;
-        color: white;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        animation: pulse 2s infinite;
-        cursor: pointer;
-    }
-    
-    .btn-primary-custom:hover {
-        background: linear-gradient(135deg, #0056e0 0%, #004bb3 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 92, 255, 0.3);
-        color: white;
-    }
-    
-    .btn-primary-custom:focus {
-        outline: none;
-        box-shadow: 0 0 0 0.25rem rgba(0, 92, 255, 0.25);
-        color: white;
-    }
-    
-    .btn-primary-custom:active {
-        transform: translateY(0);
-        background: linear-gradient(135deg, #004bb3 0%, #003d8a 100%);
-        color: white;
-    }
-    
-    .btn-outline-custom {
-        border: 2px solid var(--primary-color);
-        color: var(--primary-color);
-        background: transparent;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .btn-outline-custom:hover {
-        background: var(--primary-color);
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 92, 255, 0.3);
-    }
-
-    /* PDF Viewer styles */
-    #pdf-preview-container iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-    }
-    
-    /* Progress bar styles */
-    .progress-container {
-        margin-top: 20px;
-    }
-    
-    .progress {
-        height: 25px;
-        margin-bottom: 10px;
-    }
-    
-    .progress-bar {
-        transition: width 0.3s ease;
-    }
-    
-    .progress-text {
-        font-size: 0.9rem;
-        text-align: center;
-        margin-bottom: 10px;
-        color: #666;
-    }
-    
-    /* Section selector styles */
-    .section-selector {
-        margin-bottom: 1rem;
-    }
-    
-    .section-check-card {
-        background: white;
-        border: 2px solid #e3e6f0;
-        border-radius: 12px;
-        padding: 15px;
-        margin-bottom: 10px;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .section-check-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(135deg, rgba(0, 92, 255, 0.05), rgba(161, 66, 245, 0.05));
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    
-    .section-check-card:hover {
-        border-color: var(--primary-color);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 92, 255, 0.15);
-    }
-    
-    .section-check-card:hover::before {
-        opacity: 1;
-    }
-    
-    .section-checkbox:checked + .section-check-label .section-check-card {
-        border-color: var(--primary-color);
-        background: linear-gradient(135deg, rgba(0, 92, 255, 0.1), rgba(161, 66, 245, 0.1));
-    }
-    
-    .section-checkbox {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        width: 20px;
-        height: 20px;
-        z-index: 2;
-    }
-    
-    .section-check-label {
-        cursor: pointer;
-        margin-bottom: 0;
-        width: 100%;
-        position: relative;
-    }
-    
-    .section-info {
-        padding-right: 35px;
-    }
-    
-    .section-name {
-        font-weight: 600;
-        color: var(--primary-color);
-        margin-bottom: 5px;
-    }
-    
-    .section-check-card:hover .section-name {
-        color: var(--secondary-color);
-    }
-    
-    .section-checkbox:checked + .section-check-label .section-name {
-        color: var(--primary-color);
-    }
-</style>
-
+{% block extra_js %}
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Añadimos efecto de entrada a los grupos de formulario
-        const formGroups = document.querySelectorAll('.form-group');
-        formGroups.forEach((group, index) => {
-            setTimeout(() => {
-                group.style.opacity = '1';
-            }, 100 * index);
-        });
-        
-        // Efecto de focus al hacer clic en el label
-        const labels = document.querySelectorAll('.form-label');
-        labels.forEach(label => {
-            label.addEventListener('click', function() {
-                const input = document.getElementById(this.getAttribute('for'));
-                if (input) {
-                    input.focus();
-                }
-            });
-        });
-        
-        // Previsualización de archivos PDF
-        const pdfFileInput = document.getElementById('{{ form.pdf_file.id_for_label }}');
-        const previewContainer = document.getElementById('pdf-preview-container');
-        const pdfFilename = document.getElementById('pdf-filename');
-        const pdfFilesize = document.getElementById('pdf-filesize');
-        const pdfPreviewContent = document.getElementById('pdf-preview-content');
-        const pdfPreviewIframe = document.getElementById('pdf-preview-iframe');
-        const pdfPreviewToggle = document.getElementById('pdf-preview-toggle');
-        const pdfPreviewClose = document.getElementById('pdf-preview-close');
-        
-        if (pdfFileInput) {
-            pdfFileInput.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                
-                if (file) {
-                    // Mostrar la previsualización
-                    previewContainer.classList.remove('d-none');
-                    
-                    // Actualizar información del archivo
-                    pdfFilename.textContent = file.name;
-                    
-                    // Formatear el tamaño del archivo
-                    const fileSizeInKB = file.size / 1024;
-                    const fileSizeInMB = file.size / 1024 / 1024;
-                    let fileSizeStr = '';
-                    
-                    if (fileSizeInMB >= 1) {
-                        fileSizeStr = fileSizeInMB.toFixed(2) + ' MB';
-                    } else {
-                        fileSizeStr = fileSizeInKB.toFixed(2) + ' KB';
-                    }
-                    
-                    pdfFilesize.textContent = 'Tamaño: ' + fileSizeStr;
-                    
-                    // Preparar URL para previsualización
-                    const fileURL = URL.createObjectURL(file);
-                    pdfPreviewIframe.src = fileURL;
-                } else {
-                    previewContainer.classList.add('d-none');
-                    pdfPreviewIframe.src = '';
-                }
-            });
-            
-            // Botón para mostrar/ocultar la previsualización
-            pdfPreviewToggle.addEventListener('click', function() {
-                if (pdfPreviewContent.classList.contains('d-none')) {
-                    pdfPreviewContent.classList.remove('d-none');
-                    this.innerHTML = '<i class="fas fa-eye-slash me-1"></i> Ocultar documento';
-                } else {
-                    pdfPreviewContent.classList.add('d-none');
-                    this.innerHTML = '<i class="fas fa-eye me-1"></i> Ver documento';
-                }
-            });
-            
-            // Botón para quitar el archivo
-            pdfPreviewClose.addEventListener('click', function() {
-                pdfFileInput.value = '';
-                previewContainer.classList.add('d-none');
-                pdfPreviewContent.classList.add('d-none');
-                pdfPreviewIframe.src = '';
-                pdfPreviewToggle.innerHTML = '<i class="fas fa-eye me-1"></i> Ver documento';
-            });
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos del DOM
+    const contentTypeCards = document.querySelectorAll('.content-type-card');
+    const contentTypeInput = document.getElementById('id_content_type');
+    const uploadArea = document.getElementById('upload-area');
+    const uploadInput = document.querySelector('.upload-input');
+    const instructionsTextarea = document.querySelector('.instructions-textarea');
+    const charCount = document.getElementById('char-count');
+    const suggestionTags = document.querySelectorAll('.suggestion-tag');
+    const generateBtn = document.getElementById('generate-btn');
+    const form = document.querySelector('form');
+
+    // Inicializar selección de tipo de contenido
+    initContentTypeSelection();
+    
+    // Inicializar upload de archivos
+    initFileUpload();
+    
+    // Inicializar contador de caracteres
+    initCharacterCounter();
+    
+    // Inicializar sugerencias
+    initSuggestions();
+    
+    // Inicializar envío del formulario
+    initFormSubmission();
+
+    function initContentTypeSelection() {
+        // Marcar la opción seleccionada inicialmente
+        const currentValue = contentTypeInput.value;
+        if (currentValue) {
+            const selectedCard = document.querySelector(`[data-value="${currentValue}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
         }
 
-        // JavaScript específico para el selector de secciones (JavaScript vanilla)
-        function initializeSectionSelector() {
-            // Manejar clics en las tarjetas de sección
-            document.querySelectorAll('.section-check-card').forEach(function(card) {
-                card.addEventListener('click', function(e) {
-                    if (e.target.type !== 'checkbox') {
-                        var checkbox = this.querySelector('.section-checkbox');
-                        if (checkbox) {
-                            checkbox.checked = !checkbox.checked;
-                            updateSectionCount();
-                        }
-                    }
-                });
-            });
-            
-            // Manejar cambios en los checkboxes
-            document.querySelectorAll('.section-checkbox').forEach(function(checkbox) {
-                checkbox.addEventListener('change', function() {
-                    updateSectionCount();
-                });
-            });
-            
-            // Función para actualizar el contador de secciones seleccionadas
-            function updateSectionCount() {
-                var checkboxes = document.querySelectorAll('.section-checkbox');
-                var selectedCount = document.querySelectorAll('.section-checkbox:checked').length;
-                var totalCount = checkboxes.length;
+        // Manejar clics en las tarjetas
+        contentTypeCards.forEach(card => {
+            card.addEventListener('click', function() {
+                // Remover selección anterior
+                contentTypeCards.forEach(c => c.classList.remove('selected'));
                 
-                // Actualizar texto del contador si existe
-                var sectionCountDisplay = document.querySelector('.section-count-display');
-                if (!sectionCountDisplay) {
-                    var sectionSelector = document.querySelector('.section-selector');
-                    if (sectionSelector) {
-                        var countHtml = '<div class="section-count-display mb-2">' +
-                            '<small class="text-muted">' +
-                            '<i class="fas fa-check-circle me-1"></i>' +
-                            '<span class="selected-count">' + selectedCount + '</span> de <span class="total-count">' + totalCount + '</span> secciones seleccionadas' +
-                            '</small>' +
-                            '</div>';
-                        sectionSelector.insertAdjacentHTML('afterbegin', countHtml);
-                        sectionCountDisplay = document.querySelector('.section-count-display');
-                    }
-                } else {
-                    var selectedCountSpan = sectionCountDisplay.querySelector('.selected-count');
-                    if (selectedCountSpan) {
-                        selectedCountSpan.textContent = selectedCount;
-                    }
-                }
+                // Seleccionar nueva tarjeta
+                this.classList.add('selected');
                 
-                // Cambiar color del contador según la selección
-                if (sectionCountDisplay) {
-                    sectionCountDisplay.classList.remove('text-success', 'text-primary', 'text-warning');
-                    if (selectedCount === 0) {
-                        sectionCountDisplay.classList.add('text-warning');
-                    } else if (selectedCount === totalCount) {
-                        sectionCountDisplay.classList.add('text-success');
-                    } else {
-                        sectionCountDisplay.classList.add('text-primary');
-                    }
-                }
-            }
-            
-            // Agregar botones de selección rápida si hay múltiples secciones
-            var checkboxes = document.querySelectorAll('.section-checkbox');
-            if (checkboxes.length > 1) {
-                var sectionSelector = document.querySelector('.section-selector');
-                if (sectionSelector) {
-                    var quickActionsHtml = '<div class="section-quick-actions mb-3">' +
-                        '<button type="button" class="btn btn-outline-primary btn-sm me-2" id="selectAllSections">' +
-                        '<i class="fas fa-check-double me-1"></i>Seleccionar Todas' +
-                        '</button>' +
-                        '<button type="button" class="btn btn-outline-secondary btn-sm" id="deselectAllSections">' +
-                        '<i class="fas fa-times me-1"></i>Deseleccionar Todas' +
-                        '</button>' +
-                        '</div>';
-                    sectionSelector.insertAdjacentHTML('afterbegin', quickActionsHtml);
-                    
-                    // Manejar seleccionar todas
-                    document.getElementById('selectAllSections').addEventListener('click', function() {
-                        document.querySelectorAll('.section-checkbox').forEach(function(checkbox) {
-                            checkbox.checked = true;
-                        });
-                        updateSectionCount();
-                    });
-                    
-                    // Manejar deseleccionar todas
-                    document.getElementById('deselectAllSections').addEventListener('click', function() {
-                        document.querySelectorAll('.section-checkbox').forEach(function(checkbox) {
-                            checkbox.checked = false;
-                        });
-                        updateSectionCount();
-                    });
-                }
-            }
-            
-            // Inicializar contador
-            updateSectionCount();
-        }
-        
-        // Inicializar el selector de secciones cuando el DOM esté listo
-        initializeSectionSelector();
-        
-        // Manejar el envío del formulario
-        const form = document.querySelector('form[method="post"]');
-        const submitBtn = document.querySelector('.btn-primary-custom');
-        
-        if (form && submitBtn) {
-            // Prevenir múltiples envíos
-            form.addEventListener('submit', function(e) {
-                // Verificar que el botón no esté ya deshabilitado
-                if (submitBtn.disabled) {
-                    e.preventDefault();
-                    return false;
-                }
+                // Actualizar valor del input oculto
+                const value = this.getAttribute('data-value');
+                contentTypeInput.value = value;
                 
-                // Iniciar animaciones de carga
-                startLoadingAnimations();
-                
-                // Deshabilitar el botón y cambiar su texto
-                submitBtn.disabled = true;
-                submitBtn.style.cursor = 'not-allowed';
-                
-                console.log('Formulario enviado correctamente');
-                
-                // MEJORADO: Después del envío, inicializar seguimiento real del progreso
+                // Animación de feedback
+                this.style.transform = 'scale(0.95)';
                 setTimeout(() => {
-                    // Si el formulario se envía exitosamente, redirigirá automáticamente
-                    // pero mientras tanto, podemos mostrar mensajes realistas
-                    const loadingMessages = [
-                        { text: '🧠 Analizando el tema con inteligencia artificial...', delay: 2000, color: '#28a745' },
-                        { text: '🎓 Adaptando contenido para estudiantes...', delay: 4000, color: '#ffc107' },
-                        { text: '📚 Construyendo estructura pedagógica...', delay: 6000, color: '#e67e22' },
-                        { text: '💡 Generando ejemplos creativos...', delay: 8000, color: '#8e44ad' },
-                        { text: '🎯 Diseñando actividades interactivas...', delay: 10000, color: '#17a2b8' }
-                    ];
-                    
-                    loadingMessages.forEach((msg) => {
-                        setTimeout(() => {
-                            updateLoadingMessage(msg.text, msg.color);
-                        }, msg.delay);
-                    });
-                }, 1000);
+                    this.style.transform = '';
+                }, 150);
             });
-            
-            // Asegurar que el botón funcione al hacer clic
-            submitBtn.addEventListener('click', function(e) {
-                console.log('Botón clickeado');
-                
-                // Si el formulario es válido, proceder con el envío
-                if (form.checkValidity()) {
-                    console.log('Formulario válido, enviando...');
-                    // El evento submit se disparará automáticamente
+        });
+    }
+
+    function initFileUpload() {
+        if (!uploadArea || !uploadInput) return;
+
+        // Prevenir comportamiento por defecto del drag & drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        // Resaltar área de drop
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, unhighlight, false);
+        });
+
+        // Manejar drop
+        uploadArea.addEventListener('drop', handleDrop, false);
+
+        // Manejar clic para seleccionar archivo
+        uploadArea.addEventListener('click', () => uploadInput.click());
+
+        // Manejar selección de archivo
+        uploadInput.addEventListener('change', handleFileSelect);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function highlight() {
+            uploadArea.classList.add('dragover');
+        }
+
+        function unhighlight() {
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === 'application/pdf') {
+                    updateUploadUI(file);
                 } else {
-                    console.log('Formulario inválido, mostrando errores');
-                    form.reportValidity();
+                    showNotification('Por favor selecciona un archivo PDF válido.', 'error');
                 }
+            }
+        }
+
+        function updateUploadUI(file) {
+            const uploadTitle = uploadArea.querySelector('.upload-title');
+            const uploadSubtitle = uploadArea.querySelector('.upload-subtitle');
+            const uploadIcon = uploadArea.querySelector('.upload-icon i');
+            
+            uploadIcon.className = 'fas fa-file-pdf';
+            uploadTitle.textContent = file.name;
+            uploadSubtitle.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+            
+            uploadArea.style.borderColor = 'var(--success-color)';
+            uploadArea.style.background = 'rgba(16, 185, 129, 0.1)';
+            
+            showNotification('Archivo PDF cargado correctamente.', 'success');
+        }
+    }
+
+    function initCharacterCounter() {
+        if (!instructionsTextarea || !charCount) return;
+
+        function updateCounter() {
+            const length = instructionsTextarea.value.length;
+            charCount.textContent = length;
+            
+            if (length > 800) {
+                charCount.style.color = 'var(--warning-color)';
+            } else if (length > 950) {
+                charCount.style.color = 'var(--danger-color)';
+            } else {
+                charCount.style.color = 'var(--text-muted)';
+            }
+        }
+
+        instructionsTextarea.addEventListener('input', updateCounter);
+        updateCounter(); // Inicializar contador
+    }
+
+    function initSuggestions() {
+        suggestionTags.forEach(tag => {
+            tag.addEventListener('click', function() {
+                const text = this.getAttribute('data-text');
+                const currentValue = instructionsTextarea.value;
+                const newValue = currentValue ? `${currentValue}\n\n${text}` : text;
+                
+                instructionsTextarea.value = newValue;
+                instructionsTextarea.focus();
+                
+                // Actualizar contador
+                if (charCount) {
+                    charCount.textContent = newValue.length;
+                }
+                
+                // Animación de feedback
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+                
+                showNotification('Sugerencia añadida a las instrucciones.', 'success');
             });
-        }
-        
-        // Función auxiliar para obtener parámetros de URL
-        function getUrlParameter(name) {
-            name = name.replace(/[\[\]]/g, '\\$&');
-            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
-            var results = regex.exec(window.location.href);
-            if (!results) return null;
-            if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/\+/g, ' '));
-        }
-        
-        // Función para mostrar toast notifications
-        function showToast(message, type) {
-            // Crear contenedor de toast si no existe
-            var toastContainer = document.getElementById('toast-container');
-            if (!toastContainer) {
-                toastContainer = document.createElement('div');
-                toastContainer.id = 'toast-container';
-                toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
-                document.body.appendChild(toastContainer);
-            }
-            
-            // Crear toast
-            var toast = document.createElement('div');
-            toast.className = 'toast show';
-            toast.style.cssText = 'margin-bottom: 10px;';
-            
-            var toastClass = 'bg-success';
-            var icon = 'fa-check-circle';
-            if (type === 'error') {
-                toastClass = 'bg-danger';
-                icon = 'fa-exclamation-circle';
-            } else if (type === 'warning') {
-                toastClass = 'bg-warning';
-                icon = 'fa-exclamation-triangle';
-            }
-            
-            toast.innerHTML = `
-                <div class="toast-header ${toastClass} text-white">
-                    <i class="fas ${icon} me-2"></i>
-                    <strong class="me-auto">${type === 'error' ? 'Error' : type === 'warning' ? 'Advertencia' : 'Éxito'}</strong>
-                    <button type="button" class="btn-close btn-close-white ms-2" onclick="this.closest('.toast').remove()"></button>
-                </div>
-                <div class="toast-body">
-                    ${message}
-                </div>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            // Auto-remove después de 5 segundos
-            setTimeout(function() {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 5000);
-        }
-        
-        // En la función de asignación del material, verificar secciones seleccionadas
-        function assignToPortfolio(contentId, materialType, materialName, topicId) {
-            if (!contentId) {
-                showToast('ID de contenido requerido', 'error');
+        });
+    }
+
+    function initFormSubmission() {
+        if (!form || !generateBtn) return;
+
+        form.addEventListener('submit', function(e) {
+            // Validar que se haya seleccionado un tipo de contenido
+            if (!contentTypeInput.value) {
+                e.preventDefault();
+                showNotification('Por favor selecciona un tipo de contenido.', 'error');
                 return;
             }
+
+            // Mostrar estado de carga
+            const btnText = generateBtn.querySelector('.btn-text');
+            const btnLoading = generateBtn.querySelector('.btn-loading');
             
-            // Verificar checkboxes de secciones solo para material de clase
-            var selectedSections = [];
-            if (materialType === 'class') {
-                document.querySelectorAll('.section-checkbox:checked').forEach(function(checkbox) {
-                    selectedSections.push(checkbox.value);
-                });
-                
-                // Si hay secciones disponibles pero ninguna seleccionada
-                var totalCheckboxes = document.querySelectorAll('.section-checkbox');
-                if (totalCheckboxes.length > 0 && selectedSections.length === 0) {
-                    showToast('Por favor selecciona al menos una sección', 'error');
-                    return;
-                }
-                
-                // Para debug
-                console.log('Secciones seleccionadas:', selectedSections);
-            }
+            btnText.style.display = 'none';
+            btnLoading.style.display = 'inline-flex';
+            generateBtn.disabled = true;
             
-            // Configurar datos según el tipo de asignación
-            var assignmentData = {};
-            
-            if (materialType === 'class') {
-                // Material de clase: necesita título del tema del curso y secciones
-                var courseTopicElement = document.getElementById('course_topic_title') || document.querySelector('input[name="topic"]');
-                var courseTopic = courseTopicElement ? courseTopicElement.value : getUrlParameter('topic') || '';
-                
-                if (!courseTopic) {
-                    showToast('No se pudo obtener el tema del curso', 'error');
-                    return;
-                }
-                
-                assignmentData = {
-                    content_id: contentId,
-                    material_type: materialType,
-                    material_name: materialName,
-                    course_topic_title: courseTopic,
-                    use_scorm_format: true,
-                    target_sections: selectedSections  // Agregar secciones seleccionadas
-                };
-                
-                console.log('📚 Datos para material de clase:', assignmentData);
+            showNotification('Iniciando generación de contenido...', 'info');
+        });
+    }
+
+    function showNotification(message, type = 'info') {
+        const toast = document.getElementById('notification-toast');
+        const icon = toast.querySelector('.notification-icon');
+        const messageEl = toast.querySelector('.notification-message');
+        
+        // Configurar icono según el tipo
+        const icons = {
+            success: 'fas fa-check-circle text-success',
+            error: 'fas fa-exclamation-circle text-danger',
+            warning: 'fas fa-exclamation-triangle text-warning',
+            info: 'fas fa-info-circle text-info'
+        };
+        
+        icon.className = icons[type] || icons.info;
+        messageEl.textContent = message;
+        
+        // Mostrar toast
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+    }
+
+    // Función para asignar al portafolio (mantenida para compatibilidad)
+    window.assignToPortfolio = function(materialId, materialType) {
+        const url = materialType === 'class' ? 
+            `/ai/contents/${materialId}/assign-class/` : 
+            `/ai/contents/${materialId}/assign/`;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                material_type: materialType
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                // Opcional: recargar la página o actualizar la UI
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             } else {
-                // Material personalizado: necesita topic_id específico
-                if (!topicId) {
-                    showToast('Debe seleccionar un tema específico para material personalizado', 'error');
-                    return;
-                }
-                
-                assignmentData = {
-                    content_id: contentId,
-                    material_type: materialType,
-                    topic_id: topicId,
-                    material_name: materialName
-                };
-                
-                console.log('👤 Datos para material personalizado:', assignmentData);
+                showNotification(data.message || 'Error al asignar el material', 'error');
             }
-            
-            // Resto de la función assignToPortfolio...
-            // [continúa con el código de envío AJAX]
-        }
-        
-        // ========================================
-        // ANIMACIONES DE CARGA MEJORADAS
-        // ========================================
-        
-        function startLoadingAnimations() {
-            const submitBtn = document.querySelector('.btn-primary-custom');
-            if (!submitBtn) return;
-            
-            // Crear overlay de carga
-            createLoadingOverlay();
-            
-            // Mensajes de progreso dinámicos MÁS EMOCIONANTES
-            const loadingMessages = [
-                { text: '🚀 ¡Iniciando la magia educativa! Preparando tu contenido...', delay: 0, color: '#3e82fc' },
-                { text: '🧠 Analizando el tema con inteligencia artificial avanzada...', delay: 1500, color: '#28a745' },
-                { text: '🎓 Adaptando contenido para estudiantes de ' + getGradeLevel() + '...', delay: 3000, color: '#ffc107' },
-                { text: '🔬 Construyendo estructura pedagógica innovadora...', delay: 4500, color: '#e67e22' },
-                { text: '💡 Generando ejemplos súper creativos y actuales...', delay: 6000, color: '#8e44ad' },
-                { text: '🎯 Diseñando actividades interactivas espectaculares...', delay: 7500, color: '#17a2b8' },
-                { text: '📊 Creando evaluaciones inteligentes y justas...', delay: 9000, color: '#dc3545' },
-                { text: '🎨 Aplicando diseño visual moderno y atractivo...', delay: 10500, color: '#fd7e14' },
-                { text: '🌟 Integrando tecnología educativa de vanguardia...', delay: 12000, color: '#6f42c1' },
-                { text: '✨ Puliendo cada detalle para la perfección...', delay: 13500, color: '#20c997' },
-                { text: '🎭 Agregando elementos dinámicos y multimedia...', delay: 15000, color: '#e83e8c' },
-                { text: '🔥 ¡Casi terminado! Aplicando últimos toques mágicos...', delay: 16500, color: '#fd7e14' },
-                { text: '🎉 ¡LISTO! Tu contenido educativo espectacular está aquí...', delay: 18000, color: '#28a745' }
-            ];
-            
-            // Mostrar mensajes progresivamente con efectos dinámicos
-            loadingMessages.forEach((msg, index) => {
-                setTimeout(() => {
-                    updateLoadingMessage(msg.text, msg.color);
-                    updateLoadingProgress((index + 1) / loadingMessages.length * 100);
-                    
-                    // Efecto de partículas en el último mensaje
-                    if (index === loadingMessages.length - 1) {
-                        setTimeout(() => {
-                            createCelebrationEffect();
-                        }, 1000);
-                    }
-                }, msg.delay);
-            });
-            
-            // Animar el botón con diferentes estados
-            animateSubmitButton();
-        }
-        
-        function createLoadingOverlay() {
-            // Crear overlay si no existe
-            let overlay = document.getElementById('loading-overlay');
-            if (!overlay) {
-                overlay = document.createElement('div');
-                overlay.id = 'loading-overlay';
-                overlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0, 0, 0, 0.8);
-                    z-index: 9999;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    backdrop-filter: blur(5px);
-                `;
-                
-                overlay.innerHTML = `
-                    <div style="
-                        background: white;
-                        padding: 40px;
-                        border-radius: 20px;
-                        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-                        text-align: center;
-                        max-width: 500px;
-                        width: 90%;
-                        animation: fadeInScale 0.5s ease-out;
-                    ">
-                        <div style="
-                            width: 80px;
-                            height: 80px;
-                            border: 4px solid #e3f2fd;
-                            border-top: 4px solid #3e82fc;
-                            border-radius: 50%;
-                            animation: spin 1s linear infinite;
-                            margin: 0 auto 20px;
-                        "></div>
-                        
-                        <h3 style="color: #3e82fc; margin-bottom: 20px; font-size: 1.4rem;">
-                            🎓 Generando Contenido Educativo
-                        </h3>
-                        
-                        <div style="
-                            background: #f8f9fa;
-                            border-radius: 10px;
-                            padding: 15px;
-                            margin-bottom: 20px;
-                        ">
-                            <div id="loading-message" style="
-                                color: #2c3e50;
-                                font-size: 1.1rem;
-                                margin-bottom: 15px;
-                                min-height: 25px;
-                                transition: all 0.3s ease;
-                                transform: translateX(0);
-                                opacity: 1;
-                            ">
-                                🚀 Iniciando generación de contenido educativo...
-                            </div>
-                            
-                            <div style="
-                                background: #e9ecef;
-                                border-radius: 15px;
-                                height: 8px;
-                                overflow: hidden;
-                                margin-bottom: 10px;
-                            ">
-                                <div id="loading-progress" style="
-                                    background: linear-gradient(90deg, #3e82fc, #ff6b6b);
-                                    height: 100%;
-                                    width: 0%;
-                                    border-radius: 15px;
-                                    transition: width 0.3s ease;
-                                "></div>
-                            </div>
-                            
-                            <div style="
-                                color: #6c757d;
-                                font-size: 0.9rem;
-                            ">
-                                <span id="progress-percentage">0%</span> completado
-                            </div>
-                        </div>
-                        
-                        <p style="
-                            color: #6c757d;
-                            font-size: 0.9rem;
-                            margin: 0;
-                        ">
-                            ⏱️ Tiempo estimado: 4-5 minutos<br>
-                            💡 Esto puede tomar hasta 5 minutos. Por favor, no cierres esta ventana.
-                        </p>
-                    </div>
-                `;
-                
-                document.body.appendChild(overlay);
-                
-                // Agregar estilos de animación MEJORADOS
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                    
-                    @keyframes fadeInScale {
-                        0% { 
-                            opacity: 0; 
-                            transform: scale(0.8) rotate(-5deg); 
-                        }
-                        50% {
-                            transform: scale(1.05) rotate(2deg);
-                        }
-                        100% { 
-                            opacity: 1; 
-                            transform: scale(1) rotate(0deg); 
-                        }
-                    }
-                    
-                    @keyframes messageGlow {
-                        0% { 
-                            transform: translateX(-10px) scale(0.95);
-                            opacity: 0;
-                        }
-                        50% {
-                            transform: translateX(5px) scale(1.02);
-                            opacity: 0.8;
-                        }
-                        100% { 
-                            transform: translateX(0) scale(1);
-                            opacity: 1;
-                        }
-                    }
-                    
-                    @keyframes progressPulse {
-                        0%, 100% { box-shadow: 0 0 5px rgba(62, 130, 252, 0.5); }
-                        50% { box-shadow: 0 0 20px rgba(62, 130, 252, 0.8); }
-                    }
-                    
-                    @keyframes celebration {
-                        0% { transform: scale(1) rotate(0deg); }
-                        25% { transform: scale(1.1) rotate(-5deg); }
-                        50% { transform: scale(1.05) rotate(5deg); }
-                        75% { transform: scale(1.08) rotate(-3deg); }
-                        100% { transform: scale(1) rotate(0deg); }
-                    }
-                    
-                    @keyframes confetti {
-                        0% { 
-                            transform: translateY(-100vh) rotate(0deg);
-                            opacity: 1;
-                        }
-                        100% { 
-                            transform: translateY(100vh) rotate(720deg);
-                            opacity: 0;
-                        }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-            
-            // En su lugar, solo mostramos el mensaje inicial y dejamos que el backend maneje el progreso
-            updateLoadingMessage('🚀 Iniciando generación de contenido educativo...', '#3e82fc');
-        }
-        
-        function updateLoadingMessage(message, color = '#2c3e50') {
-            const messageElement = document.getElementById('loading-message');
-            if (messageElement) {
-                // Animación de salida
-                messageElement.style.transform = 'translateX(-20px)';
-                messageElement.style.opacity = '0';
-                
-                setTimeout(() => {
-                    messageElement.textContent = message;
-                    messageElement.style.color = color;
-                    messageElement.style.fontWeight = 'bold';
-                    messageElement.style.textShadow = `0 0 10px ${color}40`;
-                    
-                    // Animación de entrada
-                    messageElement.style.transform = 'translateX(0)';
-                    messageElement.style.opacity = '1';
-                    messageElement.style.animation = 'messageGlow 0.6s ease-in-out';
-                    
-                    setTimeout(() => {
-                        messageElement.style.animation = '';
-                    }, 600);
-                }, 200);
-            }
-        }
-        
-        function updateLoadingProgress(percentage) {
-            const progressBar = document.getElementById('loading-progress');
-            const progressText = document.getElementById('progress-percentage');
-            
-            if (progressBar) {
-                progressBar.style.width = percentage + '%';
-                progressBar.style.animation = 'progressPulse 1s ease-in-out';
-                
-                // Cambiar color según progreso
-                if (percentage >= 90) {
-                    progressBar.style.background = 'linear-gradient(90deg, #28a745, #20c997)';
-                } else if (percentage >= 70) {
-                    progressBar.style.background = 'linear-gradient(90deg, #ffc107, #fd7e14)';
-                } else if (percentage >= 40) {
-                    progressBar.style.background = 'linear-gradient(90deg, #17a2b8, #6f42c1)';
-                }
-                
-                setTimeout(() => {
-                    progressBar.style.animation = '';
-                }, 1000);
-            }
-            
-            if (progressText) {
-                const oldText = progressText.textContent;
-                progressText.textContent = Math.round(percentage) + '%';
-                
-                // Animación de número cambiando
-                if (oldText !== progressText.textContent) {
-                    progressText.style.transform = 'scale(1.2)';
-                    progressText.style.color = '#28a745';
-                    setTimeout(() => {
-                        progressText.style.transform = 'scale(1)';
-                        progressText.style.color = '#6c757d';
-                    }, 300);
-                }
-            }
-        }
-        
-        function createCelebrationEffect() {
-            const overlay = document.getElementById('loading-overlay');
-            if (!overlay) return;
-            
-            // Efecto de celebración en el contenedor principal
-            const mainContainer = overlay.querySelector('div');
-            if (mainContainer) {
-                mainContainer.style.animation = 'celebration 1s ease-in-out';
-            }
-            
-            // Crear partículas de confetti
-            for (let i = 0; i < 20; i++) {
-                setTimeout(() => {
-                    createConfettiParticle();
-                }, i * 100);
-            }
-            
-            // Cambiar mensaje final con efecto especial
-            setTimeout(() => {
-                const messageElement = document.getElementById('loading-message');
-                if (messageElement) {
-                    messageElement.style.background = 'linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3)';
-                    messageElement.style.backgroundClip = 'text';
-                    messageElement.style.webkitBackgroundClip = 'text';
-                    messageElement.style.color = 'transparent';
-                    messageElement.style.fontSize = '1.3rem';
-                    messageElement.style.animation = 'celebration 2s ease-in-out infinite';
-                }
-            }, 500);
-        }
-        
-        function createConfettiParticle() {
-            const overlay = document.getElementById('loading-overlay');
-            if (!overlay) return;
-            
-            const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd'];
-            const particle = document.createElement('div');
-            
-            particle.style.cssText = `
-                position: absolute;
-                width: 8px;
-                height: 8px;
-                background: ${colors[Math.floor(Math.random() * colors.length)]};
-                left: ${Math.random() * 100}%;
-                top: -10px;
-                border-radius: 50%;
-                pointer-events: none;
-                animation: confetti 3s linear;
-                z-index: 10001;
-            `;
-            
-            overlay.appendChild(particle);
-            
-            // Remover partícula después de la animación
-            setTimeout(() => {
-                if (particle.parentNode) {
-                    particle.parentNode.removeChild(particle);
-                }
-            }, 3000);
-        }
-        
-        function animateSubmitButton() {
-            const submitBtn = document.querySelector('.btn-primary-custom');
-            if (!submitBtn) return;
-            
-            const buttonStates = [
-                { text: '🚀 Iniciando...', color: '#3e82fc' },
-                { text: '📚 Analizando...', color: '#28a745' },
-                { text: '🎓 Procesando...', color: '#ffc107' },
-                { text: '💡 Generando...', color: '#e67e22' },
-                { text: '🎨 Diseñando...', color: '#8e44ad' },
-                { text: '✨ Finalizando...', color: '#17a2b8' }
-            ];
-            
-            buttonStates.forEach((state, index) => {
-                setTimeout(() => {
-                    submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> ${state.text}`;
-                    submitBtn.style.background = state.color;
-                }, index * 4000);
-            });
-        }
-        
-        function getGradeLevel() {
-            const gradeLevelSelect = document.querySelector('select[name="grade_level"]');
-            if (gradeLevelSelect) {
-                const selectedOption = gradeLevelSelect.options[gradeLevelSelect.selectedIndex];
-                return selectedOption ? selectedOption.text : 'estudiantes';
-            }
-            return 'estudiantes';
-        }
-        
-        // Función para limpiar animaciones (se ejecuta cuando se carga la página de resultado)
-        function cleanupLoadingAnimations() {
-            const overlay = document.getElementById('loading-overlay');
-            if (overlay) {
-                overlay.remove();
-            }
-        }
-        
-        // Limpiar animaciones si hay errores
-        window.addEventListener('error', cleanupLoadingAnimations);
-        
-    });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error de conexión al asignar el material', 'error');
+        });
+    };
+});
 </script>
+{% endblock %}
 
-<!-- Script para seguimiento de progreso real -->
-<script src="{% static 'ai_content_generator/js/progress_tracker.js' %}"></script>
+{% block extra_css %}
+<style>
+:root {
+    --primary-color: #005CFF;
+    --primary-light: rgba(0, 92, 255, 0.1);
+    --secondary-color: #A142F5;
+    --accent-color: #8B5CF6;
+    --success-color: #10B981;
+    --warning-color: #F59E0B;
+    --danger-color: #EF4444;
+    --info-color: #005CFF;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border-color: #e5e7eb;
+    --bg-light: #f8f9fa;
+    --light-gray: #f8f9fa;
+    --medium-gray: #e9ecef;
+    --dark-gray: #495057;
+    --card-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    --hover-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    --border-radius: 12px;
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
 
+.modern-form-container {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    transition: var(--transition);
+}
+
+.modern-form-container:hover {
+    box-shadow: var(--hover-shadow);
+}
+
+.form-header {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    padding: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(150px, -150px);
+}
+
+.header-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.header-content {
+    flex: 1;
+}
+
+.header-title {
+    color: white;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.header-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+    font-size: 1rem;
+}
+
+.form-body {
+    padding: 2rem;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    color: var(--text-primary);
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.section-description {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+}
+
+.content-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.content-type-card {
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: var(--transition);
+    background: white;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--card-shadow);
+}
+
+.content-type-card:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--hover-shadow);
+    transform: translateY(-2px);
+}
+
+.content-type-card.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+    box-shadow: var(--hover-shadow);
+}
+
+.card-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.card-content {
+    flex: 1;
+}
+
+.card-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+}
+
+.card-description {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.upload-area {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 3rem 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    background: var(--bg-light);
+    box-shadow: var(--card-shadow);
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+}
+
+.upload-area.dragover {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+    transform: scale(1.02);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.upload-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    margin: 0 0 0.5rem 0;
+}
+
+.upload-subtitle {
+    color: var(--text-secondary);
+    margin: 0 0 0.5rem 0;
+}
+
+.upload-note {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.instructions-container {
+    position: relative;
+}
+
+.instructions-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    resize: vertical;
+    transition: var(--transition);
+    font-family: inherit;
+    box-shadow: var(--card-shadow);
+}
+
+.instructions-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.char-counter {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 1rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    background: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    box-shadow: var(--shadow-sm);
+}
+
+.suggestions-section {
+    margin-top: 1rem;
+}
+
+.suggestions-title {
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.suggestions-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.suggestion-tag {
+    background: var(--bg-light);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: var(--card-shadow);
+}
+
+.suggestion-tag:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: var(--hover-shadow);
+}
+
+.form-actions {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.generate-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 200px;
+    justify-content: center;
+    box-shadow: var(--card-shadow);
+}
+
+.generate-btn:hover:not(:disabled) {
+    background: #0052e6;
+    transform: translateY(-2px);
+    box-shadow: var(--hover-shadow);
+}
+
+.generate-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-loading {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .form-header {
+        padding: 1.5rem;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .form-body {
+        padding: 1.5rem;
+    }
+    
+    .content-type-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .content-type-card {
+        padding: 1rem;
+    }
+    
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+    
+    .suggestions-tags {
+        justify-content: center;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modern-form-container {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.content-type-card {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.content-type-card:nth-child(1) { animation-delay: 0.1s; }
+.content-type-card:nth-child(2) { animation-delay: 0.2s; }
+.content-type-card:nth-child(3) { animation-delay: 0.3s; }
+.content-type-card:nth-child(4) { animation-delay: 0.4s; }
+.content-type-card:nth-child(5) { animation-delay: 0.5s; }
+.content-type-card:nth-child(6) { animation-delay: 0.6s; }
+</style>
 {% endblock %} 

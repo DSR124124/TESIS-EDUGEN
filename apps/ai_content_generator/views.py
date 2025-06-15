@@ -31,7 +31,7 @@ from .services.llm_service import OpenAIService
 from apps.scorm_packager.services.packager import SCORMPackager
 from apps.scorm_packager.models import SCORMPackage
 from apps.portfolios.models import PortfolioTopic, PortfolioMaterial
-from apps.academic.models import Course, Student, Enrollment, Grade
+from apps.academic.models import Course, Student, Enrollment, Grade, Section
 from .tasks import get_generation_progress
 from .utils.pdf_utils import extract_text_from_pdf
 from .utils.openai_utils import analizar_con_openai
@@ -523,7 +523,14 @@ class ContentRequestCreateView(LoginRequiredMixin, CreateView):
                     
             elif course_topic_id:
                 # Para temas de clase, mostrar información apropiada
-                messages.info(self.request, "El contenido se está generando para toda la clase. Podrás asignarlo a los estudiantes cuando esté listo.")
+                try:
+                    from apps.academic.models import CourseTopic
+                    course_topic = CourseTopic.objects.get(pk=course_topic_id)
+                    
+                    messages.info(self.request, f"El contenido se está generando para la clase {course_topic.section.grade.name} - Sección {course_topic.section.name}. Podrás asignarlo manualmente a toda la sección o a estudiantes específicos cuando esté listo.")
+                except Exception as e:
+                    logger.error(f"Error obteniendo información del tema de clase: {str(e)}")
+                    messages.info(self.request, "El contenido se está generando para toda la clase. Podrás asignarlo a los estudiantes cuando esté listo.")
                     
             return redirect(redirect_url)
             
@@ -1165,6 +1172,8 @@ class ContentDetailView(LoginRequiredMixin, DetailView):
             logger.info(f"Limpiando datos de paquete SCORM de la sesión: {request.session['scorm_package_created']}")
             # No eliminamos inmediatamente para que la plantilla pueda usar los datos
             request.session['_clear_scorm_data'] = True
+        
+
         
         try:
             return super().get(request, *args, **kwargs)
@@ -3452,7 +3461,29 @@ class ContentPreviewView(View):
             
             # Usar exactamente el mismo contenido que la vista de edición
             # Priorizar formatted_content sobre raw_content para consistencia
-            raw_content = content.formatted_content or content.raw_content or ""
+            # EXCEPCIÓN: Para contenido incompleto, usar raw_content si formatted_content no tiene contenido educativo
+            formatted_content = content.formatted_content or ""
+            is_formatted_complete = (
+                formatted_content and 
+                len(formatted_content.strip()) > 1000 and
+                '<div class="main-container"></div>' not in formatted_content and
+                'main-container">' not in formatted_content.replace(' ', '').replace('\n', '') and
+                # Also check for educational content presence
+                not (
+                    'institutional-header' in formatted_content and
+                    'ecuaciones' not in formatted_content.lower() and
+                    'ejercicio' not in formatted_content.lower() and
+                    'actividad' not in formatted_content.lower() and
+                    'ejemplo' not in formatted_content.lower() and
+                    len(formatted_content) < 15000
+                )
+            )
+            
+            if is_formatted_complete:
+                raw_content = content.formatted_content
+            else:
+                logger.info(f"Contenido {pk} - formatted_content incompleto, usando raw_content")
+                raw_content = content.raw_content or content.formatted_content or ""
             
             if not raw_content.strip():
                 return HttpResponse("""
@@ -3477,8 +3508,9 @@ class ContentPreviewView(View):
                 
                 # Completar estructura HTML si es necesario
                 if raw_content_clean.startswith('<!DOCTYPE html>'):
-                    # Ya tiene DOCTYPE, usar tal como está
-                    complete_html = raw_content
+                    # Ya tiene DOCTYPE, usar tal como está SIN procesamiento adicional
+                    logger.info(f"Contenido {pk} tiene DOCTYPE completo, devolviendo sin modificaciones")
+                    return HttpResponse(raw_content)
                 elif raw_content_clean.startswith('<html'):
                     # Ya tiene html tag, solo agregar DOCTYPE
                     complete_html = f"<!DOCTYPE html>\n{raw_content}"
@@ -4761,3 +4793,100 @@ def debug_line_by_line_view(request):
     """
     
     return HttpResponse(debug_html)
+
+@login_required
+def auto_generate_content_view(request):
+    """
+    Vista que genera contenido automáticamente basado en parámetros GET
+    sin mostrar un formulario intermedio.
+    """
+    try:
+        # Verificar que el usuario sea profesor
+        if not hasattr(request.user, 'teacher_profile'):
+            messages.error(request, "Solo los profesores pueden generar contenido automáticamente.")
+            return redirect('dashboard:teacher')
+        
+        # Obtener parámetros de la URL
+        topic = request.GET.get('topic', '')
+        course_id = request.GET.get('course', '')
+        grade_level = request.GET.get('grade_level', '')
+        course_topic_id = request.GET.get('course_topic_id', '')
+        for_class = request.GET.get('for_class', 'false').lower() == 'true'
+        
+        # Validar parámetros mínimos
+        if not topic:
+            messages.error(request, "Se requiere especificar un tema para generar contenido.")
+            return redirect('ai:generator')
+        
+        if not grade_level:
+            messages.error(request, "Se requiere especificar un grado para generar contenido.")
+            return redirect('ai:generator')
+        
+        # Obtener curso si se especifica
+        course = None
+        if course_id:
+            try:
+                from apps.academic.models import Course
+                course = Course.objects.get(pk=course_id)
+            except Course.DoesNotExist:
+                messages.error(request, f"No se encontró el curso con ID {course_id}")
+                return redirect('ai:generator')
+        
+        # Obtener tipo de contenido por defecto
+        from .models import ContentType
+        content_type = ContentType.objects.filter(name='Material didáctico').first()
+        if not content_type:
+            content_type = ContentType.objects.first()
+        
+        if not content_type:
+            messages.error(request, "No hay tipos de contenido configurados en el sistema.")
+            return redirect('ai:generator')
+        
+        # Crear ContentRequest automáticamente
+        content_request = ContentRequest.objects.create(
+            teacher=request.user,
+            topic=topic,
+            grade_level=grade_level,
+            course=course,
+            content_type=content_type,
+            additional_instructions="Contenido generado automáticamente."
+        )
+        
+        # Si viene course_topic_id, agregar información del curso
+        if course_topic_id:
+            try:
+                from apps.academic.models import CourseTopic
+                course_topic = CourseTopic.objects.get(pk=course_topic_id)
+                
+                # Agregar información del CourseTopic al campo additional_instructions
+                class_info_text = f"\n\nINFORMACIÓN DEL TEMA DE CLASE:\nTema: {course_topic.title}\nCurso: {course_topic.course.name}\nSección: {course_topic.section.grade.name} - Sección {course_topic.section.name}\nProfesor: {course_topic.teacher.user.get_full_name()}\n\nEste contenido será utilizado como material de clase para todos los estudiantes de la sección."
+                
+                if course_topic.description:
+                    class_info_text += f"\nDescripción del tema: {course_topic.description}"
+                
+                content_request.additional_instructions += class_info_text
+                content_request.save()
+                
+            except Exception as e:
+                logger.warning(f"Error al obtener información del CourseTopic {course_topic_id}: {str(e)}")
+        
+        # Iniciar generación de contenido
+        try:
+            from .tasks import generate_content
+            result = generate_content(content_request.id)
+            
+            messages.success(request, f"🚀 ¡Contenido en generación automática! Tema: '{topic}' para {grade_level}")
+            messages.info(request, "El contenido se está generando automáticamente. Será redirigido cuando esté listo.")
+            
+            # Redirigir a la lista de contenidos con el ID de la nueva solicitud
+            redirect_url = reverse('ai:content_request_list') + f'?auto_generated=true&request_id={content_request.id}'
+            return redirect(redirect_url)
+            
+        except Exception as e:
+            messages.error(request, f"Error al iniciar la generación automática: {str(e)}")
+            return redirect('ai:generator')
+            
+    except Exception as e:
+        logger.exception(f"Error en auto_generate_content_view: {str(e)}")
+        messages.error(request, f"Error inesperado: {str(e)}")
+        return redirect('ai:generator')

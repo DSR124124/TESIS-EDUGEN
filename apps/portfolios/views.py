@@ -1052,10 +1052,10 @@ class StudentTopicDetailView(LoginRequiredMixin, UserPassesTestMixin, AutoSafeTo
         # Se ha eliminado la lógica que causaba que aparecieran materiales incorrectos
         
         # 4. Clasificar materiales del portafolio (SOLO del tema actual)
-        portfolio_regular_materials = []
-        portfolio_personal_materials = []
-        portfolio_ai_materials = []
-        portfolio_ai_class_materials = []  # Nueva categoría para material AI de clase
+        portfolio_class_materials = []     # Materiales de clase (regulares)
+        portfolio_personal_materials = []  # Materiales personalizados
+        portfolio_ai_class_materials = []  # Materiales AI de clase
+        portfolio_ai_personal_materials = []  # Materiales AI personalizados
         
         # CORREGIDO: Solo usar materiales del tema actual, NO de otros temas
         all_portfolio_materials = list(portfolio_materials)  # SOLO materiales del tema actual
@@ -1082,19 +1082,17 @@ class StudentTopicDetailView(LoginRequiredMixin, UserPassesTestMixin, AutoSafeTo
             
             # CORREGIDA: Lógica de clasificación de materiales
             ai_generated = getattr(material, 'ai_generated', False)
-            is_class_material = getattr(material, 'is_class_material', True)  # Por defecto True
+            is_class_material = getattr(material, 'is_class_material', False)  # Cambio: Por defecto False
             
-            if ai_generated:
-                # Material generado por IA
-                if is_class_material:
-                    # Material AI de clase - debe aparecer en la sección de clase
-                    portfolio_ai_class_materials.append(material)
-                else:
-                    # Material AI personalizado - aparece en personalizado
-                    portfolio_ai_materials.append(material)
-            elif is_class_material:
+            if ai_generated and is_class_material:
+                # Material AI de clase - aparece en la sección de clase
+                portfolio_ai_class_materials.append(material)
+            elif ai_generated and not is_class_material:
+                # Material AI personalizado - aparece en personalizado
+                portfolio_ai_personal_materials.append(material)
+            elif not ai_generated and is_class_material:
                 # Material de clase regular (no AI)
-                portfolio_regular_materials.append(material)
+                portfolio_class_materials.append(material)
             else:
                 # Material personalizado (no IA, no clase)
                 portfolio_personal_materials.append(material)
@@ -1119,34 +1117,30 @@ class StudentTopicDetailView(LoginRequiredMixin, UserPassesTestMixin, AutoSafeTo
                 material.scorm_standard = None
                 material.is_published = False
         
-        # 6. Combinar TODOS los materiales (externos de clase + del portafolio)
-        all_materials = list(class_materials) + all_portfolio_materials
+        # 6. Combinar materiales de clase: externos + AI de clase + regulares del portafolio
+        all_class_materials = list(class_materials) + portfolio_ai_class_materials + portfolio_class_materials
         
-        # 7. Clasificar materiales para los contadores y categorías
-        regular_materials = []  # Materiales de clase (no AI)
-        ai_materials = []      # Materiales con IA (personalizados)
+        # 7. Combinar materiales personalizados: AI personalizado + regulares personalizados
+        all_personal_materials = portfolio_ai_personal_materials + portfolio_personal_materials
         
-        for material in all_materials:
-            if getattr(material, 'ai_generated', False):
-                ai_materials.append(material)
-            else:
-                regular_materials.append(material)
+        # 8. Combinar TODOS los materiales
+        all_materials = all_class_materials + all_personal_materials
         
-        # 8. Añadir contadores al contexto
-        context['regular_materials_count'] = len(regular_materials)
-        context['ai_materials_count'] = len(ai_materials)
+        # 9. Añadir contadores al contexto
+        context['regular_materials_count'] = len(all_class_materials)  # Total de materiales de clase
+        context['ai_materials_count'] = len(all_personal_materials)   # Total de materiales personalizados
         context['total_materials_count'] = len(all_materials)
         
-        # 9. Enviar todos los materiales al template
+        # 10. Enviar materiales clasificados al template
         context['materials'] = all_materials
-        context['class_materials'] = regular_materials
-        context['ai_materials'] = ai_materials
+        context['class_materials'] = all_class_materials      # Materiales de clase (aparecen en "Material de Clase")
+        context['ai_materials'] = all_personal_materials      # Materiales personalizados (aparecen en "Personalizado")
         
         # Debug info
         logger.info(f"📚 Materiales encontrados para tema {topic.title}:")
         logger.info(f"  - Total: {len(all_materials)}")
-        logger.info(f"  - Regulares: {len(regular_materials)}")
-        logger.info(f"  - Con IA: {len(ai_materials)}")
+        logger.info(f"  - De clase: {len(all_class_materials)}")
+        logger.info(f"  - Personalizados: {len(all_personal_materials)}")
         logger.info(f"  - Del portafolio: {len(all_portfolio_materials)}")
         logger.info(f"  - De clase externa: {len(class_materials)}")
         

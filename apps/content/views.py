@@ -37,9 +37,17 @@ def get_openai_service():
         try:
             _openai_service = DeepSeekService()
             logger.info("✅ Servicio de IA inicializado correctamente")
+            
+            # Verificar si el servicio está disponible
+            if not _openai_service.api_available:
+                logger.warning("⚠️ API de DeepSeek no está disponible, pero el servicio se mantendrá activo para fallback")
+                # No establecer _openai_service = None, mantener el servicio para contenido de fallback
+                
         except Exception as e:
             logger.warning(f"⚠️ No se pudo inicializar el servicio de IA: {e}")
+            logger.exception("Detalles del error:")
             _openai_service = None
+    
     return _openai_service
 
 # Alias para compatibilidad

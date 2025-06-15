@@ -1257,7 +1257,56 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeIframe() {
         if (isInitialized) return; // Prevent multiple initializations
         
-        originalContent = `{{ content.formatted_content|safe|escapejs }}`;
+        // Smart content selection - use raw_content if formatted_content is incomplete
+        let formattedContent = `{{ content.formatted_content|safe|escapejs }}`;
+        let rawContent = `{{ content.raw_content|safe|escapejs }}`;
+        
+        // Check if formatted content is incomplete (has empty containers or only institutional header)
+        let isFormattedIncomplete = (
+            // Empty main container
+            formattedContent.includes('<div class="main-container"></div>') ||
+            (formattedContent.includes('main-container">') && formattedContent.replace(/\s/g, '').includes('main-container"></div>')) ||
+            // Only institutional header without educational content
+            (formattedContent.includes('institutional-header') && 
+             !formattedContent.includes('ecuaciones') && 
+             !formattedContent.includes('ECUACIONES') &&
+             !formattedContent.includes('ejercicio') &&
+             !formattedContent.includes('actividad') &&
+             !formattedContent.includes('ejemplo') &&
+             formattedContent.length < 15000)
+        );
+        
+        if (isFormattedIncomplete && rawContent && rawContent.length > 1000) {
+            console.log('📝 Formatted content incompleto detectado, usando raw_content para edición');
+            originalContent = rawContent;
+        } else if (isFormattedIncomplete || (!formattedContent.includes('ecuaciones') && !formattedContent.includes('ECUACIONES'))) {
+            // Ambos contenidos están incompletos - mostrar mensaje informativo
+            console.log('⚠️ Contenido incompleto detectado en ID {{ content.id }}');
+            originalContent = `
+                <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin: 20px;">
+                    <h2 style="color: #856404; margin-bottom: 20px;">⚠️ Contenido Incompleto</h2>
+                    <p style="color: #856404; font-size: 16px; margin-bottom: 15px;">
+                        <strong>El contenido "${content.title}" no se ha generado completamente.</strong>
+                    </p>
+                    <p style="color: #856404; margin-bottom: 20px;">
+                        Solo se generó la estructura HTML básica sin el contenido educativo sobre <strong>ECUACIONES LINEALES</strong>.
+                    </p>
+                    <div style="background: white; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                        <h4 style="color: #856404; margin-bottom: 10px;">🔄 Opciones disponibles:</h4>
+                        <ol style="text-align: left; color: #856404; margin: 0; padding-left: 20px;">
+                            <li>Volver a la lista de contenidos y regenerar este material</li>
+                            <li>Crear un nuevo contenido sobre ECUACIONES LINEALES</li>
+                            <li>Contactar al administrador del sistema</li>
+                        </ol>
+                    </div>
+                    <p style="color: #856404; font-size: 14px; font-style: italic;">
+                        ID de contenido: {{ content.id }} | Request ID: {{ content.request_id }}
+                    </p>
+                </div>
+            `;
+        } else {
+            originalContent = formattedContent;
+        }
         
         // Create complete HTML document for iframe
         const iframeHTML = `

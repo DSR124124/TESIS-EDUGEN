@@ -6,6 +6,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}EduGen{% endblock %}</title>
     
+    <!-- Content Security Policy para bloquear scripts externos no autorizados -->
+    <meta http-equiv="Content-Security-Policy" content="
+        default-src 'self' 'unsafe-inline' 'unsafe-eval';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' 
+            https://cdn.jsdelivr.net 
+            https://cdnjs.cloudflare.com 
+            https://fonts.googleapis.com 
+            https://www.google.com 
+            https://www.gstatic.com;
+        style-src 'self' 'unsafe-inline' 
+            https://cdn.jsdelivr.net 
+            https://cdnjs.cloudflare.com 
+            https://fonts.googleapis.com;
+        font-src 'self' 
+            https://fonts.gstatic.com 
+            https://cdnjs.cloudflare.com;
+        img-src 'self' data: blob: 
+            https://cdn.jsdelivr.net 
+            https://cdnjs.cloudflare.com;
+        connect-src 'self';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+        frame-ancestors 'self';
+    ">
+    
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -1038,7 +1064,7 @@
         (function() {
             'use strict';
             
-            // Lista completa de patrones conocidos de extensiones
+            // Lista completa de patrones conocidos de extensiones y servicios externos
             const EXTENSION_PATTERNS = [
                 'contentScript.js',
                 'content_script.js',
@@ -1054,6 +1080,9 @@
                 'honey',
                 'dashlane',
                 'bitwarden',
+                'rokt.com',
+                'apps.rokt.com',
+                'index.2.6024.0.js',
                 'Cannot read properties of undefined (reading \'query\')',
                 'Cannot read properties of undefined (reading \'runtime\')',
                 'Cannot read properties of undefined (reading \'sendMessage\')',

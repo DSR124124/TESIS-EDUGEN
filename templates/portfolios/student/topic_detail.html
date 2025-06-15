@@ -1066,15 +1066,15 @@
                     </div>
                 </div>
                 
-                <!-- Material Individual con IA -->
+                <!-- Material Personalizado -->
                 <div class="material-category ai-materials">
                     <div class="category-header ai-materials">
                         <h3 class="category-title">
-                            <i class="fas fa-magic"></i>
-                            Material Individual con IA
+                            <i class="fas fa-user-circle"></i>
+                            Material Personalizado
                         </h3>
                         <p class="category-description">
-                            Material personalizado generado específicamente para ti
+                            Material asignado específicamente para ti (incluye contenido generado con IA)
                         </p>
                         <div class="category-count">{{ ai_materials_count }}</div>
                     </div>
@@ -1084,9 +1084,15 @@
                                 <div class="material-header">
                                     <h4 class="material-title">
                                         {{ material.title }}
-                                        <span class="material-type-badge ai-badge">
-                                            <i class="fas fa-magic"></i> IA Personal
-                                        </span>
+                                        {% if material.ai_generated %}
+                                            <span class="material-type-badge ai-badge">
+                                                <i class="fas fa-magic"></i> IA Personal
+                                            </span>
+                                        {% else %}
+                                            <span class="material-type-badge ai-badge">
+                                                <i class="fas fa-user"></i> Personal
+                                            </span>
+                                        {% endif %}
                                     </h4>
                                 </div>
                                 <div class="material-meta">
@@ -1095,8 +1101,13 @@
                                         {{ material.created_at|date:"d/m/Y H:i" }}
                                     </div>
                                     <div class="material-meta-item">
-                                        <i class="fas fa-robot"></i>
-                                        Generado con IA
+                                        {% if material.ai_generated %}
+                                            <i class="fas fa-robot"></i>
+                                            Generado con IA
+                                        {% else %}
+                                            <i class="fas fa-user-tie"></i>
+                                            Material del Profesor
+                                        {% endif %}
                                     </div>
                                     {% if material.file %}
                                     <div class="material-meta-item">

@@ -606,8 +606,8 @@
             // También ajustar altura si el contenido cambia dinámicamente
             setInterval(function() { resizeIframe(iframe); }, 1500);
         }
-    // 🎉 EFECTO DE CELEBRACIÓN ESPECTACULAR AL CARGAR CONTENIDO 
-    showContentSuccessAnimation();
+    // 🎉 EFECTO DE CELEBRACIÓN ESPECTACULAR AL CARGAR CONTENIDO (DESHABILITADO PARA NO INTERFERIR)
+    // showContentSuccessAnimation(); // Comentado para evitar que bloquee la visualización
     function showContentSuccessAnimation() {
         // Crear overlay de celebración
         const celebrationOverlay = document.createElement('div');

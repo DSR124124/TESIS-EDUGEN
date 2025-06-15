@@ -9,13 +9,14 @@ from .views import (
     delete_request_view, get_grades_for_course, get_sections_for_grade,
     get_course_topics, get_progress, get_portfolio_topics, get_students_for_topic,
     MaterialPreviewView, test_content_styles_view, debug_content_processing_view,
-    debug_line_by_line_view, final_content_test_view
+    debug_line_by_line_view, final_content_test_view, auto_generate_content_view
 )
 
 app_name = 'ai'
 
 urlpatterns = [
     path('generator/', ContentRequestCreateView.as_view(), name='generator'),
+    path('auto-generate/', auto_generate_content_view, name='auto_generate'),
     path('requests/create/', ContentRequestCreateView.as_view(), name='content_request_create'),
     path('requests/', ContentRequestListView.as_view(), name='content_request_list'),
     path('content-request/<int:pk>/', content_request_redirect, name='content_request_redirect'),
