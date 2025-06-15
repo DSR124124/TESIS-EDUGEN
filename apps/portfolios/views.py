@@ -126,10 +126,12 @@ class TeacherPortfolioDetailView(LoginRequiredMixin, UserPassesTestMixin, AutoSa
         ).distinct()
         context['student_sections'] = student_sections
         
-        # Obtener los temas creados por el profesor para este portafolio
+        # Solo obtener los temas creados por el profesor para este portafolio (PortfolioTopic)
+        # Estos son los temas reales que deberían estar sincronizados con los CourseTopic
         portfolio_topics = self.object.portfolio_topics.filter(teacher=teacher)
         
-        # Obtener los temas de curso (CourseTopic) para las secciones del estudiante
+        # Sincronización: Verificar si hay CourseTopics que no tienen PortfolioTopic correspondiente
+        # y crearlos si es necesario
         course_topics = CourseTopic.objects.filter(
             teacher=teacher,
             section__enrollments__student=student,
@@ -137,22 +139,54 @@ class TeacherPortfolioDetailView(LoginRequiredMixin, UserPassesTestMixin, AutoSa
             is_active=True
         ).distinct()
         
-        # Filtrar CourseTopics que ya tienen PortfolioTopics correspondientes
-        # para evitar duplicados en la visualización
-        portfolio_topic_keys = set()
+        # Crear/actualizar PortfolioTopics basados en CourseTopics existentes
+        for course_topic in course_topics:
+            # Verificar si ya existe un PortfolioTopic para este CourseTopic
+            existing_portfolio_topic = portfolio_topics.filter(
+                course=course_topic.course,
+                title=course_topic.title
+            ).first()
+            
+            if not existing_portfolio_topic:
+                # Crear el PortfolioTopic faltante
+                PortfolioTopic.objects.create(
+                    portfolio=self.object,
+                    course=course_topic.course,
+                    teacher=teacher,
+                    title=course_topic.title,
+                    description=course_topic.description,
+                    is_complete=False,
+                    last_updated_by=self.request.user
+                )
+                logger.info(f"PortfolioTopic creado automáticamente: {course_topic.title} - Curso: {course_topic.course.name}")
+            else:
+                # Actualizar descripción si ha cambiado
+                if existing_portfolio_topic.description != course_topic.description:
+                    existing_portfolio_topic.description = course_topic.description
+                    existing_portfolio_topic.last_updated_by = self.request.user
+                    existing_portfolio_topic.save()
+                    logger.info(f"PortfolioTopic actualizado automáticamente: {course_topic.title} - Curso: {course_topic.course.name}")
+        
+        # Recargar los portfolio_topics después de la sincronización
+        portfolio_topics = self.object.portfolio_topics.filter(teacher=teacher)
+        
+        # Limpieza: Eliminar PortfolioTopics que no tienen CourseTopic correspondiente activo
+        valid_course_topic_keys = set()
+        for ct in course_topics:
+            valid_course_topic_keys.add((ct.course.id, ct.title))
+        
+        # Eliminar automáticamente PortfolioTopics que no tienen un CourseTopic válido correspondiente
         for pt in portfolio_topics:
             key = (pt.course.id, pt.title)
-            portfolio_topic_keys.add(key)
+            if key not in valid_course_topic_keys:
+                logger.info(f"Eliminando PortfolioTopic huérfano: {pt.title} (ID: {pt.id}) - Curso: {pt.course.name}")
+                pt.delete()
         
-        # Solo incluir CourseTopics que NO tienen un PortfolioTopic correspondiente
-        filtered_course_topics = []
-        for ct in course_topics:
-            key = (ct.course.id, ct.title)
-            if key not in portfolio_topic_keys:
-                filtered_course_topics.append(ct)
+        # Recargar una vez más después de la limpieza (si se habilitó)
+        portfolio_topics = self.object.portfolio_topics.filter(teacher=teacher)
         
-        # Combinar ambos tipos de temas (sin duplicados)
-        all_topics = list(portfolio_topics) + filtered_course_topics
+        # Usar solo los PortfolioTopic como fuente de verdad
+        all_topics = list(portfolio_topics)
         
         # Calculate topic completion percentages using safe utilities
         topics_with_percentages = []
@@ -598,8 +632,10 @@ class TopicUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             })
         
         # Si no es AJAX, usar la respuesta normal
-        messages.success(self.request, 'Tema actualizado exitosamente.')
+        messages.success(self.request, 'Tema actualizado exitosamente.')        
         return response
+
+
     
     def form_invalid(self, form):
         # Si es una solicitud AJAX, devolver errores como JSON
