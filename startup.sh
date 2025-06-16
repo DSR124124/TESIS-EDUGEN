@@ -14,6 +14,17 @@ fi
 # Configurar variables de entorno
 export DJANGO_SETTINGS_MODULE=config.settings.azure_production
 
+# Crear directorio de media si no existe
+echo "📁 Configurando directorio de media..."
+mkdir -p /home/site/wwwroot/media
+chmod 755 /home/site/wwwroot/media
+
+# Migrar archivos de media existentes
+if [ -d "media" ]; then
+    echo "📋 Migrando archivos de media..."
+    python scripts/migrate_media_files.py
+fi
+
 # Ejecutar collectstatic
 echo "🔧 Recolectando archivos estáticos..."
 python manage.py collectstatic --noinput --clear

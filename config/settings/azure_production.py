@@ -148,9 +148,13 @@ if AZURE_STORAGE_CONNECTION_STRING:
         MEDIA_ROOT = os.path.join('/tmp', 'media')
         MEDIA_URL = '/media/'
 else:
-    MEDIA_ROOT = os.path.join('/tmp', 'media')
+    # Use persistent storage path in Azure App Service
+    MEDIA_ROOT = os.path.join('/home/site/wwwroot', 'media')
     MEDIA_URL = '/media/'
-    print("🔧 Usando almacenamiento local temporal")
+    print("🔧 Usando almacenamiento local en Azure App Service")
+    
+    # Ensure media directory exists
+    os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024

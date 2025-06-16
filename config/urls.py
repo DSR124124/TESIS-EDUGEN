@@ -171,9 +171,11 @@ urlpatterns = [
     path('health/', health_check, name='health_check'),
 ]
 
+# Serve media files in all environments
+# In production, this is a temporary solution - Azure Blob Storage is preferred
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    
     # Agregar las URLs de debug_toolbar cuando estamos en modo DEBUG
     try:
         import debug_toolbar
