@@ -822,25 +822,46 @@ class StudentCreateView(LoginRequiredMixin, CreateView):
             return self.form_invalid(form, user_form)
     
     def form_valid(self, form, user_form):
-        # Obtener el valor del campo link_with_google
+        # Obtener valores de los campos
         link_with_google = form.cleaned_data.get('link_with_google', False)
+        generate_username = form.cleaned_data.get('generate_username', True)
+        default_password = form.cleaned_data.get('default_password', 'estudiante123')
         
-        # Crear usuario
-        user = user_form.save(link_with_google=link_with_google)
+        # Generar username automáticamente si está marcado
+        if generate_username and not user_form.cleaned_data.get('username'):
+            first_name = user_form.cleaned_data.get('first_name', '')
+            dni = form.cleaned_data.get('dni', '')
+            # Generar username: primera letra del nombre + dni
+            username = f"{first_name[0].lower() if first_name else 'e'}{dni}"
+            user_form.cleaned_data['username'] = username
+            user_form.instance.username = username
+        
+        # Crear usuario con la contraseña apropiada
+        user = user_form.save(
+            link_with_google=link_with_google,
+            default_password=default_password if not link_with_google else None
+        )
         
         # Crear estudiante
         student = form.save(commit=False)
         student.user = user
         
-        # Si se ha marcado link_with_google, establecer los campos correspondientes
+        # Configurar vinculación con Google si está marcado
         if link_with_google and user_form.cleaned_data.get('email'):
             student.google_account = user_form.cleaned_data.get('email')
             student.google_account_linked = True
             student.google_linked_at = timezone.now()
+        else:
+            student.google_account_linked = False
         
         student.save()
         
-        messages.success(self.request, 'Estudiante creado correctamente.')
+        # Mensaje personalizado según el tipo de autenticación
+        if link_with_google:
+            messages.success(self.request, f'Estudiante creado correctamente. Podrá iniciar sesión con Google usando: {user.email}')
+        else:
+            messages.success(self.request, f'Estudiante creado correctamente. Credenciales de acceso: Usuario: {user.username} | Contraseña: {default_password}')
+        
         return redirect(self.success_url)
     
     def form_invalid(self, form, user_form):

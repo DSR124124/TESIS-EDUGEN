@@ -574,12 +574,10 @@
         }
         
         .google-btn {
-            background: linear-gradient(135deg, 
-                rgba(255, 255, 255, 0.15), 
-                rgba(255, 255, 255, 0.05));
-            border: 2px solid rgba(0, 207, 255, 0.4);
-            color: white;
-            padding: 15px 30px;
+            background: white;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            color: #5f6368;
+            padding: 16px 30px;
             border-radius: 15px;
             text-decoration: none;
             display: flex;
@@ -590,22 +588,21 @@
             font-weight: 600;
             font-size: 1.1rem;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            margin-bottom: 1rem;
+            margin-bottom: 15px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
         
         .google-btn:hover {
-            background: linear-gradient(135deg, 
-                rgba(0, 207, 255, 0.2), 
-                rgba(161, 66, 245, 0.1));
-            border-color: #00CFFF;
-            color: white;
+            background: #f8f9fa;
+            color: #5f6368;
             text-decoration: none;
+            transform: translateY(-3px);
+            border-color: rgba(0, 0, 0, 0.2);
             box-shadow: 
-                0 20px 40px rgba(0, 207, 255, 0.3),
-                0 0 30px rgba(0, 207, 255, 0.2);
+                0 8px 20px rgba(0, 0, 0, 0.15),
+                0 0 15px rgba(0, 0, 0, 0.1);
         }
         
         .google-logo {
@@ -804,6 +801,327 @@
                 margin-top: 1.5rem;
             }
         }
+        
+        .main-login-options {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .login-option {
+            text-align: center;
+        }
+        
+        .option-description {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+        
+        .separator-text {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            font-weight: 500;
+            position: relative;
+            margin: 10px 0;
+        }
+        
+        .separator-text::before,
+        .separator-text::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 35%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+        
+        .separator-text::before {
+            left: 0;
+        }
+        
+        .separator-text::after {
+            right: 0;
+        }
+        
+        .normal-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #2C3E50 0%, #34495E 50%, #2C3E50 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(44, 62, 80, 0.3);
+        }
+        
+        .normal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(44, 62, 80, 0.4);
+            background: linear-gradient(135deg, #34495E 0%, #2C3E50 50%, #34495E 100%);
+        }
+        
+        .login-form-container {
+            width: 100%;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .login-form {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .back-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: rgba(124, 139, 161, 0.1);
+            border: 2px solid rgba(124, 139, 161, 0.3);
+            border-radius: 12px;
+            color: #7c8ba1;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .back-btn:hover {
+            background: rgba(124, 139, 161, 0.2);
+            border-color: rgba(124, 139, 161, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #7c8ba1;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .form-group label i {
+            margin-right: 8px;
+            width: 16px;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid rgba(124, 139, 161, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #00CFFF;
+            background: rgba(0, 207, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 207, 255, 0.3);
+        }
+        
+        .form-control::placeholder {
+            color: rgba(124, 139, 161, 0.7);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #005CFF 0%, #A142F5 50%, #00CFFF 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+            box-shadow: 0 8px 25px rgba(0, 92, 255, 0.3);
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 92, 255, 0.4);
+            background: linear-gradient(135deg, #0056E6 0%, #9A39E0 50%, #00B8E6 100%);
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+        
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            color: #ff6b7a;
+        }
+        
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+            color: #51d97c;
+        }
+        
+        .alert-warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            color: #ffc107;
+        }
+        
+        .alert-info {
+            background: rgba(13, 202, 240, 0.1);
+            border: 1px solid rgba(13, 202, 240, 0.3);
+            color: #0dcaf0;
+        }
+        
+        .form-text {
+            font-size: 0.8rem;
+            color: rgba(124, 139, 161, 0.8);
+            margin-top: 5px;
+        }
+        
+        .password-input-container {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: rgba(124, 139, 161, 0.7);
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.3s ease;
+        }
+        
+        .password-toggle:hover {
+            color: #00CFFF;
+        }
+        
+        .login-btn-loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #django-messages {
+            margin-bottom: 20px;
+        }
+        
+        #django-messages .alert {
+            margin-bottom: 10px;
+            animation: slideInDown 0.3s ease-out;
+        }
+        
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Estilos para botón deshabilitado */
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .login-btn:disabled:hover {
+            transform: none !important;
+            box-shadow: 0 8px 25px rgba(0, 92, 255, 0.3) !important;
+        }
+        
+        /* Mejoras para el input de contraseña */
+        .password-input-container input {
+            padding-right: 45px;
+        }
+        
+        /* Animación de carga suave */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .login-form-container {
+            animation: fadeInScale 0.3s ease-out;
+        }
+        
+        /* Mejoras de accesibilidad */
+        .google-btn:focus,
+        .normal-btn:focus,
+        .login-btn:focus,
+        .back-btn:focus {
+            outline: 2px solid #00CFFF;
+            outline-offset: 2px;
+        }
+        
+        /* Indicador de carga en botón de Google */
+        .google-btn:disabled {
+            opacity: 0.8;
+            cursor: wait;
+        }
     </style>
 </head>
 <body>
@@ -853,11 +1171,114 @@
                     <p class="welcome-subtitle">Accede a tu plataforma educativa</p>
                 </div>
                 
-                <a href="/auth/login/google-oauth2/" class="google-btn">
-                    <img src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" 
-                         alt="Google" class="google-logo">
-                    <span>Iniciar sesión con Google</span>
-                </a>
+                <!-- Botones principales de selección -->
+                <div id="main-buttons" class="main-login-options">
+                    <div class="login-option">
+                        <button type="button" onclick="showGoogleLogin()" class="google-btn">
+                            <img src="https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png" 
+                                 alt="Google" class="google-logo">
+                            <span>Iniciar Sesión con Google</span>
+                        </button>
+                        <small class="option-description">Usa tu cuenta de Gmail</small>
+                    </div>
+                    
+                    <div class="separator-text">
+                        <span>O</span>
+                    </div>
+                    
+                    <div class="login-option">
+                        <button type="button" onclick="showNormalLogin()" class="normal-btn">
+                            <i class="fas fa-user"></i>
+                            <span>Sesión Normal</span>
+                        </button>
+                        <small class="option-description">Usa usuario y contraseña</small>
+                    </div>
+                </div>
+                
+                <!-- Mensajes de Django (errores, éxito, etc.) -->
+                {% if messages %}
+                    <div id="django-messages">
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">
+                                <i class="fas fa-{% if message.tags == 'error' or message.tags == 'danger' %}exclamation-triangle{% elif message.tags == 'success' %}check-circle{% elif message.tags == 'warning' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Formulario de login tradicional (oculto inicialmente) -->
+                <div id="normal-login-form" class="login-form-container" style="display: none;">
+                    <form method="post" class="login-form" id="loginForm">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="id_username">
+                                <i class="fas fa-envelope"></i>
+                                Correo electrónico o Usuario
+                            </label>
+                            <input type="text" name="username" id="id_username" 
+                                   class="form-control" 
+                                   placeholder="Ingresa tu correo o usuario"
+                                   aria-describedby="username-help"
+                                   autocomplete="email"
+                                   required>
+                            <div id="username-help" class="form-text">
+                                Puedes usar tu correo electrónico o nombre de usuario
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_password">
+                                <i class="fas fa-lock"></i>
+                                Contraseña
+                            </label>
+                            <div class="password-input-container">
+                                <input type="password" name="password" id="id_password" 
+                                       class="form-control" 
+                                       placeholder="Ingresa tu contraseña"
+                                       aria-describedby="password-help"
+                                       autocomplete="current-password"
+                                       required>
+                                <button type="button" class="password-toggle" onclick="togglePassword()" 
+                                        aria-label="Mostrar/ocultar contraseña">
+                                    <i class="fas fa-eye" id="password-toggle-icon"></i>
+                                </button>
+                            </div>
+                            <div id="password-help" class="form-text">
+                                Para estudiantes, la contraseña por defecto es: <strong>estudiante123</strong>
+                            </div>
+                        </div>
+                        
+                        <!-- Mostrar errores específicos del formulario -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                {% for field, errors in form.errors.items %}
+                                    {% for error in errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        <button type="submit" class="login-btn" id="loginButton">
+                            <span class="login-btn-content">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Iniciar Sesión
+                            </span>
+                            <span class="login-btn-loading" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                Verificando...
+                            </span>
+                        </button>
+                        
+                        <button type="button" onclick="showMainButtons()" class="back-btn">
+                            <i class="fas fa-arrow-left"></i>
+                            Volver
+                        </button>
+                    </form>
+                </div>
                 
                 <div class="footer-text">
                     &copy; 2024 Sistema Educativo EduGen
@@ -869,8 +1290,189 @@
     <!-- Bootstrap Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Filtro de errores de extensiones -->
+    <!-- JavaScript para la funcionalidad de login -->
     <script>
+        // Variables globales
+        let isSubmitting = false;
+        
+        // Funciones para manejar la navegación entre opciones de login
+        function showGoogleLogin() {
+            // Guardar preferencia del usuario
+            localStorage.setItem('lastLoginMethod', 'google');
+            
+            // Mostrar loading en el botón de Google
+            const googleBtn = document.querySelector('.google-btn');
+            const originalContent = googleBtn.innerHTML;
+            googleBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Conectando con Google...</span>';
+            googleBtn.disabled = true;
+            
+            // Redirigir directamente a Google OAuth
+            window.location.href = '/auth/login/google-oauth2/';
+        }
+        
+        function showNormalLogin() {
+            // Guardar preferencia del usuario
+            localStorage.setItem('lastLoginMethod', 'normal');
+            
+            // Ocultar botones principales con animación
+            const mainButtons = document.getElementById('main-buttons');
+            mainButtons.style.opacity = '0';
+            mainButtons.style.transform = 'translateY(-20px)';
+            
+            setTimeout(() => {
+                mainButtons.style.display = 'none';
+                
+                // Mostrar formulario de login normal con animación
+                const normalForm = document.getElementById('normal-login-form');
+                normalForm.style.display = 'block';
+                normalForm.style.opacity = '0';
+                normalForm.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    normalForm.style.opacity = '1';
+                    normalForm.style.transform = 'translateY(0)';
+                    
+                    // Enfocar el primer campo del formulario
+                    document.getElementById('id_username').focus();
+                }, 50);
+            }, 150);
+        }
+        
+        function showMainButtons() {
+            // Ocultar formulario de login normal con animación
+            const normalForm = document.getElementById('normal-login-form');
+            normalForm.style.opacity = '0';
+            normalForm.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                normalForm.style.display = 'none';
+                
+                // Mostrar botones principales con animación
+                const mainButtons = document.getElementById('main-buttons');
+                mainButtons.style.display = 'flex';
+                mainButtons.style.opacity = '0';
+                mainButtons.style.transform = 'translateY(-20px)';
+                
+                setTimeout(() => {
+                    mainButtons.style.opacity = '1';
+                    mainButtons.style.transform = 'translateY(0)';
+                }, 50);
+            }, 150);
+        }
+        
+        // Función para mostrar/ocultar contraseña
+        function togglePassword() {
+            const passwordInput = document.getElementById('id_password');
+            const toggleIcon = document.getElementById('password-toggle-icon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+        
+        // Validación en tiempo real
+        function validateForm() {
+            const username = document.getElementById('id_username').value.trim();
+            const password = document.getElementById('id_password').value;
+            const loginButton = document.getElementById('loginButton');
+            
+            if (username && password) {
+                loginButton.disabled = false;
+                loginButton.style.opacity = '1';
+            } else {
+                loginButton.disabled = true;
+                loginButton.style.opacity = '0.6';
+            }
+        }
+        
+        // Manejo del formulario de login
+        function handleFormSubmit(event) {
+            if (isSubmitting) {
+                event.preventDefault();
+                return false;
+            }
+            
+            isSubmitting = true;
+            const loginButton = document.getElementById('loginButton');
+            const btnContent = loginButton.querySelector('.login-btn-content');
+            const btnLoading = loginButton.querySelector('.login-btn-loading');
+            
+            // Mostrar estado de carga
+            btnContent.style.display = 'none';
+            btnLoading.style.display = 'flex';
+            loginButton.disabled = true;
+            
+            // Si el formulario falla, restaurar el botón después de un tiempo
+            setTimeout(() => {
+                if (isSubmitting) {
+                    btnContent.style.display = 'flex';
+                    btnLoading.style.display = 'none';
+                    loginButton.disabled = false;
+                    isSubmitting = false;
+                }
+            }, 10000); // 10 segundos de timeout
+        }
+        
+        // Inicialización cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            // Agregar transiciones CSS
+            const mainButtons = document.getElementById('main-buttons');
+            const normalForm = document.getElementById('normal-login-form');
+            
+            mainButtons.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            normalForm.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            
+            // Si hay errores de formulario o mensajes, mostrar automáticamente el formulario normal
+            const hasErrors = document.querySelector('.alert-danger');
+            const hasMessages = document.querySelector('#django-messages');
+            
+            if (hasErrors || hasMessages) {
+                showNormalLogin();
+            } else {
+                // Mostrar la última opción seleccionada por el usuario
+                const lastMethod = localStorage.getItem('lastLoginMethod');
+                if (lastMethod === 'normal') {
+                    showNormalLogin();
+                }
+            }
+            
+            // Agregar validación en tiempo real
+            const usernameInput = document.getElementById('id_username');
+            const passwordInput = document.getElementById('id_password');
+            
+            if (usernameInput && passwordInput) {
+                usernameInput.addEventListener('input', validateForm);
+                passwordInput.addEventListener('input', validateForm);
+                
+                // Validación inicial
+                validateForm();
+            }
+            
+            // Agregar manejo del formulario
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', handleFormSubmit);
+            }
+            
+            // Auto-ocultar mensajes después de 5 segundos
+            const messages = document.querySelectorAll('#django-messages .alert');
+            messages.forEach(message => {
+                setTimeout(() => {
+                    message.style.opacity = '0';
+                    message.style.transform = 'translateY(-10px)';
+                    setTimeout(() => {
+                        message.remove();
+                    }, 300);
+                }, 5000);
+            });
+        });
+        
         // Silenciar errores de extensiones del navegador
         window.addEventListener('error', function(e) {
             if (e.filename && (e.filename.includes('contentScript') || e.filename.includes('extension'))) {
@@ -884,6 +1486,40 @@
                 e.preventDefault();
                 return true;
             }
+        });
+        
+        // Navegación por teclado mejorada
+        document.addEventListener('keydown', function(e) {
+            // Si está en la pantalla principal
+            if (document.getElementById('main-buttons').style.display !== 'none') {
+                if (e.key === 'g' || e.key === 'G') {
+                    e.preventDefault();
+                    showGoogleLogin();
+                } else if (e.key === 'n' || e.key === 'N') {
+                    e.preventDefault();
+                    showNormalLogin();
+                }
+            }
+            
+            // Si está en el formulario normal
+            if (document.getElementById('normal-login-form').style.display !== 'none') {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    showMainButtons();
+                }
+                // Enter en el último campo envía el formulario
+                if (e.key === 'Enter' && e.target.id === 'id_password') {
+                    const form = document.getElementById('loginForm');
+                    if (form && !isSubmitting) {
+                        form.dispatchEvent(new Event('submit', { cancelable: true }));
+                    }
+                }
+            }
+        });
+        
+        // Prevenir envío múltiple del formulario
+        window.addEventListener('beforeunload', function() {
+            isSubmitting = false;
         });
     </script>
 </body>

@@ -123,7 +123,58 @@
                                         name="{{ user_form.password.name }}" 
                                         id="{{ user_form.password.id_for_label }}" 
                                         class="form-control {% if user_form.password.errors %}is-invalid{% endif %}"
-                                        placeholder="Ingrese contraseña">
+                                        placeholder="Ingrese contraseña (opcional)"
+                                        value="estudiante123">
+                                    <small class="form-text text-muted">
+                                        Si no se especifica, se usará: estudiante123
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <!-- Opciones de autenticación -->
+                            <div class="col-md-6 mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Opciones de Acceso</label>
+                                    
+                                    <!-- Contraseña predeterminada -->
+                                    <div class="mb-2">
+                                        <label for="{{ form.default_password.id_for_label }}" class="form-label">
+                                            {{ form.default_password.label }}
+                                        </label>
+                                        {{ form.default_password }}
+                                        <small class="form-text text-muted">
+                                            {{ form.default_password.help_text }}
+                                        </small>
+                                    </div>
+                                    
+                                    <!-- Opciones -->
+                                    <div class="form-check">
+                                        {{ form.generate_username }}
+                                        <label class="form-check-label" for="{{ form.generate_username.id_for_label }}">
+                                            {{ form.generate_username.label }}
+                                        </label>
+                                        <small class="form-text text-muted d-block">
+                                            {{ form.generate_username.help_text }}
+                                        </small>
+                                    </div>
+                                    
+                                    <div class="form-check mt-2">
+                                        {{ form.link_with_google }}
+                                        <label class="form-check-label" for="{{ form.link_with_google.id_for_label }}">
+                                            {{ form.link_with_google.label }}
+                                        </label>
+                                        <small class="form-text text-muted d-block">
+                                            {{ form.link_with_google.help_text }}
+                                        </small>
+                                    </div>
+                                    
+                                    <!-- Información adicional -->
+                                    <div class="alert alert-info mt-3" style="font-size: 0.9rem;">
+                                        <strong>💡 Métodos de acceso disponibles:</strong><br>
+                                        • <strong>Usuario/Contraseña:</strong> Se genera automáticamente<br>
+                                        • <strong>Email/Contraseña:</strong> Usando el correo registrado<br>
+                                        • <strong>Google OAuth:</strong> Solo si se marca la opción
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">

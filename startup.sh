@@ -37,6 +37,10 @@ python manage.py migrate --noinput
 echo "🔧 Creando usuario administrador..."
 python manage.py create_admin
 
+# Crear estudiantes de ejemplo si no existen
+echo "🎓 Configurando estudiantes de ejemplo..."
+python manage.py manage_students --create
+
 # Verificar archivos estáticos
 if [ -d "staticfiles" ]; then
     echo "✅ Directorio staticfiles encontrado"

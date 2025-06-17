@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from django.contrib.auth import get_user_model
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, login
 import logging
 from django.views.generic import RedirectView, TemplateView
 from django.contrib.auth import logout
@@ -89,19 +89,19 @@ class CustomLoginView(LoginView):
                 logger.info("=== AUTENTICACIÓN EXITOSA ===")
                 logger.info(f"Usuario autenticado: {auth_user.username}")
                 
-                # Llamar al método padre para completar el login PERO sin usar get_success_url
-                response = super().form_valid(form)
+                # Hacer login manualmente en lugar de llamar al método padre
+                login(self.request, auth_user)
                 
                 # Log adicional después del login
                 logger.info(f"Usuario en request después del login: {self.request.user}")
                 logger.info(f"Usuario autenticado en request: {self.request.user.is_authenticated}")
                 
                 # Calcular y redirigir a la URL correcta directamente
-                success_url = self.calculate_success_url()
-                logger.info(f"URL de redirección calculada: {success_url}")
+                success_url_name = self.calculate_success_url()
+                logger.info(f"URL de redirección calculada: {success_url_name}")
                 
-                # Devolver redirección directa en lugar de usar el response del padre
-                return redirect(success_url)
+                # Devolver redirección directa usando el nombre de la URL
+                return redirect(success_url_name)
             else:
                 logger.warning("Autenticación fallida - contraseña incorrecta")
         except User.DoesNotExist:
@@ -153,9 +153,7 @@ class CustomLoginView(LoginView):
         messages.error(self.request, 'Tu cuenta no tiene un rol asignado. Contacta al administrador del sistema.')
         return 'admin:index'
 
-    def get_success_url(self):
-        """Método sobreescrito para evitar que se use - usamos calculate_success_url en su lugar"""
-        return self.calculate_success_url()
+
 
     def form_invalid(self, form):
         logger.error(f"=== FORMULARIO INVÁLIDO ===")

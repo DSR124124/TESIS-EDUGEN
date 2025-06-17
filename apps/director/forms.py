@@ -266,8 +266,23 @@ class StudentForm(forms.ModelForm):
     link_with_google = forms.BooleanField(
         label='Vincular con Google', 
         required=False, 
+        initial=False,  # Cambiar default a False
+        help_text='El estudiante podrá iniciar sesión con su cuenta de Google (opcional)'
+    )
+    
+    # Campos adicionales para login sin Google
+    generate_username = forms.BooleanField(
+        label='Generar usuario automáticamente',
+        required=False,
         initial=True,
-        help_text='El estudiante podrá iniciar sesión con su cuenta de Google'
+        help_text='Genera usuario basado en nombres y DNI'
+    )
+    
+    default_password = forms.CharField(
+        label='Contraseña predeterminada',
+        initial='estudiante123',
+        help_text='Contraseña que usará el estudiante para iniciar sesión',
+        widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     
     class Meta:
@@ -361,13 +376,19 @@ class StudentUserForm(forms.ModelForm):
             'password': forms.PasswordInput(attrs={'class': 'form-control'}),
         }
     
-    def save(self, commit=True, link_with_google=False, google_email=None):
+    def save(self, commit=True, link_with_google=False, google_email=None, default_password=None):
         user = super().save(commit=False)
         if link_with_google:
             # Si se vincula con Google, establecer una contraseña inutilizable
             user.set_unusable_password()
         elif "password" in self.cleaned_data and self.cleaned_data["password"]:
             user.set_password(self.cleaned_data["password"])
+        elif default_password:
+            # Usar contraseña predeterminada
+            user.set_password(default_password)
+        else:
+            # Contraseña por defecto si no se especifica otra
+            user.set_password('estudiante123')
         user.role = 'student'
         if commit:
             user.save()
