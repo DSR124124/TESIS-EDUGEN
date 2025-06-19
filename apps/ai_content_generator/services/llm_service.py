@@ -705,24 +705,55 @@ Genera contenido HTML educativo COMPLETO y EXTENSO:
         return fallback_html
 
     def _process_content_to_html(self, content: str) -> str:
-        """Procesa contenido con marcadores a HTML básico"""
+        """Procesa contenido con marcadores a HTML básico usando el procesador mejorado"""
         try:
-            # Reemplazos básicos de marcadores
-            content = content.replace('[TÍTULO]', '<h1>')
-            content = content.replace('[SUBTÍTULO]', '</div><h2>')
-            content = content.replace('[PÁRRAFO]', '<p>')
-            content = content.replace('[EJEMPLO]', '<div class="example-box"><strong>Ejemplo:</strong><br>')
-            content = content.replace('[ACTIVIDAD]', '<div class="activity-box"><strong>Actividad:</strong><br>')
-            content = content.replace('[MULTIMEDIA]', '<div class="multimedia-box"><strong>Recurso Multimedia:</strong><br>')
-            content = content.replace('[EVALUACIÓN]', '<div class="evaluation-box"><strong>Evaluación:</strong><br>')
+            from ..utils.enhanced_text_processor import EnhancedTextProcessor
             
-            # Cerrar divs abiertos
-            content += '</div>'
+            # Usar el procesador mejorado que ya maneja correctamente los marcadores
+            processor = EnhancedTextProcessor()
             
-            return content
+            # Procesar el contenido con el procesador mejorado
+            enhanced_html = processor.process_to_structured_html(
+                raw_text=content,
+                topic="Contenido Generado",
+                course="Curso",
+                grade="Nivel"
+            )
+            
+            return enhanced_html
+            
         except Exception as e:
-            logger.error(f"Error procesando contenido: {str(e)}")
-            return f"<p>Contenido generado disponible</p><div>{content}</div>"
+            logger.error(f"Error procesando contenido con procesador mejorado: {str(e)}")
+            
+            # Fallback a procesamiento simple si falla el procesador mejorado
+            try:
+                # Limpiar marcadores problemáticos primero
+                import re
+                
+                # Eliminar marcadores problemáticos aislados
+                content = re.sub(r'^\[PÁRRAFO\]$', '', content, flags=re.MULTILINE)
+                content = re.sub(r'^\[EJEMPLO\]$', '', content, flags=re.MULTILINE)
+                content = re.sub(r'^\[ACTIVIDAD\]$', '', content, flags=re.MULTILINE)
+                content = re.sub(r'^\[MULTIMEDIA\]$', '', content, flags=re.MULTILINE)
+                content = re.sub(r'^\[EVALUACIÓN\]$', '', content, flags=re.MULTILINE)
+                
+                # Procesar marcadores con contenido
+                content = re.sub(r'\[TÍTULO\]\s*([^\n]+)', r'<h1>\1</h1>', content)
+                content = re.sub(r'\[SUBTÍTULO\]\s*([^\n]+)', r'<h2>\1</h2>', content)
+                content = re.sub(r'\[PÁRRAFO\]\s*([^\n]+)', r'<p>\1</p>', content)
+                content = re.sub(r'\[EJEMPLO\]\s*([^\n]+)', r'<div class="example-box"><strong>💡 Ejemplo:</strong><br>\1</div>', content)
+                content = re.sub(r'\[ACTIVIDAD\]\s*([^\n]+)', r'<div class="activity-box"><strong>🎯 Actividad:</strong><br>\1</div>', content)
+                content = re.sub(r'\[MULTIMEDIA\]\s*([^\n]+)', r'<div class="multimedia-box"><strong>🎥 Recurso Multimedia:</strong><br>\1</div>', content)
+                content = re.sub(r'\[EVALUACIÓN\]\s*([^\n]+)', r'<div class="evaluation-box"><strong>📊 Evaluación:</strong><br>\1</div>', content)
+                
+                # Limpiar líneas vacías excesivas
+                content = re.sub(r'\n\s*\n\s*\n+', '\n\n', content)
+                
+                return content
+                
+            except Exception as e2:
+                logger.error(f"Error en fallback de procesamiento: {str(e2)}")
+                return f"<p>Contenido generado disponible</p><div>{content}</div>"
 
     def _create_error_content(self, error_message: str) -> str:
         """Crea contenido de error en formato HTML para mostrar al usuario"""

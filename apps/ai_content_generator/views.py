@@ -727,7 +727,7 @@ def improve_content_formatting(html_content, request=None):
     Ahora incluye header institucional con logo.
     """
     # Obtener información institucional para el header
-    institutional_header = get_institutional_header(request)
+    # Header institucional eliminado por solicitud del usuario
     
     if not html_content or html_content.strip() == '':
         return f"""
@@ -740,7 +740,6 @@ def improve_content_formatting(html_content, request=None):
             {get_institutional_styles()}
         </head>
         <body>
-            {institutional_header}
             <div class="content-container">
                 <div class="alert alert-warning">
                     <h3>Contenido no disponible</h3>
@@ -780,7 +779,6 @@ def improve_content_formatting(html_content, request=None):
                 {get_institutional_styles()}
             </head>
             <body>
-                {institutional_header}
                 <div class="content-container">
                     {html_content}
                 </div>
@@ -894,76 +892,11 @@ def improve_content_formatting(html_content, request=None):
         {get_institutional_styles()}
     </head>
     <body>
-        {institutional_header}
         <div class="content-container">
             {html_content}
         </div>
     </body>
     </html>
-    """
-
-def get_institutional_header(request=None):
-    """
-    Genera el header institucional con logo y información de la institución
-    """
-    institution_info = get_institution_info(request)
-    
-    if not institution_info:
-        return f"""
-        <div class="institutional-header">
-            <div class="header-content">
-                <div class="header-left">
-                    <div class="institution-logo-placeholder">
-                        <i class="fas fa-graduation-cap"></i>
-                    </div>
-                    <div class="institution-info">
-                        <h1 class="institution-name">Material Educativo</h1>
-                        <p class="institution-subtitle">Generado con Inteligencia Artificial</p>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <div class="ai-badge">
-                        <i class="fas fa-robot"></i>
-                        <span>Generado con IA</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        """
-    
-    logo_html = ""
-    if institution_info.get('logo_url'):
-        logo_html = f'<img src="{institution_info["logo_url"]}" alt="Logo de {institution_info["name"]}" class="institution-logo">'
-    else:
-        logo_html = '''
-        <div class="institution-logo-placeholder">
-            <i class="fas fa-university"></i>
-        </div>
-        '''
-    
-    return f"""
-    <div class="institutional-header">
-        <div class="header-content">
-            <div class="header-left">
-                {logo_html}
-                <div class="institution-info">
-                    <h1 class="institution-name">{institution_info.get('name', 'Institución Educativa')}</h1>
-                    <p class="institution-subtitle">Material Educativo - Generado con IA</p>
-                    {f'<p class="institution-address">{institution_info.get("address", "")}</p>' if institution_info.get("address") else ''}
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="ai-badge">
-                    <i class="fas fa-robot"></i>
-                    <span>Generado con IA</span>
-                </div>
-                <div class="generation-date">
-                    <i class="fas fa-calendar-alt"></i>
-                    <span id="generation-date"></span>
-                </div>
-            </div>
-        </div>
-    </div>
     """
 
 def get_institution_info(request=None):
@@ -1352,9 +1285,8 @@ class ContentDetailView(LoginRequiredMixin, DetailView):
             logger.info(f"Limpiando datos de paquete SCORM de la sesión: {request.session['scorm_package_created']}")
             # No eliminamos inmediatamente para que la plantilla pueda usar los datos
             request.session['_clear_scorm_data'] = True
-        
 
-        
+
         try:
             return super().get(request, *args, **kwargs)
         except Http404:
@@ -2857,7 +2789,7 @@ def assign_to_portfolio_api(request):
         logger.info(f"📝 Descripción limpia creada: {len(clean_description)} caracteres")
         
         # Crear contenido con cabecera institucional
-        institutional_header = get_institutional_header(request)
+    # Header institucional eliminado por solicitud del usuario
         institutional_styles = get_institutional_styles()
         
         # Crear HTML completo con cabecera institucional
@@ -2899,7 +2831,6 @@ def assign_to_portfolio_api(request):
     </style>
 </head>
 <body>
-    {institutional_header}
     <div class="content">
         {source_content}
     </div>
@@ -3148,7 +3079,7 @@ def handle_class_material_assignment(request, content, data):
                             clean_description += '...'
                         
                         # Crear contenido con cabecera institucional para material principal
-                        institutional_header = get_institutional_header(request)
+    # Header institucional eliminado por solicitud del usuario
                         institutional_styles = get_institutional_styles()
                         
                         # Crear HTML completo con cabecera institucional
@@ -3190,7 +3121,6 @@ def handle_class_material_assignment(request, content, data):
     </style>
 </head>
 <body>
-    {institutional_header}
     <div class="content">
         {source_content}
     </div>
@@ -3291,7 +3221,7 @@ def handle_class_material_assignment(request, content, data):
                                     clean_description += '...'
                                 
                                 # Crear contenido con cabecera institucional para material de clase
-                                institutional_header = get_institutional_header(request)
+    # Header institucional eliminado por solicitud del usuario
                                 institutional_styles = get_institutional_styles()
                                 
                                 # Crear HTML completo con cabecera institucional
@@ -3333,7 +3263,6 @@ def handle_class_material_assignment(request, content, data):
     </style>
 </head>
 <body>
-    {institutional_header}
     <div class="content">
         {source_content}
     </div>
@@ -3543,7 +3472,7 @@ def handle_personal_material_assignment(request, content, data):
                     continue
                 
                 # Crear contenido con cabecera institucional para material personalizado
-                institutional_header = get_institutional_header(request)
+    # Header institucional eliminado por solicitud del usuario
                 institutional_styles = get_institutional_styles()
                 
                 # Crear HTML completo con cabecera institucional
@@ -3585,7 +3514,6 @@ def handle_personal_material_assignment(request, content, data):
     </style>
 </head>
 <body>
-    {institutional_header}
     <div class="content">
         {source_content}
     </div>
@@ -3995,7 +3923,7 @@ class ContentPreviewView(View):
                 logger.info(f"Contenido {pk} es HTML completo, completando estructura si es necesario")
                 
                 # Obtener cabecera institucional
-                institutional_header = get_institutional_header(request)
+    # Header institucional eliminado por solicitud del usuario
                 
                 # Completar estructura HTML si es necesario
                 if raw_content_clean.startswith('<!DOCTYPE html>'):
@@ -4006,7 +3934,6 @@ class ContentPreviewView(View):
                         body_end = body_match.end()
                         content_with_header = (
                             raw_content[:body_end] + 
-                            '\n' + institutional_header + '\n' + 
                             raw_content[body_end:]
                         )
                         # Agregar script para fecha
@@ -4038,7 +3965,6 @@ class ContentPreviewView(View):
                         body_end = body_match.end()
                         content_with_header = (
                             raw_content[:body_end] + 
-                            '\n' + institutional_header + '\n' + 
                             raw_content[body_end:]
                         )
                         complete_html = f"<!DOCTYPE html>\n{content_with_header}"
@@ -4371,7 +4297,7 @@ class ContentPreviewView(View):
         processed_content = '\n'.join(processed_lines)
         
         # Obtener cabecera institucional
-        institutional_header = get_institutional_header(request)
+    # Header institucional eliminado por solicitud del usuario
         institutional_styles = get_institutional_styles()
         
         html_wrapper = f"""
@@ -4595,7 +4521,6 @@ class ContentPreviewView(View):
             </style>
         </head>
         <body>
-            {institutional_header}
             <div class="content">
                 {processed_content}
             </div>

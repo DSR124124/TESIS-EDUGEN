@@ -64,6 +64,7 @@ class EnhancedTextProcessor:
         """
         # Lista de frases problemáticas a eliminar
         problematic_phrases = [
+            "Aquí están las secciones faltantes completas para extender el contenido educativo:",
             "Aquí están las secciones faltantes completamente desarrolladas para alcanzar los requisitos:",
             "Aquí están las secciones faltantes completamente desarrolladas para alcanzar los requisitos solicitados:",
             "**Nota**: Este es solo un extracto inicial. El contenido completo incluirá:",
@@ -126,6 +127,15 @@ class EnhancedTextProcessor:
                 line.startswith('5 [ACTIVIDAD]') or
                 line.startswith('12 [MULTIMEDIA]') or
                 line.startswith('[EVALUACIÓN] expandida') or
+                # Líneas con marcadores aislados que aparecen como encabezados problemáticos
+                line == '[PÁRRAFO]' or
+                line == '[EJEMPLO]' or
+                line == '[ACTIVIDAD]' or
+                line == '[MULTIMEDIA]' or
+                line == '[EVALUACIÓN]' or
+                line == '[TÍTULO]' or
+                line == '[SUBTÍTULO]' or
+                line == '[SECCIÓN]' or
                 'extracto inicial' in line.lower() or
                 'contenido completo' in line.lower() or
                 'javascript' in line.lower() or
@@ -265,7 +275,7 @@ class EnhancedTextProcessor:
         html_parts = []
         
         # Header institucional primero
-        html_parts.append(self._get_institutional_header())
+        # Header institucional eliminado
         
         # Header principal del contenido
         title = elements.get('title', topic)
@@ -301,118 +311,7 @@ class EnhancedTextProcessor:
         
         return full_html
     
-    def _get_institutional_header(self) -> str:
-        """Genera el encabezado institucional con logo y nombre del colegio"""
-        try:
-            # Intentar obtener información de la institución
-            from apps.institutions.models import Institution
-            institution = Institution.objects.filter(is_active=True).first()
-            
-            if institution:
-                # Generar HTML con la información institucional
-                logo_html = ""
-                if institution.logo:
-                    logo_html = f'''
-                    <div class="institution-logo">
-                        <img src="{institution.logo.url}" alt="Logo de {institution.name}" />
-                    </div>
-                    '''
-                else:
-                    logo_html = '''
-                    <div class="institution-logo placeholder">
-                        <i class="fas fa-university"></i>
-                    </div>
-                    '''
-                
-                return f'''
-                <div class="institutional-header" data-gjs-type="institutional-header">
-                    <div class="institutional-content">
-                        <div class="institution-brand">
-                            {logo_html}
-                            <div class="institution-info">
-                                <h1 class="institution-name">{institution.name}</h1>
-                                <div class="institution-details">
-                                    <div class="institution-type">Institución Educativa</div>
-                                    {f'<div class="institution-address">{institution.address}</div>' if institution.address else ''}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="header-badges">
-                            <div class="ai-badge">
-                                <i class="fas fa-robot"></i>
-                                <span>Generado con IA</span>
-                            </div>
-                            <div class="date-badge">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span id="current-date"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="header-decoration"></div>
-                </div>
-                '''
-            else:
-                # Fallback sin institución específica
-                return '''
-                <div class="institutional-header default" data-gjs-type="institutional-header">
-                    <div class="institutional-content">
-                        <div class="institution-brand">
-                            <div class="institution-logo placeholder">
-                                <i class="fas fa-graduation-cap"></i>
-                            </div>
-                            <div class="institution-info">
-                                <h1 class="institution-name">Material Educativo</h1>
-                                <div class="institution-details">
-                                    <div class="institution-type">Contenido Pedagógico Digital</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="header-badges">
-                            <div class="ai-badge">
-                                <i class="fas fa-robot"></i>
-                                <span>Generado con IA</span>
-                            </div>
-                            <div class="date-badge">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span id="current-date"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="header-decoration"></div>
-                </div>
-                '''
-        except Exception as e:
-            logger.error(f"Error obteniendo información institucional: {str(e)}")
-            # Fallback en caso de error
-            return '''
-            <div class="institutional-header default" data-gjs-type="institutional-header">
-                <div class="institutional-content">
-                    <div class="institution-brand">
-                        <div class="institution-logo placeholder">
-                            <i class="fas fa-graduation-cap"></i>
-                        </div>
-                        <div class="institution-info">
-                            <h1 class="institution-name">Material Educativo</h1>
-                            <div class="institution-details">
-                                <div class="institution-type">Contenido Pedagógico Digital</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="header-badges">
-                        <div class="ai-badge">
-                            <i class="fas fa-robot"></i>
-                            <span>Generado con IA</span>
-                        </div>
-                        <div class="date-badge">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span id="current-date"></span>
-                        </div>
-                    </div>
-                </div>
-                <div class="header-decoration"></div>
-            </div>
-            '''
-
+    
     def _create_header(self, title: str, course: str, grade: str) -> str:
         """Crea el header principal del contenido (sin el header institucional que ya se agregó)"""
         return f'''
@@ -602,6 +501,10 @@ class EnhancedTextProcessor:
             if not paragraph:
                 continue
             
+            # Filtrar marcadores problemáticos que no deberían aparecer aquí
+            if self._is_problematic_marker(paragraph):
+                continue
+            
             # Detectar listas
             if paragraph.startswith('- ') or paragraph.startswith('• '):
                 if not processed or not processed[-1].startswith('<ul>'):
@@ -612,14 +515,40 @@ class EnhancedTextProcessor:
                 if processed and processed[-1].startswith('<li>'):
                     processed.append('</ul>')
                 
-                # Agregar párrafo normal
-                processed.append(f'<p class="content-paragraph">{paragraph}</p>')
+                # Agregar párrafo normal (después de limpiar marcadores residuales)
+                clean_paragraph = self._clean_residual_markers(paragraph)
+                if clean_paragraph:  # Solo agregar si no está vacío
+                    processed.append(f'<p class="content-paragraph">{clean_paragraph}</p>')
         
         # Cerrar lista final si quedó abierta
         if processed and processed[-1].startswith('<li>'):
             processed.append('</ul>')
         
         return '\n'.join(processed)
+    
+    def _is_problematic_marker(self, text: str) -> bool:
+        """Detecta si un texto es solo un marcador problemático"""
+        text = text.strip()
+        problematic_markers = [
+            '[PÁRRAFO]', '[PARRAFO]',
+            '[EJEMPLO]', 
+            '[ACTIVIDAD]', 
+            '[MULTIMEDIA]',
+            '[EVALUACIÓN]', '[EVALUACION]',
+            '[TÍTULO]', '[TITULO]',
+            '[SUBTÍTULO]', '[SUBTITULO]',
+            '[SECCIÓN]', '[SECCION]'
+        ]
+        return text in problematic_markers
+    
+    def _clean_residual_markers(self, text: str) -> str:
+        """Limpia marcadores residuales que aparecen al inicio del texto"""
+        import re
+        
+        # Limpiar marcadores que aparecen al inicio seguidos de espacio
+        cleaned = re.sub(r'^(\[PÁRRAFO\]|\[PARRAFO\]|\[EJEMPLO\]|\[ACTIVIDAD\]|\[MULTIMEDIA\]|\[EVALUACIÓN\]|\[EVALUACION\]|\[TÍTULO\]|\[TITULO\]|\[SUBTÍTULO\]|\[SUBTITULO\]|\[SECCIÓN\]|\[SECCION\])\s*', '', text)
+        
+        return cleaned.strip()
     
     def _wrap_in_document(self, html_parts: List[str]) -> str:
         """Envuelve el contenido en un documento HTML completo"""

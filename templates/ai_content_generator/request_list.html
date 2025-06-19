@@ -1383,6 +1383,8 @@
     }
     
     function updateCardStatus(requestId, newStatus) {
+        console.log(`🔄 Actualizando estado de request ${requestId} a: ${newStatus}`);
+        
         // Actualizar tarjeta (vista grid)
         const card = document.querySelector(`[data-request-id="${requestId}"]`);
         if (card) {
@@ -1431,10 +1433,11 @@
             // Actualizar atributo de estado
             tableRow.setAttribute('data-status', newStatus);
             
-            // Actualizar celda de estado
-            const statusCell = tableRow.querySelector('.table-status-badge');
+            // Actualizar celda de estado (usar .status-badge como en el HTML)
+            const statusCell = tableRow.querySelector('.status-badge');
             if (statusCell) {
-                statusCell.className = `table-status-badge ${newStatus}`;
+                statusCell.className = `status-badge ${newStatus}`;
+                statusCell.style.marginBottom = '0'; // Mantener el estilo inline
                 
                 let statusContent = '';
                 switch(newStatus) {
@@ -1455,10 +1458,16 @@
                         break;
                 }
                 statusCell.innerHTML = statusContent;
+                
+                console.log(`✅ Estado de tabla actualizado para request ${requestId}: ${newStatus}`);
+            } else {
+                console.error(`❌ No se encontró .status-badge en la tabla para request ${requestId}`);
             }
             
             // Actualizar acciones de la tabla
             updateTableRowActions(requestId, newStatus);
+        } else {
+            console.error(`❌ No se encontró fila de tabla para request ${requestId}`);
         }
         
         // Actualizar estadísticas
@@ -1730,8 +1739,13 @@
             .then(data => {
                 if (data.status === 'completed' && !notificationShown) {
                     // Contenido listo - mostrar notificación solo una vez
+                    console.log(`🎉 Contenido completado para request ${requestId}, actualizando UI...`);
                     notificationShown = true;
                     showContentReadyNotification(data.content_url, data.content_title);
+                    
+                    // IMPORTANTE: Actualizar inmediatamente el estado en la tabla
+                    updateCardStatus(requestId, 'completed');
+                    
                     localStorage.removeItem('monitoring_content_request');
                     
                 } else if (data.status === 'failed' || data.status === 'cancelled') {
@@ -1739,6 +1753,9 @@
                     if (!notificationShown) {
                         showToast(data.message, 'error');
                         notificationShown = true;
+                        
+                        // IMPORTANTE: Actualizar inmediatamente el estado en la tabla
+                        updateCardStatus(requestId, data.status);
                     }
                     localStorage.removeItem('monitoring_content_request');
                     

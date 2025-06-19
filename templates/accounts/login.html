@@ -432,74 +432,29 @@
         }
         
         .login-box {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(25px);
+            /* Fondo llamativo con los colores base del sistema */
+            background: linear-gradient(135deg, 
+                #005CFF 0%, 
+                #A142F5 45%, 
+                #00CFFF 100%);
             border-radius: 25px;
             padding: 2.5rem;
             max-width: 350px;
             width: 100%;
             text-align: center;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.4);
             margin-left: 2rem;
             position: relative;
             box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: fadeInUp 1s ease-out 1s both;
-            overflow: hidden;
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(0, 92, 255, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            /* Sin animaciones para evitar bloqueo de botones */
         }
         
-        /* Efecto de scanner/líneas */
-        .login-box::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, 
-                transparent, 
-                rgba(0, 207, 255, 0.2), 
-                rgba(161, 66, 245, 0.2), 
-                transparent);
-            animation: scan 4s linear infinite;
-        }
+        /* Efecto scanner eliminado para evitar bloqueo de botones */
         
-        @keyframes scan {
-            0% { left: -100%; }
-            100% { left: 100%; }
-        }
-        
-        .login-box::before {
-            content: '';
-            position: absolute;
-            top: -3px;
-            left: -3px;
-            right: -3px;
-            bottom: -3px;
-            background: linear-gradient(45deg, 
-                #005CFF, #A142F5, #00CFFF, #FFFFFF, 
-                #005CFF, #A142F5, #00CFFF, #FFFFFF);
-            background-size: 400% 400%;
-            border-radius: 28px;
-            z-index: -1;
-            animation: borderGlow 4s linear infinite;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .login-box:hover::before {
-            opacity: 0.8;
-        }
-        
-        .login-box:hover {
-            transform: translateY(-8px) scale(1.03);
-            box-shadow: 
-                0 35px 70px rgba(0, 0, 0, 0.5),
-                0 0 30px rgba(0, 207, 255, 0.3);
-            border-color: rgba(0, 207, 255, 0.6);
-        }
+        /* Border glow y hover effects eliminados para evitar bloqueo de botones */
         
         .logo-section {
             margin-bottom: 2rem;
@@ -555,22 +510,19 @@
             font-size: 1.8rem;
             color: white;
             margin-bottom: 0.5rem;
-            font-weight: 600;
+            font-weight: 700;
             text-shadow: 
-                0 0 20px rgba(255, 255, 255, 0.4),
-                0 0 40px rgba(0, 207, 255, 0.3);
-            animation: pulse 2s ease-in-out infinite;
-            background: linear-gradient(45deg, #FFFFFF, #00CFFF, #A142F5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+                0 2px 8px rgba(0, 0, 0, 0.5),
+                0 0 20px rgba(255, 255, 255, 0.2);
+            /* Sin animaciones para mejor rendimiento */
         }
         
         .welcome-subtitle {
-            color: rgba(255, 255, 255, 0.9);
+            color: rgba(255, 255, 255, 0.95);
             font-size: 1rem;
             margin-bottom: 2rem;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+            font-weight: 400;
         }
         
         .google-btn {
@@ -619,9 +571,10 @@
         
         .footer-text {
             margin-top: 2rem;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255, 255, 255, 0.8);
             font-size: 0.8rem;
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+            font-weight: 300;
         }
         
         /* Responsive */
@@ -663,7 +616,7 @@
                 margin-left: 0;
                 margin-top: 0.5rem;
                 max-width: 320px;
-                animation: fadeInUp 0.8s ease-out 0.6s both;
+                /* Animación eliminada para evitar bloqueo de botones */
             }
             
             .main-title {
@@ -816,10 +769,11 @@
         
         .option-description {
             display: block;
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255, 255, 255, 0.85);
             font-size: 0.85rem;
             margin-top: 8px;
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            font-weight: 300;
         }
         
         .separator-text {
@@ -1281,7 +1235,7 @@
                 </div>
                 
                 <div class="footer-text">
-                    &copy; 2024 Sistema Educativo EduGen
+                    &copy; 2025 Sistema Educativo EduGen
                 </div>
             </div>
         </div>
@@ -1421,6 +1375,11 @@
         
         // Inicialización cuando se carga la página
         document.addEventListener('DOMContentLoaded', function() {
+            // Limpiar localStorage en visitas iniciales (cuando no hay referrer interno)
+            if (!document.referrer || !document.referrer.includes(window.location.hostname)) {
+                localStorage.removeItem('lastLoginMethod');
+            }
+            
             // Agregar transiciones CSS
             const mainButtons = document.getElementById('main-buttons');
             const normalForm = document.getElementById('normal-login-form');
@@ -1428,19 +1387,14 @@
             mainButtons.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
             normalForm.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
             
-            // Si hay errores de formulario o mensajes, mostrar automáticamente el formulario normal
-            const hasErrors = document.querySelector('.alert-danger');
-            const hasMessages = document.querySelector('#django-messages');
+            // Solo mostrar automáticamente el formulario normal si hay errores de login
+            const hasFormErrors = document.querySelector('.alert-danger');
             
-            if (hasErrors || hasMessages) {
+            if (hasFormErrors) {
+                // Solo si hay errores específicos del formulario de login
                 showNormalLogin();
-            } else {
-                // Mostrar la última opción seleccionada por el usuario
-                const lastMethod = localStorage.getItem('lastLoginMethod');
-                if (lastMethod === 'normal') {
-                    showNormalLogin();
-                }
             }
+            // En todos los otros casos, mostrar siempre las opciones principales primero
             
             // Agregar validación en tiempo real
             const usernameInput = document.getElementById('id_username');
