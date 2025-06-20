@@ -1558,7 +1558,32 @@ class StudentProfileView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         student = self.request.user.student_profile
-        context['student'] = student
+        
+        # Obtener información adicional del estudiante
+        current_enrollment = student.enrollments.filter(status='ACTIVE').first()
+        
+        # Obtener información de la institución
+        from apps.institutions.models import Institution
+        institution = Institution.objects.filter(is_active=True).first()
+        
+        # Calcular estadísticas académicas
+        total_courses = 0
+        if current_enrollment:
+            total_courses = current_enrollment.section.course_assignments.filter(is_active=True).count()
+        
+        # Obtener portafolios del estudiante
+        from apps.portfolios.models import StudentPortfolio
+        portfolios = StudentPortfolio.objects.filter(student=student).order_by('-academic_year', '-month')
+        
+        context.update({
+            'student': student,
+            'current_enrollment': current_enrollment,
+            'institution': institution,
+            'total_courses': total_courses,
+            'portfolios': portfolios,
+            'portfolios_count': portfolios.count()
+        })
+        
         return context
 
 class StudentSalonView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):

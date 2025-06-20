@@ -16,6 +16,7 @@ import uuid
 import re
 from io import BytesIO
 from bs4 import BeautifulSoup
+from django.views.decorators.clickjacking import xframe_options_exempt, xframe_options_sameorigin
 
 logger = logging.getLogger(__name__)
 
@@ -252,6 +253,7 @@ def generate_from_ai_content(request, content_id):
         return JsonResponse({'success': False, 'error': str(e)})
 
 @login_required
+@xframe_options_exempt  # Permitir que se muestre en iframes
 def student_scorm_execute(request, pk):
     """Vista para que los estudiantes ejecuten paquetes SCORM a través de material de portafolio"""
     package = get_object_or_404(SCORMPackage, pk=pk)
@@ -420,6 +422,7 @@ def _extract_inline_styles(content):
     return '\n'.join(important_styles) if important_styles else ''
 
 @login_required
+@xframe_options_exempt  # Permitir que se muestre en iframes
 def scorm_content_viewer(request, pk):
     """Vista para servir el contenido SCORM descomprimido"""
     package = get_object_or_404(SCORMPackage, pk=pk)
@@ -754,4 +757,85 @@ def scorm_resource_viewer(request, pk, resource_path):
     
     except Exception as e:
         logger.exception(f"Error al servir recurso SCORM {resource_path}: {str(e)}")
-        return HttpResponse("Error al cargar el recurso.", status=500) 
+        return HttpResponse("Error al cargar el recurso.", status=500)
+
+@login_required
+@xframe_options_exempt  # Permitir que se muestre en iframes
+def scorm_content_viewer_raw(request, pk):
+    """Vista para servir el contenido SCORM SIN NINGÚN procesamiento ni modificación"""
+    package = get_object_or_404(SCORMPackage, pk=pk)
+    
+    # Verificar acceso
+    is_student = False
+    try:
+        student = request.user.student_profile
+        is_student = True
+        accessible_material = PortfolioMaterial.objects.filter(
+            scorm_package=package,
+            topic__portfolio__student=student
+        ).first()
+        
+        if not accessible_material:
+            logger.warning(f"scorm_content_viewer_raw: Estudiante {student.id} no tiene acceso al paquete SCORM {package.id}")
+            return HttpResponse("No tienes acceso a este contenido.", status=403)
+    except AttributeError:
+        # No es estudiante, verificar si es profesor o staff
+        if not request.user.is_staff and package.generated_content.request.teacher != request.user:
+            return HttpResponse("No tienes acceso a este contenido.", status=403)
+    
+    import zipfile
+    import tempfile
+    import shutil
+    
+    try:
+        # Verificar que el archivo existe
+        if not os.path.exists(package.package_file.path):
+            return HttpResponse("Archivo SCORM no encontrado.", status=404)
+        
+        # Crear directorio temporal para extraer el contenido
+        temp_dir = tempfile.mkdtemp()
+        
+        try:
+            # Extraer el archivo ZIP
+            with zipfile.ZipFile(package.package_file.path, 'r') as zip_ref:
+                zip_ref.extractall(temp_dir)
+            
+            # Buscar el archivo index.html
+            index_path = None
+            for root, dirs, files in os.walk(temp_dir):
+                if 'index.html' in files:
+                    index_path = os.path.join(root, 'index.html')
+                    break
+            
+            if not index_path:
+                return HttpResponse("No se encontró index.html en el paquete SCORM.", status=404)
+            
+            # Leer el contenido del index.html SIN MODIFICACIONES
+            with open(index_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # SOLO reemplazar rutas relativas para recursos - SIN AGREGAR ESTILOS
+            import re
+            resource_base_url = request.build_absolute_uri(f'/scorm/packages/{package.id}/resource/')
+            
+            # Reemplazar SOLO las rutas de recursos
+            content = re.sub(r'src="(?!https?://|data:|#)([^"]*)"', f'src="{resource_base_url}\\1"', content)
+            content = re.sub(r'href="(?!https?://|mailto:|tel:|#)([^"]*\.(?:css|js|pdf|doc|docx|xls|xlsx|ppt|pptx))"', 
+                           f'href="{resource_base_url}\\1"', content)
+            content = re.sub(r'url\((?![\'"]*(?:https?://|data:))([\'"]?)([^\'"()]+)\1\)', 
+                           f'url("{resource_base_url}\\2")', content)
+            
+            # Limpiar directorio temporal
+            shutil.rmtree(temp_dir)
+            
+            # Devolver el contenido SIN MODIFICACIONES adicionales
+            return HttpResponse(content, content_type='text/html; charset=utf-8')
+            
+        except Exception as e:
+            logger.error(f"Error extrayendo contenido SCORM {package.id}: {str(e)}")
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            return HttpResponse(f"Error extrayendo contenido SCORM: {str(e)}", status=500)
+    
+    except Exception as e:
+        logger.exception(f"Error sirviendo contenido SCORM RAW {package.id}: {str(e)}")
+        return HttpResponse(f"Error cargando contenido SCORM: {str(e)}", status=500) 

@@ -1,900 +1,785 @@
-{% extends "base_student.html" %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ package.title }} - Material SCORM</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Variables del dashboard estudiantil - consistencia con portfolio */
+        :root {
+            /* Colores principales del dashboard estudiantil */
+            --primary-color: #005CFF;
+            --secondary-color: #A142F5;
+            --accent-color: #00CFFF;
+            --success-color: #00E676;
+            --warning-color: #FFB300;
+            --danger-color: #FF5722;
+            
+            /* Gradientes dinámicos */
+            --primary-gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            --secondary-gradient: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+            --success-gradient: linear-gradient(135deg, var(--success-color) 0%, #4CAF50 100%);
+            --warning-gradient: linear-gradient(135deg, var(--warning-color) 0%, #FF9800 100%);
+            --accent-gradient: linear-gradient(135deg, var(--accent-color) 0%, var(--primary-color) 100%);
+            
+            /* Sombras */
+            --shadow-sm: 0 2px 8px rgba(0, 92, 255, 0.12);
+            --shadow-md: 0 8px 24px rgba(0, 92, 255, 0.15);
+            --shadow-lg: 0 16px 48px rgba(0, 92, 255, 0.2);
+            --shadow-xl: 0 24px 64px rgba(0, 92, 255, 0.25);
+            
+            /* Otros */
+            --border-radius: 12px;
+            --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Adicionales para SCORM */
+            --white: #FFFFFF;
+            --light-gray: #F3F4F6;
+            --dark: #1F2937;
+            --gray: #6B7280;
+        }
 
-{% block title %}{{ package.title }} - Material SCORM - {{ block.super }}{% endblock %}
-
-{% block page_title %}{% endblock %}
-
-{% block extra_css %}
-<style>
-    :root {
-        /* Esquema de colores principal - Estilo estudiante */
-        --primary-color: #005CFF;       /* Azul intenso */
-        --primary-light: rgba(0, 92, 255, 0.1);
-        --secondary-color: #A142F5;     /* Púrpura vibrante */
-        --accent-color: #00CFFF;        /* Azul eléctrico */
-        --dark-accent: #3B0E6D;         /* Azul violeta oscuro */
-        --success-color: #10B981;
-        --warning-color: #F59E0B;
-        --danger-color: #EF4444;
-        --light-gray: #f5f7fa;
-        --medium-gray: #e9ecef;
-        --dark-gray: #495057;
-        --bg-dark: #0A0A0A;             /* Fondo negro degradado */
-        --card-bg: #FFFFFF;
-        --text-primary: #333333;
-        --text-secondary: #6B7280;
-        --border-radius: 12px;
-        --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-        --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
-        --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.12);
-        --transition-fast: all 0.2s ease;
-        --transition-normal: all 0.3s ease;
-    }
-
-    /* Layout para SCORM con footer visible */
-    body {
-        margin: 0;
-        padding: 0;
-        overflow-x: hidden; /* Solo ocultar scroll horizontal */
-        overflow-y: auto; /* Permitir scroll vertical para ver footer */
-    }
-    
-    .main-content {
-        padding: 0 !important;
-        margin: 0 !important;
-        /* Ajustar altura para dejar espacio al footer */
-        min-height: calc(100vh - 160px); /* navbar + footer */
-        height: auto;
-        /* Removido overflow: hidden */
-    }
-    
-    .scorm-container {
-        display: flex;
-        min-height: calc(100vh - 160px); /* Ajustar para navbar + footer */
-        height: auto;
-        background: var(--card-bg);
-        position: relative;
-    }
-
-    /* Panel de información lateral */
-    .scorm-sidebar {
-        width: 320px;
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-        transition: var(--transition-normal);
-        z-index: 100;
-        position: relative;
-    }
-    
-    .scorm-sidebar.collapsed {
-        width: 60px;
-        padding: 20px 10px;
-    }
-    
-    .sidebar-toggle {
-        position: absolute;
-        top: 20px;
-        right: -15px;
-        background: var(--accent-color);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        box-shadow: var(--shadow-md);
-        transition: var(--transition-fast);
-        z-index: 101;
-    }
-    
-    .sidebar-toggle:hover {
-        transform: scale(1.1);
-        background: var(--primary-color);
-    }
-
-    /* Información del material */
-    .material-info {
-        color: white;
-        margin-bottom: 20px;
-        opacity: 1;
-        transition: var(--transition-normal);
-    }
-    
-    .scorm-sidebar.collapsed .material-info {
-        opacity: 0;
-        pointer-events: none;
-    }
-    
-    .material-title {
-        font-size: 1.2rem;
-        font-weight: 700;
-        margin-bottom: 8px;
-        line-height: 1.3;
-    }
-    
-    .material-description {
-        font-size: 0.9rem;
-        opacity: 0.9;
-        margin-bottom: 15px;
-        line-height: 1.4;
-    }
-    
-    .topic-info {
-        background: rgba(255, 255, 255, 0.1);
-        padding: 12px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-    }
-    
-    .topic-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        opacity: 0.8;
-        margin-bottom: 4px;
-    }
-    
-    .topic-name {
-        font-size: 0.95rem;
-        font-weight: 600;
-    }
-
-    /* Controles de progreso */
-    .progress-section {
-        margin-bottom: 20px;
-        opacity: 1;
-        transition: var(--transition-normal);
-    }
-    
-    .scorm-sidebar.collapsed .progress-section {
-        opacity: 0;
-        pointer-events: none;
-    }
-    
-    .progress-label {
-        font-size: 0.8rem;
-        color: rgba(255, 255, 255, 0.8);
-        margin-bottom: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .progress-bar {
-        background: rgba(255, 255, 255, 0.2);
-        height: 8px;
-        border-radius: 4px;
-        overflow: hidden;
-        margin-bottom: 10px;
-    }
-    
-    .progress-fill {
-        background: var(--accent-color);
-        height: 100%;
-        width: 0%;
-        transition: width 0.5s ease;
-        border-radius: 4px;
-    }
-    
-    .time-info {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.75rem;
-        opacity: 0.8;
-    }
-
-    /* Botones de acción */
-    .action-buttons {
-        margin-top: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        opacity: 1;
-        transition: var(--transition-normal);
-    }
-    
-    .scorm-sidebar.collapsed .action-buttons {
-        opacity: 0;
-        pointer-events: none;
-    }
-    
-    .action-btn {
-        background: rgba(255, 255, 255, 0.15);
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        padding: 10px 15px;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: var(--transition-fast);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-    
-    .action-btn:hover {
-        background: rgba(255, 255, 255, 0.25);
-        transform: translateY(-2px);
-    }
-    
-    .action-btn.primary {
-        background: var(--accent-color);
-        border-color: var(--accent-color);
-    }
-    
-    .action-btn.primary:hover {
-        background: #00B8E6;
-        border-color: #00B8E6;
-    }
-
-    /* Iconos del sidebar colapsado */
-    .sidebar-icons {
-        display: none;
-        flex-direction: column;
-        gap: 15px;
-        align-items: center;
-        margin-top: 20px;
-    }
-    
-    .scorm-sidebar.collapsed .sidebar-icons {
-        display: flex;
-    }
-    
-    .sidebar-icon {
-        color: white;
-        font-size: 1.2rem;
-        opacity: 0.8;
-        cursor: pointer;
-        transition: var(--transition-fast);
-    }
-    
-    .sidebar-icon:hover {
-        opacity: 1;
-        transform: scale(1.2);
-    }
-
-    /* Contenido SCORM */
-    .scorm-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        position: relative;
-        background: white;
-        min-height: calc(100vh - 160px); /* Altura mínima para dejar espacio al footer */
-    }
-    
-    #scormViewer {
-        width: 100%;
-        height: calc(100vh - 160px); /* Ajustar altura para dejar espacio al footer */
-        min-height: 600px; /* Altura mínima para contenido */
-        border: none;
-        background: white;
-        border-radius: 0;
-        /* Aislamiento de estilos para evitar conflictos */
-        isolation: isolate;
-    }
-
-    /* Loading state */
-    .loading-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.95);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        transition: opacity 0.3s ease;
-    }
-    
-    .loading-overlay.hidden {
-        opacity: 0;
-        pointer-events: none;
-    }
-    
-    .loading-spinner {
-        width: 40px;
-        height: 40px;
-        border: 4px solid var(--primary-light);
-        border-top: 4px solid var(--primary-color);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 15px;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    
-    .loading-text {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        font-weight: 500;
-    }
-
-    /* Botón flotante de vuelta (cuando sidebar está colapsado) */
-    .floating-back-btn {
-        position: fixed;
-        top: 120px;
-        left: 20px;
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        font-size: 1.2rem;
-        box-shadow: var(--shadow-lg);
-        transition: var(--transition-fast);
-        z-index: 1001;
-    }
-    
-    .floating-back-btn:hover {
-        transform: scale(1.1);
-        background: var(--secondary-color);
-    }
-    
-    .scorm-sidebar.collapsed ~ .scorm-content .floating-back-btn {
-        display: flex;
-    }
-
-    /* Error state */
-    .error-message {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        padding: 40px;
-        text-align: center;
-        background: var(--light-gray);
-    }
-    
-    .error-icon {
-        font-size: 4rem;
-        color: var(--danger-color);
-        margin-bottom: 20px;
-    }
-    
-    .error-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 10px;
-    }
-    
-    .error-text {
-        color: var(--text-secondary);
-        margin-bottom: 20px;
-        line-height: 1.6;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .main-content {
-            min-height: calc(100vh - 200px); /* Más espacio para footer en móvil */
+        /* Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
-        .scorm-container {
-            min-height: calc(100vh - 200px);
-        }
-        
-        #scormViewer {
-            height: calc(100vh - 200px);
-        }
-        
-        .scorm-sidebar {
-            position: absolute;
+        html, body {
             height: 100%;
-            z-index: 200;
-            transform: translateX(-100%);
+            overflow: hidden;
+            background: var(--light-gray);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        .scorm-sidebar.mobile-open {
-            transform: translateX(0);
+        /* Animaciones mejoradas - consistente con portfolio */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8) translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 92, 255, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(161, 66, 245, 0.5); }
         }
         
-        .scorm-sidebar.collapsed {
-            width: 320px;
-            transform: translateX(-100%);
-        }
-        
-        .mobile-sidebar-toggle {
-            position: fixed;
-            top: 120px;
-            left: 20px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 1.2rem;
-            box-shadow: var(--shadow-lg);
-            transition: var(--transition-fast);
-            z-index: 201;
-        }
-        
-        .mobile-sidebar-toggle:hover {
-            transform: scale(1.1);
-            background: var(--secondary-color);
-        }
-        
-        .sidebar-overlay {
+        /* Header de control con gradiente del portfolio */
+        .scorm-header {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
+            height: 70px;
+            background: var(--primary-gradient);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 1000;
+            box-shadow: var(--shadow-lg);
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: var(--border-radius);
+            transition: var(--transition-normal);
+            font-size: 14px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            color: var(--white);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .content-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--white);
+            max-width: 350px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .progress-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .progress-bar {
+            width: 140px;
+            height: 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--success-gradient);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 8px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Panel de control lateral con estilos del portfolio */
+        .control-panel {
+            position: fixed;
+            top: 70px;
+            right: -320px;
+            width: 320px;
+            height: calc(100vh - 70px);
+            background: var(--white);
+            box-shadow: var(--shadow-xl);
+            transition: right var(--transition-normal);
+            z-index: 999;
+            overflow-y: auto;
+            border-left: 1px solid rgba(0, 92, 255, 0.1);
+        }
+        
+        .control-panel.open {
+            right: 0;
+        }
+        
+        .panel-toggle {
+            position: fixed;
+            top: 85px;
+            right: 15px;
+            width: 50px;
+            height: 50px;
+            background: var(--accent-gradient);
+            color: var(--white);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+            transition: var(--transition-normal);
+            box-shadow: var(--shadow-lg);
+            font-size: 16px;
+            animation: glow 3s ease-in-out infinite;
+        }
+        
+        .panel-toggle:hover {
+            transform: scale(1.1);
+            animation: pulse 0.3s ease-in-out;
+        }
+        
+        .panel-content {
+            padding: 25px;
+        }
+        
+        .panel-section {
+            margin-bottom: 30px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #E5E7EB;
+        }
+        
+        .panel-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            background: var(--light-gray);
+            color: var(--dark);
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: var(--transition-normal);
+            border: 2px solid transparent;
+        }
+        
+        .control-btn:hover {
+            background: var(--primary-color);
+            color: var(--white);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .control-btn.primary {
+            background: var(--primary-gradient);
+            color: var(--white);
+        }
+        
+        .control-btn.primary:hover {
+            background: var(--secondary-gradient);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .control-btn.success {
+            background: var(--success-gradient);
+            color: var(--white);
+        }
+        
+        .control-btn.success:hover {
+            background: var(--success-color);
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .time-display {
+            background: var(--primary-gradient);
+            color: var(--white);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            box-shadow: var(--shadow-md);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .status-badge.active {
+            background: var(--success-gradient);
+            color: var(--white);
+        }
+        
+        .status-badge.pending {
+            background: var(--warning-gradient);
+            color: var(--white);
+        }
+        
+        .status-badge.success {
+            background: var(--success-gradient);
+            color: var(--white);
+        }
+        
+        /* Contenedor del iframe */
+        .scorm-container {
+            position: absolute;
+            top: 70px;
+            left: 0;
+            right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 199;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            background: var(--white);
+            transition: right var(--transition-normal);
         }
         
-        .sidebar-overlay.active {
-            opacity: 1;
-            pointer-events: all;
+        .scorm-container.with-panel {
+            right: 320px;
         }
-    }
-</style>
-{% endblock %}
-
-{% block content %}
-<div class="scorm-wrapper" style="min-height: calc(100vh - 160px);">
-<div class="scorm-container">
-    <!-- Sidebar con información del material -->
-    <div class="scorm-sidebar" id="scormSidebar">
-        <button class="sidebar-toggle" id="sidebarToggle">
-            <i class="fas fa-chevron-left"></i>
-        </button>
         
-        <!-- Información del material -->
-        <div class="material-info">
-            <div class="material-title">{{ package.title }}</div>
-            <div class="material-description">{{ package.description|default:"Material de aprendizaje SCORM interactivo" }}</div>
-            <div class="topic-info">
-                <div class="topic-label">Tema</div>
-                <div class="topic-name">{{ topic.title }}</div>
-            </div>
-        </div>
+        /* Iframe SCORM */
+        #scormViewer {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: var(--white);
+            display: block;
+        }
         
-        <!-- Sección de progreso -->
-        <div class="progress-section">
-            <div class="progress-label">
-                <span>Progreso</span>
-                <span id="progressPercent">0%</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
-            </div>
-            <div class="time-info">
-                <span>Tiempo: <span id="sessionTime">00:00</span></span>
-                <span id="completionStatus">No iniciado</span>
-            </div>
-            <div class="score-info" id="scoreInfo" style="display: none; margin-top: 10px; font-size: 0.75rem;">
-                <span>Puntaje: <span id="scormScore">-</span></span>
-            </div>
-        </div>
+        /* Overlay de carga con estilos del portfolio */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 998;
+            animation: fadeInUp 0.5s ease-out;
+        }
         
-        <!-- Botones de acción -->
-        <div class="action-buttons">
-            <button class="action-btn primary" onclick="fullscreenMode()">
-                <i class="fas fa-expand"></i>
-                Pantalla completa
-            </button>
-            <button class="action-btn" onclick="restartContent()">
-                <i class="fas fa-refresh"></i>
-                Reiniciar
-            </button>
-            <button class="action-btn" onclick="goBack()">
-                <i class="fas fa-arrow-left"></i>
-                Volver al tema
-            </button>
-        </div>
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--light-gray);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
         
-        <!-- Iconos para sidebar colapsado -->
-        <div class="sidebar-icons">
-            <div class="sidebar-icon" onclick="fullscreenMode()" title="Pantalla completa">
-                <i class="fas fa-expand"></i>
-            </div>
-            <div class="sidebar-icon" onclick="restartContent()" title="Reiniciar">
-                <i class="fas fa-refresh"></i>
-            </div>
-            <div class="sidebar-icon" onclick="goBack()" title="Volver">
-                <i class="fas fa-arrow-left"></i>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Contenido SCORM -->
-    <div class="scorm-content">
-        <div class="loading-overlay" id="loadingOverlay">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Cargando contenido SCORM...</div>
-        </div>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         
-        <iframe id="scormViewer" src="about:blank"></iframe>
+        .loading-text {
+            color: var(--primary-color);
+            font-size: 16px;
+            font-weight: 600;
+        }
         
-        <button class="floating-back-btn" onclick="goBack()">
-            <i class="fas fa-arrow-left"></i>
-        </button>
-    </div>
-</div>
-
-<!-- Overlay para móvil -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
-
-<!-- Botón de toggle para móvil -->
-<button class="mobile-sidebar-toggle d-md-none" id="mobileSidebarToggle">
-    <i class="fas fa-bars"></i>
-</button>
-</div> <!-- Cerrar scorm-wrapper -->
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Variables globales
-    let sessionStartTime = Date.now();
-    let progressTimer;
-    let currentProgress = 0;
-    let isContentLoaded = false;
-    
-    // Elementos del DOM
-    const sidebar = document.getElementById('scormSidebar');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const mobileSidebarToggle = document.getElementById('mobileSidebarToggle');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    const scormViewer = document.getElementById('scormViewer');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const progressFill = document.getElementById('progressFill');
-    const progressPercent = document.getElementById('progressPercent');
-    const sessionTimeEl = document.getElementById('sessionTime');
-    const completionStatusEl = document.getElementById('completionStatus');
-    
-    // Cargar contenido SCORM
-    function loadScormContent() {
-        if (isContentLoaded) return;
+        .info-text {
+            font-size: 13px;
+            color: var(--gray);
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
         
-        // URL del contenido SCORM
-        const scormUrl = '{% url "scorm_packager:scorm_content_viewer" package.id %}';
-        
-        // Configurar listener para mensajes del iframe
-        window.addEventListener('message', handleIframeMessage);
-        
-        // Cargar directamente en el iframe para mantener el aislamiento de estilos
-        scormViewer.src = scormUrl;
-        
-        // Manejar la carga del iframe
-        scormViewer.onload = function() {
-            // Ocultar loading y actualizar estado
-            setTimeout(() => {
-                loadingOverlay.classList.add('hidden');
-                isContentLoaded = true;
-                updateCompletionStatus('En progreso');
-                startProgressTracking();
-            }, 500);
-        };
-        
-        // Manejar errores de carga
-        scormViewer.onerror = function() {
-            console.error('Error loading SCORM content');
-            showError('Error al cargar el contenido SCORM', 'Verifica tu conexión e inténtalo nuevamente.');
-        };
-    }
-    
-    // Manejar mensajes del iframe
-    function handleIframeMessage(event) {
-        // Verificar origen por seguridad
-        if (event.origin !== window.location.origin) return;
-        
-        const message = event.data;
-        
-        if (message && typeof message === 'object' && message.type && message.type.startsWith('scorm-')) {
-            switch (message.type) {
-                case 'scorm-ready':
-                    console.log('Contenido SCORM listo:', message.data);
-                    break;
-                    
-                case 'scorm-progress':
-                    updateProgressFromIframe(message.data);
-                    break;
-                    
-                case 'scorm-final':
-                    console.log('Datos finales SCORM:', message.data);
-                    updateProgressFromIframe(message.data);
-                    saveProgress();
-                    break;
+        /* Responsive */
+        @media (max-width: 768px) {
+            .scorm-header {
+                padding: 0 20px;
+                height: 60px;
             }
-        }
-    }
-    
-    // Actualizar progreso desde el iframe
-    function updateProgressFromIframe(data) {
-        if (data.completion !== undefined) {
-            currentProgress = data.completion;
-            updateProgress(currentProgress);
-        }
-        
-        if (data.status) {
-            let statusText = data.status;
-            switch (data.status) {
-                case 'completed':
-                    statusText = 'Completado';
-                    break;
-                case 'incomplete':
-                    statusText = 'En progreso';
-                    break;
-                case 'not attempted':
-                    statusText = 'No iniciado';
-                    break;
-                case 'passed':
-                    statusText = 'Aprobado';
-                    break;
-                case 'failed':
-                    statusText = 'No aprobado';
-                    break;
-            }
-            updateCompletionStatus(statusText);
-        }
-        
-        if (data.timeSpent !== undefined) {
-            sessionStartTime = Date.now() - (data.timeSpent * 1000);
-        }
-        
-        if (data.score !== undefined && data.score > 0) {
-            // Mostrar puntaje si está disponible
-            console.log('Puntaje SCORM:', data.score);
             
-            const scoreElement = document.getElementById('scormScore');
-            const scoreInfoElement = document.getElementById('scoreInfo');
+            .header-left .content-title {
+                display: none;
+            }
             
-            if (scoreElement && scoreInfoElement) {
-                scoreElement.textContent = Math.round(data.score);
-                scoreInfoElement.style.display = 'block';
+            .progress-info {
+                display: none;
+            }
+            
+            .control-panel {
+                width: 100%;
+                right: -100%;
+                top: 60px;
+                height: calc(100vh - 60px);
+            }
+            
+            .scorm-container {
+                top: 60px;
+            }
+            
+            .scorm-container.with-panel {
+                right: 0;
+            }
+            
+            .panel-toggle {
+                top: 75px;
             }
         }
-    }
-    
-    // Mostrar error
-    function showError(title, message) {
-        const errorHtml = `
-            <div class="error-message">
-                <div class="error-icon">
-                    <i class="fas fa-exclamation-triangle"></i>
+    </style>
+</head>
+<body>
+    <!-- Header de control con estilos del portfolio -->
+    <div class="scorm-header">
+        <div class="header-left">
+            <a href="{% url 'portfolios:student_topic_detail' material.topic.id %}" class="back-btn">
+                <i class="fas fa-arrow-left"></i>
+                Volver a Materiales
+            </a>
+            <div class="content-title">{{ package.title }}</div>
+        </div>
+        
+        <div class="header-right">
+            <div class="progress-info">
+                <span id="progressText">0%</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
                 </div>
-                <div class="error-title">${title}</div>
-                <div class="error-text">${message}</div>
-                <button class="action-btn primary" onclick="location.reload()">
-                    <i class="fas fa-refresh"></i>
-                    Reintentar
+            </div>
+            <div class="user-info">
+                <i class="fas fa-user-graduate"></i>
+                {{ user.get_full_name|default:user.username }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón para abrir panel de control -->
+    <button class="panel-toggle" id="panelToggle">
+        <i class="fas fa-cog"></i>
+    </button>
+
+    <!-- Panel de control lateral -->
+    <div class="control-panel" id="controlPanel">
+        <div class="panel-content">
+            <!-- Información del material -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    Información del Material
+                </div>
+                <div class="info-text">
+                    <strong>Tema:</strong> {{ material.topic.title }}<br>
+                    <strong>Curso:</strong> {{ material.topic.course.name }}<br>
+                    <strong>Tipo:</strong> Material SCORM Interactivo<br>
+                    <strong>Estado:</strong> 
+                    <span class="status-badge active" id="statusBadge">
+                        <i class="fas fa-play"></i>
+                        En progreso
+                    </span>
+                </div>
+            </div>
+
+            <!-- Tiempo y progreso -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <i class="fas fa-clock"></i>
+                    Tiempo de Estudio
+                </div>
+                <div class="time-display" id="timeDisplay">00:00:00</div>
+            </div>
+
+            <!-- Controles de navegación -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <i class="fas fa-gamepad"></i>
+                    Controles de Navegación
+                </div>
+                <button class="control-btn" onclick="reloadContent()">
+                    <i class="fas fa-redo"></i>
+                    Reiniciar contenido
+                </button>
+                <button class="control-btn" onclick="toggleFullscreen()">
+                    <i class="fas fa-expand"></i>
+                    Pantalla completa
+                </button>
+                <button class="control-btn" onclick="printContent()">
+                    <i class="fas fa-print"></i>
+                    Imprimir/Guardar
                 </button>
             </div>
-        `;
-        scormViewer.style.display = 'none';
-        scormViewer.parentNode.insertAdjacentHTML('beforeend', errorHtml);
-        loadingOverlay.classList.add('hidden');
-    }
-    
-    // Seguimiento de progreso
-    function startProgressTracking() {
-        progressTimer = setInterval(() => {
-            updateSessionTime();
-            
-            // Solo simular progreso mínimo si no hay progreso del iframe
-            if (currentProgress === 0) {
-                // Progreso muy lento basado en tiempo (solo como backup)
-                let timeProgress = Math.floor((Date.now() - sessionStartTime) / 60000); // 1% por minuto máximo 10%
-                if (timeProgress > 0 && timeProgress <= 10) {
-                    currentProgress = timeProgress;
-                    updateProgress(currentProgress);
+
+            <!-- Acciones principales -->
+            <div class="panel-section">
+                <div class="section-title">
+                    <i class="fas fa-check-circle"></i>
+                    Finalizar Estudio
+                </div>
+                <button class="control-btn success" onclick="markAsCompleted()">
+                    <i class="fas fa-check"></i>
+                    Marcar como completado
+                </button>
+                <button class="control-btn primary" onclick="saveProgress()">
+                    <i class="fas fa-save"></i>
+                    Guardar progreso
+                </button>
+                <a href="{% url 'portfolios:student_topic_detail' material.topic.id %}" class="control-btn" style="text-decoration: none;">
+                    <i class="fas fa-list"></i>
+                    Ver Materiales
+                </a>
+                <a href="{% url 'portfolios:student_portfolio_detail_by_course' material.topic.portfolio.id material.topic.course.id %}" class="control-btn" style="text-decoration: none;">
+                    <i class="fas fa-folder-open"></i>
+                    Ir al Portafolio
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor del SCORM -->
+    <div class="scorm-container" id="scormContainer">
+        <!-- Overlay de carga -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Cargando contenido educativo...</div>
+        </div>
+        
+        <!-- Iframe del contenido SCORM -->
+        <iframe 
+            id="scormViewer" 
+            src="{% url 'scorm_packager:scorm_content_viewer_raw' package.id %}"
+            title="Contenido SCORM - {{ package.title }}"
+            scrolling="auto">
+        </iframe>
+    </div>
+
+    <script>
+        // Variables globales
+        let startTime = Date.now();
+        let currentProgress = 0;
+        let isCompleted = false;
+        let progressTimer;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeInterface();
+            startProgressTracking();
+        });
+
+        function initializeInterface() {
+            const scormViewer = document.getElementById('scormViewer');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const panelToggle = document.getElementById('panelToggle');
+            const controlPanel = document.getElementById('controlPanel');
+            const scormContainer = document.getElementById('scormContainer');
+
+            // Configurar iframe
+            scormViewer.onload = function() {
+                setTimeout(() => {
+                    loadingOverlay.style.display = 'none';
+                }, 1500);
+            };
+
+            // Toggle del panel de control
+            panelToggle.addEventListener('click', function() {
+                const isOpen = controlPanel.classList.contains('open');
+                
+                if (isOpen) {
+                    controlPanel.classList.remove('open');
+                    scormContainer.classList.remove('with-panel');
+                    panelToggle.innerHTML = '<i class="fas fa-cog"></i>';
+                } else {
+                    controlPanel.classList.add('open');
+                    scormContainer.classList.add('with-panel');
+                    panelToggle.innerHTML = '<i class="fas fa-times"></i>';
                 }
+            });
+
+            // Cerrar panel al hacer clic fuera en móvil
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    if (!controlPanel.contains(e.target) && !panelToggle.contains(e.target)) {
+                        controlPanel.classList.remove('open');
+                        scormContainer.classList.remove('with-panel');
+                        panelToggle.innerHTML = '<i class="fas fa-cog"></i>';
+                    }
+                }
+            });
+        }
+
+        function startProgressTracking() {
+            progressTimer = setInterval(() => {
+                updateTimeDisplay();
+                
+                // Simular progreso basado en tiempo (como respaldo)
+                if (currentProgress < 100 && !isCompleted) {
+                    const timeSpent = (Date.now() - startTime) / 1000;
+                    const timeProgress = Math.min(Math.floor(timeSpent / 60), 95); // 1% por minuto, máximo 95%
+                    
+                    if (timeProgress > currentProgress) {
+                        currentProgress = timeProgress;
+                        updateProgress(currentProgress);
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateTimeDisplay() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const hours = Math.floor(elapsed / 3600);
+            const minutes = Math.floor((elapsed % 3600) / 60);
+            const seconds = elapsed % 60;
+            
+            const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('timeDisplay').textContent = timeString;
+        }
+
+        function updateProgress(percent) {
+            const clampedPercent = Math.min(100, Math.max(0, percent));
+            document.getElementById('progressFill').style.width = `${clampedPercent}%`;
+            document.getElementById('progressText').textContent = `${Math.round(clampedPercent)}%`;
+            
+            currentProgress = clampedPercent;
+        }
+
+        function reloadContent() {
+            if (confirm('¿Estás seguro de que quieres reiniciar el contenido?')) {
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                document.getElementById('scormViewer').src = document.getElementById('scormViewer').src;
+                currentProgress = 0;
+                updateProgress(0);
+                updateStatus('En progreso', 'active');
             }
+        }
+
+        function toggleFullscreen() {
+            const container = document.getElementById('scormContainer');
             
-            if (currentProgress >= 100) {
-                updateCompletionStatus('Completado');
-                clearInterval(progressTimer);
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {
+                    console.log(`Error al entrar en pantalla completa: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
             }
-        }, 1000);
-    }
-    
-    // Actualizar tiempo de sesión
-    function updateSessionTime() {
-        const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
-        const minutes = Math.floor(elapsed / 60);
-        const seconds = elapsed % 60;
-        sessionTimeEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-    
-    // Actualizar progreso visual
-    function updateProgress(percent) {
-        const clampedPercent = Math.min(100, Math.max(0, percent));
-        progressFill.style.width = `${clampedPercent}%`;
-        progressPercent.textContent = `${Math.round(clampedPercent)}%`;
-    }
-    
-    // Actualizar estado de completación
-    function updateCompletionStatus(status) {
-        completionStatusEl.textContent = status;
-        
-        // Cambiar color según el estado
-        completionStatusEl.className = '';
-        if (status === 'Completado') {
-            completionStatusEl.style.color = 'var(--success-color)';
-        } else if (status === 'En progreso') {
-            completionStatusEl.style.color = 'var(--warning-color)';
-        } else {
-            completionStatusEl.style.color = 'inherit';
         }
-    }
-    
-    // Toggle sidebar
-    function toggleSidebar() {
-        sidebar.classList.toggle('collapsed');
-        const icon = sidebarToggle.querySelector('i');
-        
-        if (sidebar.classList.contains('collapsed')) {
-            icon.className = 'fas fa-chevron-right';
-        } else {
-            icon.className = 'fas fa-chevron-left';
-        }
-    }
-    
-    // Toggle sidebar móvil
-    function toggleMobileSidebar() {
-        sidebar.classList.toggle('mobile-open');
-        sidebarOverlay.classList.toggle('active');
-    }
-    
-    // Cerrar sidebar móvil
-    function closeMobileSidebar() {
-        sidebar.classList.remove('mobile-open');
-        sidebarOverlay.classList.remove('active');
-    }
-    
-    // Event listeners
-    sidebarToggle.addEventListener('click', toggleSidebar);
-    
-    if (mobileSidebarToggle) {
-        mobileSidebarToggle.addEventListener('click', toggleMobileSidebar);
-    }
-    
-    // Funciones globales
-    window.fullscreenMode = function() {
-        const scormContent = document.querySelector('.scorm-content');
-        if (scormContent.requestFullscreen) {
-            scormContent.requestFullscreen();
-        } else if (scormContent.webkitRequestFullscreen) {
-            scormContent.webkitRequestFullscreen();
-        } else if (scormContent.msRequestFullscreen) {
-            scormContent.msRequestFullscreen();
-        }
-    };
-    
-    window.restartContent = function() {
-        if (confirm('¿Estás seguro de que quieres reiniciar el contenido?')) {
-            currentProgress = 0;
-            sessionStartTime = Date.now();
-            updateProgress(0);
-            updateCompletionStatus('Reiniciando...');
-            isContentLoaded = false;
-            
-            // Mostrar loading y recargar
-            loadingOverlay.classList.remove('hidden');
-            scormViewer.src = 'about:blank';
-            
-            // Recargar contenido
-            setTimeout(() => {
-                loadScormContent();
-            }, 500);
-        }
-    };
-    
-    window.goBack = function() {
-        if (confirm('¿Estás seguro de que quieres salir? El progreso se guardará automáticamente.')) {
-            // Guardar progreso antes de salir (implementar según necesidades)
-            saveProgress();
-            window.location.href = '{% url "portfolios:student_topic_detail" topic.id %}';
-        }
-    };
-    
-    window.toggleSidebar = toggleSidebar;
-    
-    // Función para guardar progreso
-    function saveProgress() {
-        // Aquí se implementaría la lógica para guardar el progreso
-        // Esto podría incluir llamadas AJAX al backend
-        const progressData = {
-            packageId: {{ package.id }},
-            progress: currentProgress,
-            timeSpent: Math.floor((Date.now() - sessionStartTime) / 1000),
-            completionStatus: completionStatusEl.textContent
-        };
-        
-        // Guardar en localStorage como respaldo
-        localStorage.setItem(`scorm_progress_{{ package.id }}`, JSON.stringify(progressData));
-        
-        // TODO: Enviar al servidor
-        console.log('Progreso guardado:', progressData);
-    }
-    
-    // Cargar progreso previo si existe
-    function loadPreviousProgress() {
-        const savedProgress = localStorage.getItem(`scorm_progress_{{ package.id }}`);
-        if (savedProgress) {
+
+        function printContent() {
+            const iframe = document.getElementById('scormViewer');
             try {
-                const data = JSON.parse(savedProgress);
-                currentProgress = data.progress || 0;
-                updateProgress(currentProgress);
-                updateCompletionStatus(data.completionStatus || 'No iniciado');
+                iframe.contentWindow.print();
             } catch (e) {
-                console.log('No se pudo cargar el progreso previo');
+                alert('No se puede imprimir este contenido directamente. Use Ctrl+P en el navegador.');
             }
         }
-    }
-    
-    // Guardar progreso periódicamente
-    setInterval(saveProgress, 30000); // Cada 30 segundos
-    
-    // Guardar progreso al salir
-    window.addEventListener('beforeunload', saveProgress);
-    
-    // Manejo de teclas de acceso rápido
-    document.addEventListener('keydown', function(event) {
-        switch(event.key) {
-            case 'Escape':
-                if (confirm('¿Quieres salir del contenido SCORM?')) {
-                    goBack();
-                }
-                break;
-            case 'F11':
-                event.preventDefault();
-                fullscreenMode();
-                break;
-            case 'r':
-                if (event.ctrlKey) {
-                    event.preventDefault();
-                    restartContent();
-                }
-                break;
+
+        function markAsCompleted() {
+            if (confirm('¿Marcar este material como completado?')) {
+                isCompleted = true;
+                currentProgress = 100;
+                updateProgress(100);
+                updateStatus('Completado', 'success');
+                
+                // Enviar al servidor
+                saveProgressToServer();
+                
+                // Mostrar mensaje de éxito
+                alert('¡Material marcado como completado! 🎉\n\nPuedes volver al portafolio para continuar con otros materiales.');
+            }
         }
-    });
-    
-    // Auto-colapsar sidebar en pantallas pequeñas para dar más espacio al SCORM
-    function checkScreenSize() {
-        if (window.innerWidth < 1200 && !sidebar.classList.contains('collapsed')) {
-            toggleSidebar();
+
+        function saveProgress() {
+            // Guardar progreso actual
+            const progressData = {
+                packageId: {{ package.id }},
+                progress: currentProgress,
+                timeSpent: Math.floor((Date.now() - startTime) / 1000),
+                completed: isCompleted
+            };
+            
+            localStorage.setItem(`scorm_progress_{{ package.id }}`, JSON.stringify(progressData));
+            
+            // Mostrar confirmación visual
+            const originalText = event.target.innerHTML;
+            event.target.innerHTML = '<i class="fas fa-check"></i> ¡Guardado!';
+            event.target.style.background = 'var(--success-gradient)';
+            
+            setTimeout(() => {
+                event.target.innerHTML = originalText;
+                event.target.style.background = '';
+            }, 2000);
         }
-    }
-    
-    // Detectar cambios de tamaño de ventana
-    window.addEventListener('resize', checkScreenSize);
-    
-    // Inicialización
-    checkScreenSize();
-    loadPreviousProgress();
-    loadScormContent();
-});
-</script>
-{% endblock %} 
+
+        function saveProgressToServer() {
+            // Implementar llamada AJAX al servidor
+            fetch(`/scorm/packages/{{ package.id }}/save-progress/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+                },
+                body: JSON.stringify({
+                    progress: currentProgress,
+                    timeSpent: Math.floor((Date.now() - startTime) / 1000),
+                    completed: isCompleted
+                })
+            }).catch(err => {
+                console.log('Error guardando progreso:', err);
+            });
+        }
+
+        function updateStatus(text, type) {
+            const badge = document.getElementById('statusBadge');
+            badge.className = `status-badge ${type}`;
+            badge.innerHTML = `<i class="fas fa-${type === 'success' ? 'check' : 'play'}"></i> ${text}`;
+        }
+
+        // Cargar progreso previo si existe
+        function loadPreviousProgress() {
+            const savedProgress = localStorage.getItem(`scorm_progress_{{ package.id }}`);
+            if (savedProgress) {
+                try {
+                    const data = JSON.parse(savedProgress);
+                    currentProgress = data.progress || 0;
+                    isCompleted = data.completed || false;
+                    updateProgress(currentProgress);
+                    
+                    if (isCompleted) {
+                        updateStatus('Completado', 'success');
+                    }
+                } catch (e) {
+                    console.log('Error cargando progreso previo');
+                }
+            }
+        }
+
+        // Guardar progreso automáticamente cada 30 segundos
+        setInterval(saveProgressToServer, 30000);
+
+        // Guardar progreso al salir
+        window.addEventListener('beforeunload', saveProgressToServer);
+
+        // Cargar progreso al iniciar
+        loadPreviousProgress();
+    </script>
+</body>
+</html> 
