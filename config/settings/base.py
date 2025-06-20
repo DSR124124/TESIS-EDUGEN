@@ -178,6 +178,7 @@ LOGOUT_REDIRECT_URL = 'login'
 # Configuración de autenticación
 AUTHENTICATION_BACKENDS = (
     'social_core.backends.google.GoogleOAuth2',
+    'apps.accounts.backends.EmailBackend',  # Backend personalizado para login con email
     'django.contrib.auth.backends.ModelBackend',
 )
 

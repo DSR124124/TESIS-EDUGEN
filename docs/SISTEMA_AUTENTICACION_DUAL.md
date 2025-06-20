@@ -2,117 +2,126 @@
 
 ## 📖 Resumen
 
-El sistema EduGen ahora soporta **3 métodos de autenticación** para estudiantes:
+El sistema EduGen ahora soporta **2 métodos de autenticación** para estudiantes:
 
-1. **Usuario + Contraseña** (tradicional)
-2. **Email + Contraseña** (tradicional)  
-3. **Google OAuth** (social)
+1. **Email + Contraseña** (principal)
+2. **Usuario + Contraseña** (alternativo)
+
+**Nota:** Google OAuth está disponible pero deshabilitado por defecto para estudiantes.
 
 ---
 
 ## 🚀 Cómo Funciona
 
-### **Para Estudiantes:**
+### **Para Estudiantes del 4to F - Polo Jiménez:**
 
-#### Opción 1: Login con Usuario
+#### Opción 1: Login con Email (Recomendado)
 ```
-URL: https://edugen-app-d8ddd4cwfve7bhca.centralus-01.azurewebsites.net/login/
-Usuario: ana_garcia
-Contraseña: estudiante123
-```
-
-#### Opción 2: Login con Email
-```
-URL: https://edugen-app-d8ddd4cwfve7bhca.centralus-01.azurewebsites.net/login/
-Email: ana.garcia@tecnicofap.edu.pe
-Contraseña: estudiante123
+URL: http://127.0.0.1:8000/login/
+Email: 61791657@cased.edu.pe
+Contraseña: 61791657
 ```
 
-#### Opción 3: Login con Google
+#### Opción 2: Login con Usuario (Alternativo)
 ```
-URL: https://edugen-app-d8ddd4cwfve7bhca.centralus-01.azurewebsites.net/login/
-Hacer clic en "Iniciar sesión con Google"
+URL: http://127.0.0.1:8000/login/
+Usuario: carlos_eduardo_serna_ventura
+Contraseña: 61791657
 ```
 
 ---
 
 ## 👨‍💼 Para Directores
 
-### **Crear Estudiante (Interfaz Web):**
+### **Estudiantes Registrados (4to F - Polo Jiménez):**
 
-1. **Ir a:** Director → Estudiantes → Crear
-2. **Completar datos básicos** del estudiante
-3. **Configurar autenticación:**
-   - ✅ **"Generar usuario automáticamente"** = Usuario basado en nombre + DNI
-   - ✅ **"Contraseña predeterminada"** = `estudiante123` (o personalizar)
-   - ❌ **"Vincular con Google"** = Solo si el estudiante tiene Gmail
+Los siguientes 20 estudiantes están registrados y pueden hacer login:
 
-4. **Guardar:** El sistema muestra las credenciales generadas
+| **Nro** | **Nombre Completo** | **Email** | **Contraseña** |
+|---|---|---|---|
+| 1 | Carlos Eduardo Serna Ventura | `61791657@cased.edu.pe` | `61791657` |
+| 2 | Gabriela Isabel Obregón Escudero | `61912715@cased.edu.pe` | `61912715` |
+| 3 | Luciana Brigitte Orejuela Rentería | `61996238@cased.edu.pe` | `61996238` |
+| 4 | Chanel Yazmín Chalco Cardenas | `73921044@cased.edu.pe` | `73921044` |
+| 5 | Brunella Alejandra Ruiz Mera | `61907427@cased.edu.pe` | `61907427` |
+| 6 | Alvaro Fabian Vilca Quiroz | `61912578@cased.edu.pe` | `61912578` |
+| 7 | Mateo Martín Sánchez Sullón | `73724440@cased.edu.pe` | `73724440` |
+| 8 | Gabriela Alexandra Edones Castro | `61933419@cased.edu.pe` | `61933419` |
+| 9 | Valeria Deyanira Saavedra Tavara | `61851650@cased.edu.pe` | `61851650` |
+| 10 | Nicolás Carlos Lazo Adrianzen | `62544018@cased.edu.pe` | `62544018` |
+| 11 | Henry Pabbov Silupú Chavez | `61912911@cased.edu.pe` | `61912911` |
+| 12 | Tiago Arie Mori | `73846445@cased.edu.pe` | `73846445` |
+| 13 | Miguel Ángel Vera Ortiz | `72583221@cased.edu.pe` | `72583221` |
+| 14 | Luis Fernando Cardenas Esculonte | `61792050@cased.edu.pe` | `61792050` |
+| 15 | Adrianna Alessandra Beaumont Narro | `61851954@cased.edu.pe` | `61851954` |
+| 16 | Dominyk Emmanuel Zaga Toro | `73400838@cased.edu.pe` | `73400838` |
+| 17 | José Alonso Arica Paxi | `73839017@cased.edu.pe` | `73839017` |
+| 18 | Saul Santiago Reyes Ramos | `73718377@cased.edu.pe` | `73718377` |
+| 19 | Yaritza Thais Torres Ramírez | `61792348@cased.edu.pe` | `61792348` |
+| 20 | Ariana Valentina Ortega Falconi | `73914527@cased.edu.pe` | `73914527` |
 
-### **Comandos de Django (SSH/Console):**
-
-```bash
-# Crear estudiantes de ejemplo
-python manage.py manage_students --create
-
-# Listar todos los estudiantes
-python manage.py manage_students --list
-
-# Resetear todas las contraseñas
-python manage.py manage_students --reset-passwords
-
-# Habilitar Google OAuth para un estudiante
-python manage.py manage_students --enable-google ana.garcia@tecnicofap.edu.pe
-
-# Deshabilitar Google OAuth
-python manage.py manage_students --disable-google ana.garcia@tecnicofap.edu.pe
-```
-
----
-
-## 🔧 Scripts Disponibles
-
-### **1. Crear Estudiantes Masivamente:**
-```bash
-python scripts/create_students_with_passwords.py
-```
-
-### **2. Resetear Contraseñas:**
-```bash
-python scripts/create_students_with_passwords.py --reset
-```
-
-### **3. Probar Autenticación:**
-```bash
-python scripts/test_student_authentication.py
-```
+### **Información del Aula:**
+- **Institución:** TÉCNICO FAP MANUEL POLO JIMÉNEZ
+- **Grado:** 4to (CUARTO)
+- **Sección:** F
+- **Estudiantes:** 21/30 (incluyendo a Gabriela Isabel)
+- **Edades:** 15-16 años
 
 ---
 
-## 📊 Ejemplos de Credenciales
+## 🔧 Comandos de Verificación
 
-| Estudiante | Usuario | Email | Contraseña | Google |
-|------------|---------|-------|------------|---------|
-| Ana García | `ana_garcia` | `ana.garcia@tecnicofap.edu.pe` | `estudiante123` | ❌ |
-| Carlos Mendoza | `carlos_mendoza` | `carlos.mendoza@tecnicofap.edu.pe` | `estudiante123` | ❌ |
-| Sofía Hernández | `sofia_hernandez` | `sofia.hernandez@tecnicofap.edu.pe` | `estudiante123` | ❌ |
+### **Verificar estudiantes del 4to F:**
+```bash
+python manage.py shell -c "
+from apps.academic.models import Section, Enrollment;
+seccion_f = Section.objects.filter(name='F', grade__name='CUARTO').first();
+enrollments = Enrollment.objects.filter(section=seccion_f, status='ACTIVE');
+print(f'Estudiantes en 4to F: {enrollments.count()}');
+[print(f'{i+1}. {e.student.user.get_full_name()} - {e.student.user.email}') for i, e in enumerate(enrollments)]
+"
+```
+
+### **Probar autenticación de un estudiante:**
+```bash
+python manage.py shell -c "
+from django.contrib.auth import authenticate;
+user = authenticate(username='61791657@cased.edu.pe', password='61791657');
+print(f'Login exitoso: {user is not None}');
+print(f'Usuario: {user.get_full_name() if user else \"Error\"}')
+"
+```
+
+### **Listar todos los estudiantes activos:**
+```bash
+python manage.py shell -c "
+from django.contrib.auth import get_user_model;
+User = get_user_model();
+students = User.objects.filter(role='student', is_active=True);
+print(f'Total estudiantes activos: {students.count()}');
+[print(f'- {s.get_full_name()} ({s.email})') for s in students[:10]]
+"
+```
 
 ---
 
 ## 🔐 Configuración de Seguridad
 
-### **Contraseñas por Defecto:**
-- **Estudiantes:** `estudiante123`
-- **Profesores:** `profesor123`
-- **Director:** `director123`
+### **Contraseñas Actuales:**
+- **Patrón:** Cada estudiante usa su código/número como contraseña
+- **Ejemplo:** Email `61791657@cased.edu.pe` → Contraseña `61791657`
 
 ### **Generación de Usuarios:**
-- **Formato:** `primera_letra_nombre + dni`
-- **Ejemplo:** Ana García (DNI: 12345678) → `a12345678`
+- **Formato:** `nombre_apellido_normalizado`
+- **Ejemplo:** Carlos Eduardo Serna Ventura → `carlos_eduardo_serna_ventura`
 
 ### **Emails Institucionales:**
-- **Formato:** `nombre.apellido@tecnicofap.edu.pe`
-- **Ejemplo:** Ana García → `ana.garcia@tecnicofap.edu.pe`
+- **Formato:** `codigo@cased.edu.pe`
+- **Ejemplo:** `61791657@cased.edu.pe`
+
+### **Google OAuth:**
+- **Estado:** Deshabilitado por defecto
+- **Campo:** `google_account_linked = False` para todos los estudiantes
 
 ---
 
@@ -121,140 +130,197 @@ python scripts/test_student_authentication.py
 ### **Backend de Autenticación:**
 ```python
 AUTHENTICATION_BACKENDS = (
-    'social_core.backends.google.GoogleOAuth2',  # Google OAuth
-    'django.contrib.auth.backends.ModelBackend',  # Usuario/Email + Contraseña
+    'social_core.backends.google.GoogleOAuth2',  # Google OAuth (disponible)
+    'apps.accounts.backends.EmailBackend',       # Backend personalizado para email
+    'django.contrib.auth.backends.ModelBackend', # Usuario + Contraseña tradicional
 )
 ```
 
-### **Template de Login:**
-- Formulario tradicional + Botón Google OAuth
-- Validación client-side y server-side
-- Mensajes de error personalizados
+### **Backend Personalizado (EmailBackend):**
+```python
+class EmailBackend(ModelBackend):
+    """
+    Backend que permite login con email o username
+    """
+    def authenticate(self, request, username=None, password=None, **kwargs):
+        try:
+            # Buscar usuario por email o username
+            user = User.objects.get(
+                Q(email=username) | Q(username=username)
+            )
+        except User.DoesNotExist:
+            return None
+        
+        if user.check_password(password) and user.is_active:
+            return user
+        return None
+```
 
-### **Modelos:**
+### **Modelos Actualizados:**
 ```python
 # Usuario
 class CustomUser:
-    username = CharField()  # Para login tradicional
-    email = EmailField()    # Para login por email
-    password = CharField()  # Hash de contraseña
-    role = CharField()      # 'student', 'teacher', 'director'
+    username = CharField()  # carlos_eduardo_serna_ventura
+    email = EmailField()    # 61791657@cased.edu.pe
+    password = CharField()  # Hash de 61791657
+    role = CharField()      # 'student'
 
 # Estudiante
 class Student:
-    google_account_linked = BooleanField()  # ¿Usa Google OAuth?
-    google_account = EmailField()           # Email de Google
-    google_linked_at = DateTimeField()      # Cuándo se vinculó
+    dni = CharField()                    # 72345698
+    birth_date = DateField()             # 2009-05-15 (15 años)
+    google_account_linked = BooleanField()  # False
+    google_account = EmailField()           # NULL
 ```
 
 ---
 
 ## 🔄 Flujo de Autenticación
 
-### **Login Tradicional:**
-1. Usuario ingresa credenciales
-2. Django valida contra `ModelBackend`
-3. Si es válido → Redirige al dashboard
-4. Si es inválido → Muestra error
+### **Login con Email (Principal):**
+1. Usuario ingresa: `61791657@cased.edu.pe`
+2. Usuario ingresa: `61791657`
+3. `EmailBackend` busca usuario por email
+4. Valida contraseña hasheada
+5. Si es válido → Redirige al dashboard de estudiante
+6. Si es inválido → Muestra "Credenciales incorrectas"
 
-### **Login con Google:**
-1. Usuario hace clic en "Google"
-2. Redirección a Google OAuth
-3. Google retorna datos del usuario
-4. Pipeline personalizado valida
-5. Si existe cuenta → Login exitoso
-6. Si no existe → Error de autorización
-
----
-
-## 📱 Uso Diario
-
-### **Estudiantes SIN Gmail:**
-```
-1. Ir a: https://tu-app.azurewebsites.net/login/
-2. Introducir: Usuario o Email
-3. Introducir: Contraseña (predeterminada)
-4. Click: "Iniciar Sesión"
-```
-
-### **Estudiantes CON Gmail:**
-```
-1. Ir a: https://tu-app.azurewebsites.net/login/
-2. Click: "Iniciar sesión con Google"
-3. Autorizar aplicación en Google
-4. Acceso automático al dashboard
-```
+### **Login con Username (Alternativo):**
+1. Usuario ingresa: `carlos_eduardo_serna_ventura`
+2. Usuario ingresa: `61791657`
+3. `EmailBackend` busca usuario por username
+4. Valida contraseña hasheada
+5. Login exitoso → Dashboard
 
 ---
 
-## ⚡ Beneficios
+## 📱 Uso Diario para Estudiantes
 
-✅ **Flexibilidad:** Múltiples métodos de acceso  
-✅ **Simplicidad:** Contraseñas fáciles de recordar  
-✅ **Escalabilidad:** Creación masiva de usuarios  
-✅ **Seguridad:** Validación en múltiples capas  
+### **Acceso Recomendado:**
+```
+1. Ir a: http://127.0.0.1:8000/login/
+2. En "Usuario o Email": Introducir tu email (ej: 61791657@cased.edu.pe)
+3. En "Contraseña": Introducir tu código (ej: 61791657)
+4. Click: "Ingresar"
+5. Acceso automático al dashboard de estudiante
+```
+
+### **Credenciales de Ejemplo:**
+```
+✅ Carlos Eduardo:
+   Email: 61791657@cased.edu.pe
+   Contraseña: 61791657
+
+✅ Gabriela Isabel: 
+   Email: 61912715@cased.edu.pe
+   Contraseña: 61912715
+
+✅ Luciana Brigitte:
+   Email: 61996238@cased.edu.pe
+   Contraseña: 61996238
+```
+
+---
+
+## ⚡ Beneficios del Sistema Actual
+
+✅ **Simplicidad:** Email = Contraseña fácil de recordar  
+✅ **Flexibilidad:** Login con email o username  
+✅ **Seguridad:** Contraseñas hasheadas con PBKDF2  
+✅ **Escalabilidad:** Backend personalizado robusto  
 ✅ **Usabilidad:** Interface moderna e intuitiva  
+✅ **Mantenibilidad:** Código limpio y documentado  
 
 ---
 
 ## 🆘 Resolución de Problemas
 
-### **Error: "Usuario o contraseña incorrectos"**
-- ✅ Verificar que el usuario existe: `python manage.py manage_students --list`
-- ✅ Resetear contraseña: `python manage.py manage_students --reset-passwords`
+### **Error: "Credenciales incorrectas"**
+1. ✅ Verificar que el email sea exacto: `61791657@cased.edu.pe`
+2. ✅ Verificar que la contraseña sea exacta: `61791657`
+3. ✅ Probar con username en lugar de email
+4. ✅ Verificar que el usuario esté activo
 
-### **Error: "Access Denied" con Google**
-- ✅ Verificar que la cuenta Google está vinculada
-- ✅ Usar login tradicional como alternativa
+### **Error: "Usuario no encontrado"**
+1. ✅ Verificar en admin Django si existe el usuario
+2. ✅ Verificar que tenga rol 'student'
+3. ✅ Verificar que tenga perfil Student asociado
 
-### **Error: "Perfil de estudiante no encontrado"**
-- ✅ Verificar que existe perfil Student asociado
-- ✅ Crear perfil desde el admin Django
+### **Error: "Sin permisos para acceder"**
+1. ✅ Verificar que `user.is_active = True`
+2. ✅ Verificar que `user.role = 'student'`
+3. ✅ Verificar que existe matrícula activa
 
 ---
 
 ## 📞 Comandos de Emergencia
 
+### **Resetear contraseña de un estudiante:**
 ```bash
-# En Azure SSH Console
-
-# Activar todos los estudiantes
-python3 -c "
-from apps.academic.models import Student
-for s in Student.objects.all():
-    s.user.is_active = True
-    s.user.set_password('estudiante123')
-    s.user.save()
-    print(f'✅ {s.user.get_full_name()}')
+python manage.py shell -c "
+from django.contrib.auth import get_user_model;
+User = get_user_model();
+user = User.objects.get(email='61791657@cased.edu.pe');
+user.set_password('61791657');
+user.save();
+print('✅ Contraseña reseteada')
 "
+```
 
-# Crear estudiante específico
-python3 -c "
-from django.contrib.auth import get_user_model
-from apps.academic.models import Student
-User = get_user_model()
+### **Activar todos los estudiantes:**
+```bash
+python manage.py shell -c "
+from django.contrib.auth import get_user_model;
+User = get_user_model();
+students = User.objects.filter(role='student');
+for user in students:
+    user.is_active = True;
+    user.save();
+print(f'✅ {students.count()} estudiantes activados')
+"
+```
 
-user = User.objects.create_user(
-    username='test_student',
-    email='test@tecnicofap.edu.pe',
-    password='estudiante123',
-    first_name='Test',
-    last_name='Student',
-    role='student'
-)
-
-Student.objects.create(
-    user=user,
-    dni='99999999',
-    birth_date='2005-01-01',
-    guardian_name='Test Guardian',
-    guardian_phone='999999999'
-)
-print(f'✅ Usuario creado: test_student / estudiante123')
+### **Verificar estado de un estudiante:**
+```bash
+python manage.py shell -c "
+from django.contrib.auth import get_user_model, authenticate;
+from apps.academic.models import Student;
+User = get_user_model();
+email = '61791657@cased.edu.pe';
+user = User.objects.get(email=email);
+student = Student.objects.get(user=user);
+auth = authenticate(username=email, password='61791657');
+print(f'Usuario: {user.get_full_name()}');
+print(f'Activo: {user.is_active}');
+print(f'Rol: {user.role}');
+print(f'DNI: {student.dni}');
+print(f'Login funciona: {auth is not None}')
 "
 ```
 
 ---
 
+## 🏫 Información Institucional
+
+### **Institución:**
+- **Nombre:** TÉCNICO FAP MANUEL POLO JIMÉNEZ
+- **Código:** POLO-JIMENEZ
+- **Dominio:** @cased.edu.pe
+
+### **Estructura Académica:**
+- **Nivel:** Secundaria
+- **Grado:** 4to (CUARTO)
+- **Secciones:** A, B, C, F
+- **Capacidad por sección:** 30 estudiantes
+
+### **Estado Actual:**
+- **Sección F:** 21 estudiantes registrados
+- **Todos activos:** ✅
+- **Todos pueden hacer login:** ✅
+- **Edades:** 15-16 años
+
+---
+
 **✅ Sistema de autenticación dual implementado y funcionando**  
-*Fecha: Junio 2025 | Versión: 2.0* 
+*Última actualización: Junio 2025 | Versión: 3.0*  
+*Configurado para: 4to F - Polo Jiménez (21 estudiantes)* 

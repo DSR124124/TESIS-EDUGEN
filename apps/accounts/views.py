@@ -62,50 +62,41 @@ class CustomLoginView(LoginView):
         return context
 
     def form_valid(self, form):
-        email = form.cleaned_data.get('username')
+        email_or_username = form.cleaned_data.get('username')
         password = form.cleaned_data.get('password')
         
         # Log para debugging
         logger.info(f"=== INTENTO DE LOGIN ===")
-        logger.info(f"Email ingresado: {email}")
+        logger.info(f"Email/Username ingresado: {email_or_username}")
         
-        User = get_user_model()
-        try:
-            user = User.objects.get(email=email)
-            logger.info(f"Usuario encontrado: {user.username}")
-            logger.info(f"Usuario activo: {user.is_active}")
-            logger.info(f"Usuario rol: {user.role}")
-            logger.info(f"Usuario staff: {user.is_staff}")
-            logger.info(f"Usuario superuser: {user.is_superuser}")
+        # Usar el sistema de autenticación con nuestro backend personalizado
+        auth_user = authenticate(
+            self.request,
+            username=email_or_username,  # Nuestro backend personalizado manejará email o username
+            password=password
+        )
+        
+        if auth_user is not None:
+            logger.info("=== AUTENTICACIÓN EXITOSA ===")
+            logger.info(f"Usuario autenticado: {auth_user.username}")
+            logger.info(f"Usuario activo: {auth_user.is_active}")
+            logger.info(f"Usuario rol: {auth_user.role}")
             
-            # Intentar autenticar
-            auth_user = authenticate(
-                self.request,
-                username=user.username,
-                password=password
-            )
+            # Hacer login
+            login(self.request, auth_user)
             
-            if auth_user is not None:
-                logger.info("=== AUTENTICACIÓN EXITOSA ===")
-                logger.info(f"Usuario autenticado: {auth_user.username}")
-                
-                # Hacer login manualmente en lugar de llamar al método padre
-                login(self.request, auth_user)
-                
-                # Log adicional después del login
-                logger.info(f"Usuario en request después del login: {self.request.user}")
-                logger.info(f"Usuario autenticado en request: {self.request.user.is_authenticated}")
-                
-                # Calcular y redirigir a la URL correcta directamente
-                success_url_name = self.calculate_success_url()
-                logger.info(f"URL de redirección calculada: {success_url_name}")
-                
-                # Devolver redirección directa usando el nombre de la URL
-                return redirect(success_url_name)
-            else:
-                logger.warning("Autenticación fallida - contraseña incorrecta")
-        except User.DoesNotExist:
-            logger.warning(f"Usuario no encontrado con email: {email}")
+            # Log adicional después del login
+            logger.info(f"Usuario en request después del login: {self.request.user}")
+            logger.info(f"Usuario autenticado en request: {self.request.user.is_authenticated}")
+            
+            # Calcular y redirigir a la URL correcta directamente
+            success_url_name = self.calculate_success_url()
+            logger.info(f"URL de redirección calculada: {success_url_name}")
+            
+            # Devolver redirección directa usando el nombre de la URL
+            return redirect(success_url_name)
+        else:
+            logger.warning(f"Autenticación fallida para: {email_or_username}")
         
         messages.error(self.request, 'Usuario o contraseña incorrectos.')
         return self.form_invalid(form)
