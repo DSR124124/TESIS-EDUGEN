@@ -1,21 +1,22 @@
-# 📚 Manual de Implementación - Sistema Educativo EduGen en Azure
+# ☁️ Manual de Despliegue Azure - Sistema EduGen
 
-## 🎯 Guía Completa de Configuración y Despliegue
+## 🎯 Guía Específica para Azure App Service
+
+> **Nota:** Para instalación desde cero, consulta `MANUAL_DESPLIEGUE_COMPLETO.md`
 
 ---
 
 ## 📋 Tabla de Contenidos
 
-1. [Requisitos Previos](#requisitos-previos)
-2. [Configuración del Proyecto Django](#configuración-del-proyecto-django)
-3. [Configuración de Azure App Service](#configuración-de-azure-app-service)
-4. [Configuración de Base de Datos PostgreSQL](#configuración-de-base-de-datos-postgresql)
-5. [Configuración de Archivos Estáticos y Media](#configuración-de-archivos-estáticos-y-media)
-6. [Variables de Entorno](#variables-de-entorno)
-7. [Proceso de Despliegue](#proceso-de-despliegue)
-8. [Configuración de Usuarios y Permisos](#configuración-de-usuarios-y-permisos)
-9. [Resolución de Problemas Comunes](#resolución-de-problemas-comunes)
-10. [Mantenimiento y Monitoreo](#mantenimiento-y-monitoreo)
+1. [Preparación para Azure](#1-preparación-para-azure)
+2. [Configuración de Azure Resources](#2-configuración-de-azure-resources)
+3. [Configuración de Base de Datos PostgreSQL](#3-configuración-de-base-de-datos-postgresql)
+4. [Configuración de App Service](#4-configuración-de-app-service)
+5. [Variables de Entorno](#5-variables-de-entorno)
+6. [Despliegue desde GitHub](#6-despliegue-desde-github)
+7. [Configuración Post-Despliegue](#7-configuración-post-despliegue)
+8. [Monitoreo y Logs](#8-monitoreo-y-logs)
+9. [Solución de Problemas Azure](#9-solución-de-problemas-azure)
 
 ---
 
