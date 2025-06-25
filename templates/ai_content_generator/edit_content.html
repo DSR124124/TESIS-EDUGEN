@@ -385,6 +385,24 @@
         border-radius: 0 0 8px 8px;
     }
     
+    /* Estilos para imágenes seleccionables */
+    .selectable-image {
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+        cursor: pointer !important;
+        border-radius: 4px;
+    }
+    
+    .selectable-image:hover {
+        border: 2px solid #007bff !important;
+        box-shadow: 0 2px 8px rgba(0,123,255,0.3) !important;
+    }
+    
+    .selectable-image.selected {
+        border: 2px solid #007bff !important;
+        box-shadow: 0 2px 12px rgba(0,123,255,0.5) !important;
+    }
+    
     /* Column specific colors */
     .tool-column:nth-child(1) .tool-column-title:after {
         background: #ff6b35; /* Formato - Naranja */
@@ -896,6 +914,158 @@
     
     .control-btn-danger:hover {
         background: #c82333;
+    }
+    
+    /* Nuevos estilos para controles mejorados */
+    .size-preset-btn {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        justify-content: center;
+    }
+    
+    .size-preset-btn:hover {
+        background: #005CFF;
+        color: white;
+        border-color: #005CFF;
+    }
+    
+    .align-btn {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .align-btn:hover {
+        background: #005CFF;
+        color: white;
+        border-color: #005CFF;
+    }
+    
+    .align-btn.active {
+        background: #005CFF;
+        color: white;
+        border-color: #005CFF;
+    }
+    
+    .control-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 6px;
+        border-radius: 3px;
+        background: #dee2e6;
+        outline: none;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+    
+    .control-slider:hover {
+        opacity: 1;
+    }
+    
+    .control-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #005CFF;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+            .control-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #005CFF;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Estilos para imágenes redimensionables mejorados */
+        .resizable-image {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .resizable-image:hover {
+            box-shadow: 0 4px 12px rgba(0, 92, 255, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .resizable-image.selected {
+            box-shadow: 0 0 0 3px rgba(0, 92, 255, 0.3);
+            border-radius: 8px;
+        }
+        
+        .resizable-image img {
+            transition: all 0.2s ease;
+        }
+        
+        .resizable-image:hover img {
+            opacity: 0.95;
+        }
+        
+        .resize-handles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .resizable-image:hover .resize-handles,
+        .resizable-image.selected .resize-handles {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .resize-handle {
+            position: absolute;
+            background: #005CFF;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            cursor: pointer;
+            pointer-events: auto;
+        }
+        
+        .resize-handle:hover {
+            background: #0046CC;
+            transform: scale(1.2);
+        }
+        
+        .resize-handle.nw { top: -6px; left: -6px; cursor: nw-resize; }
+        .resize-handle.ne { top: -6px; right: -6px; cursor: ne-resize; }
+        .resize-handle.sw { bottom: -6px; left: -6px; cursor: sw-resize; }
+        .resize-handle.se { bottom: -6px; right: -6px; cursor: se-resize; }
+        .resize-handle.n { top: -6px; left: 50%; transform: translateX(-50%); cursor: n-resize; }
+        .resize-handle.s { bottom: -6px; left: 50%; transform: translateX(-50%); cursor: s-resize; }
+        .resize-handle.w { top: 50%; left: -6px; transform: translateY(-50%); cursor: w-resize; }
+        .resize-handle.e { top: 50%; right: -6px; transform: translateY(-50%); cursor: e-resize; }
 }
 </style>
 {% endblock %}
@@ -1185,39 +1355,72 @@
     <input type="hidden" name="formatted_content" id="contentFormatted">
 </form>
 
-<!-- Panel de Control de Imágenes -->
+<!-- Panel de Control de Imágenes Mejorado -->
 <div id="imageControls" class="image-controls">
     <h4><i class="fas fa-image"></i> Control de Imagen</h4>
     
     <div class="control-group">
-        <label>Ancho (px)</label>
-        <input type="number" id="imageWidth" class="control-input" min="20" max="2000" step="1" placeholder="Ej: 500">
-    </div>
-    
-    <div class="control-group">
-        <label>Alto (px)</label>
-        <input type="number" id="imageHeight" class="control-input" min="20" max="1500" step="1" placeholder="Ej: 300">
+        <label>📏 Dimensiones</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <input type="number" id="imageWidth" class="control-input" min="20" max="2000" step="1" placeholder="Ancho" style="flex: 1;">
+            <span style="color: #666; font-size: 12px;">×</span>
+            <input type="number" id="imageHeight" class="control-input" min="20" max="1500" step="1" placeholder="Alto" style="flex: 1;">
+        </div>
+        <div class="image-info" id="imageInfo" style="font-size: 11px; color: #666; margin-top: 4px;"></div>
     </div>
     
     <div class="control-group">
         <label>
             <input type="checkbox" id="maintainAspectRatio" checked style="margin-right: 6px;">
-            Mantener proporción
+            🔗 Mantener proporción
         </label>
     </div>
     
     <div class="control-group">
-        <label>Alineación</label>
-        <select id="imageAlignment" class="control-input">
-            <option value="left">Izquierda</option>
-            <option value="center">Centro</option>
-            <option value="right">Derecha</option>
-        </select>
+        <label>📐 Tamaño Predefinido</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
+            <button class="size-preset-btn" onclick="applyPresetSize('small')">
+                <i class="fas fa-compress"></i> Pequeña
+            </button>
+            <button class="size-preset-btn" onclick="applyPresetSize('medium')">
+                <i class="fas fa-expand-arrows-alt"></i> Mediana
+            </button>
+            <button class="size-preset-btn" onclick="applyPresetSize('large')">
+                <i class="fas fa-expand"></i> Grande
+            </button>
+            <button class="size-preset-btn" onclick="applyPresetSize('original')">
+                <i class="fas fa-undo"></i> Original
+            </button>
+        </div>
     </div>
     
     <div class="control-group">
-        <label>Borde (px)</label>
-        <input type="number" id="imageBorder" class="control-input" min="0" max="10" value="0">
+        <label>📍 Alineación</label>
+        <div style="display: flex; gap: 4px;">
+            <button class="align-btn" onclick="applyImageAlignment('left')" data-align="left">
+                <i class="fas fa-align-left"></i>
+            </button>
+            <button class="align-btn" onclick="applyImageAlignment('center')" data-align="center">
+                <i class="fas fa-align-center"></i>
+            </button>
+            <button class="align-btn" onclick="applyImageAlignment('right')" data-align="right">
+                <i class="fas fa-align-right"></i>
+            </button>
+        </div>
+    </div>
+    
+    <div class="control-group">
+        <label>🎨 Estilo</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <label style="font-size: 12px; color: #666;">Borde:</label>
+            <input type="range" id="imageBorder" class="control-slider" min="0" max="10" value="0" style="flex: 1;">
+            <span id="borderValue" style="font-size: 12px; color: #666; min-width: 25px;">0px</span>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+            <label style="font-size: 12px; color: #666;">Redondeo:</label>
+            <input type="range" id="imageBorderRadius" class="control-slider" min="0" max="20" value="4" style="flex: 1;">
+            <span id="radiusValue" style="font-size: 12px; color: #666; min-width: 25px;">4px</span>
+        </div>
     </div>
     
     <div class="control-buttons">
@@ -1240,18 +1443,23 @@
 </div>
 
 <script>
+// Variables globales
+let iframe = null;
+let iframeDoc = null;
+let originalContent = '';
+let isInitialized = false;
+let selectedImage = null;
+let isResizing = false;
+let resizeStartData = {};
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Inicializando editor con herramientas de trabajo...');
     
-    const iframe = document.getElementById('contentEditor');
+    iframe = document.getElementById('contentEditor');
     const btnSaveContent = document.getElementById('btnSaveContent');
     const btnSaveContent2 = document.getElementById('btnSaveContent2');
     const loadingOverlay = document.getElementById('loadingOverlay');
     const wordCount = document.getElementById('wordCount');
-    
-    let iframeDoc = null;
-    let originalContent = '';
-    let isInitialized = false;
     
     // Initialize iframe content
     function initializeIframe() {
@@ -1261,41 +1469,45 @@ document.addEventListener('DOMContentLoaded', function() {
         let formattedContent = `{{ content.formatted_content|safe|escapejs }}`;
         let rawContent = `{{ content.raw_content|safe|escapejs }}`;
         
-        // Check if formatted content is incomplete (has empty containers or only institutional header)
+        // Check if formatted content is incomplete (has empty containers)
         let isFormattedIncomplete = (
             // Empty main container
             formattedContent.includes('<div class="main-container"></div>') ||
             (formattedContent.includes('main-container">') && formattedContent.replace(/\s/g, '').includes('main-container"></div>')) ||
-            // Only institutional header without educational content
-            (formattedContent.includes('institutional-header') && 
-             !formattedContent.includes('ecuaciones') && 
-             !formattedContent.includes('ECUACIONES') &&
-             !formattedContent.includes('ejercicio') &&
-             !formattedContent.includes('actividad') &&
-             !formattedContent.includes('ejemplo') &&
-             formattedContent.length < 15000)
+            // Very short content (likely just structure)
+            formattedContent.length < 500 ||
+            // Only whitespace or basic HTML structure
+            formattedContent.trim().replace(/<[^>]*>/g, '').trim().length < 100
         );
         
-        if (isFormattedIncomplete && rawContent && rawContent.length > 1000) {
-            console.log('📝 Formatted content incompleto detectado, usando raw_content para edición');
+        // Debug logging
+        console.log('📊 Content analysis:', {
+            formattedLength: formattedContent.length,
+            rawLength: rawContent.length,
+            isFormattedIncomplete: isFormattedIncomplete,
+            contentId: {{ content.id }}
+        });
+        
+        if (isFormattedIncomplete && rawContent && rawContent.length > 500) {
+            console.log('📝 Using raw_content for editing (formatted content is incomplete)');
             originalContent = rawContent;
-        } else if (isFormattedIncomplete || (!formattedContent.includes('ecuaciones') && !formattedContent.includes('ECUACIONES'))) {
-            // Ambos contenidos están incompletos - mostrar mensaje informativo
-            console.log('⚠️ Contenido incompleto detectado en ID {{ content.id }}');
+        } else if (isFormattedIncomplete && (!rawContent || rawContent.length < 100)) {
+            // Both contents are incomplete - show informative message
+            console.log('⚠️ Both formatted and raw content appear incomplete for ID {{ content.id }}');
             originalContent = `
                 <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin: 20px;">
                     <h2 style="color: #856404; margin-bottom: 20px;">⚠️ Contenido Incompleto</h2>
                     <p style="color: #856404; font-size: 16px; margin-bottom: 15px;">
-                        <strong>El contenido "${content.title}" no se ha generado completamente.</strong>
+                        <strong>El contenido "{{ content.title|escapejs }}" no se ha generado completamente.</strong>
                     </p>
                     <p style="color: #856404; margin-bottom: 20px;">
-                        Solo se generó la estructura HTML básica sin el contenido educativo sobre <strong>ECUACIONES LINEALES</strong>.
+                        Parece que solo se generó la estructura básica sin el contenido educativo principal.
                     </p>
                     <div style="background: white; padding: 15px; border-radius: 6px; margin: 20px 0;">
                         <h4 style="color: #856404; margin-bottom: 10px;">🔄 Opciones disponibles:</h4>
                         <ol style="text-align: left; color: #856404; margin: 0; padding-left: 20px;">
                             <li>Volver a la lista de contenidos y regenerar este material</li>
-                            <li>Crear un nuevo contenido sobre ECUACIONES LINEALES</li>
+                            <li>Crear un nuevo contenido sobre este tema</li>
                             <li>Contactar al administrador del sistema</li>
                         </ol>
                     </div>
@@ -1305,7 +1517,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
         } else {
-            originalContent = formattedContent;
+            // Use the best available content
+            originalContent = formattedContent.length > rawContent.length ? formattedContent : rawContent;
+                         console.log('📝 Using content for editing:', formattedContent.length > rawContent.length ? 'formatted' : 'raw');
         }
         
         // Create complete HTML document for iframe
@@ -1489,6 +1703,13 @@ ${originalContent}
                     
                     // Fix broken images to prevent network errors
                     fixBrokenImages();
+                    
+                    // Make all images selectable
+                    setTimeout(() => {
+                        makeImagesSelectable();
+                        initializeImageControls();
+                        console.log('Sistema de control de imágenes inicializado');
+                    }, 300);
                     
                     // Mark as initialized
                     isInitialized = true;
@@ -1795,6 +2016,247 @@ ${originalContent}
     }, 500);
     
     console.log('Editor configurado');
+    
+    // Función de depuración para probar el sistema de imágenes
+    window.debugImageSystem = function() {
+        console.log('=== DEBUG IMAGE SYSTEM ===');
+        console.log('iframe:', iframe);
+        console.log('iframeDoc:', iframeDoc);
+        console.log('isInitialized:', isInitialized);
+        console.log('iframe es nulo?', iframe === null);
+        console.log('iframeDoc es nulo?', iframeDoc === null);
+        
+        const imageControls = document.getElementById('imageControls');
+        console.log('imageControls panel:', imageControls);
+        
+        if (iframeDoc) {
+            const allImages = iframeDoc.querySelectorAll('img');
+            console.log('Images found in iframe:', allImages.length);
+            allImages.forEach((img, index) => {
+                console.log(`Image ${index}:`, img, 'ID:', img.id, 'Classes:', img.className);
+            });
+            
+            const selectableImages = iframeDoc.querySelectorAll('.selectable-image');
+            console.log('Selectable images:', selectableImages.length);
+        } else {
+            console.log('iframeDoc is null, cannot query images');
+        }
+        
+        console.log('selectedImage actual:', selectedImage);
+        console.log('typeof selectedImage:', typeof selectedImage);
+        
+        // Verificar selectedImage después de un pequeño delay
+        setTimeout(() => {
+            console.log('selectedImage después de timeout:', selectedImage);
+        }, 100);
+        
+        console.log('=== END DEBUG ===');
+    };
+    
+    // Llamar debug después de 2 segundos
+    setTimeout(() => {
+        debugImageSystem();
+        
+        // Verificar y crear panel si no existe
+        const imageControls = document.getElementById('imageControls');
+        if (!imageControls) {
+            console.log('Panel de control no encontrado, creando panel de emergencia...');
+            createImageControlsPanel();
+        }
+    }, 2000);
+    
+    // Función de prueba manual
+    window.testImageSelection = function() {
+        console.log('=== TEST MANUAL ===');
+        
+        if (!iframeDoc) {
+            console.error('iframe no disponible para test');
+            return;
+        }
+        
+        const firstImage = iframeDoc.querySelector('img');
+        if (firstImage) {
+            console.log('Probando selección de primera imagen:', firstImage);
+            selectImage(firstImage);
+        } else {
+            console.error('No hay imágenes para probar');
+        }
+    };
+    
+    // Función para verificar elementos del DOM
+    window.checkDOMElements = function() {
+        console.log('=== CHECK DOM ELEMENTS ===');
+        
+        const imageControls = document.getElementById('imageControls');
+        console.log('imageControls panel:', imageControls);
+        
+        const imageWidth = document.getElementById('imageWidth');
+        console.log('imageWidth input:', imageWidth);
+        
+        const imageHeight = document.getElementById('imageHeight');
+        console.log('imageHeight input:', imageHeight);
+        
+        const imageInfo = document.getElementById('imageInfo');
+        console.log('imageInfo element:', imageInfo);
+        
+        if (imageControls) {
+            console.log('Panel existe! Clases:', imageControls.className);
+            console.log('Panel styles:', window.getComputedStyle(imageControls).display);
+            console.log('Panel visible:', imageControls.offsetWidth > 0 && imageControls.offsetHeight > 0);
+        }
+        
+        console.log('=== END CHECK DOM ===');
+    };
+    
+    // Función de emergencia para crear el panel si no existe
+    window.createImageControlsPanel = function() {
+        console.log('=== CREANDO PANEL DE EMERGENCIA ===');
+        
+        // Verificar si ya existe
+        let existingPanel = document.getElementById('imageControls');
+        if (existingPanel) {
+            console.log('Panel ya existe:', existingPanel);
+            return;
+        }
+        
+        // Crear el panel manualmente
+        const panel = document.createElement('div');
+        panel.id = 'imageControls';
+        panel.className = 'image-controls';
+        panel.innerHTML = `
+            <h4><i class="fas fa-image"></i> Control de Imagen</h4>
+            
+            <div class="control-group">
+                <label>📏 Dimensiones</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="number" id="imageWidth" class="control-input" min="20" max="2000" step="1" placeholder="Ancho" style="flex: 1;">
+                    <span style="color: #666; font-size: 12px;">×</span>
+                    <input type="number" id="imageHeight" class="control-input" min="20" max="1500" step="1" placeholder="Alto" style="flex: 1;">
+                </div>
+                <div class="image-info" id="imageInfo" style="font-size: 11px; color: #666; margin-top: 4px;"></div>
+            </div>
+            
+            <div class="control-group">
+                <label>
+                    <input type="checkbox" id="maintainAspectRatio" checked style="margin-right: 6px;">
+                    🔗 Mantener proporción
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <label>📍 Alineación</label>
+                <div style="display: flex; gap: 4px; justify-content: center;">
+                    <button class="align-btn active" onclick="applyImageAlignment('left')" data-align="left" style="padding: 8px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-align-left"></i>
+                    </button>
+                    <button class="align-btn" onclick="applyImageAlignment('center')" data-align="center" style="padding: 8px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-align-center"></i>
+                    </button>
+                    <button class="align-btn" onclick="applyImageAlignment('right')" data-align="right" style="padding: 8px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 4px; cursor: pointer;">
+                        <i class="fas fa-align-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>🎨 Estilo</label>
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px;">
+                    <label style="font-size: 12px; color: #666;">Borde:</label>
+                    <input type="range" id="imageBorder" min="0" max="10" value="0" style="flex: 1;">
+                    <span id="borderValue" style="font-size: 12px; color: #666; min-width: 25px;">0px</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <label style="font-size: 12px; color: #666;">Redondeo:</label>
+                    <input type="range" id="imageBorderRadius" min="0" max="20" value="4" style="flex: 1;">
+                    <span id="radiusValue" style="font-size: 12px; color: #666; min-width: 25px;">4px</span>
+                </div>
+            </div>
+            
+            <div class="control-buttons">
+                <button class="control-btn control-btn-primary" onclick="applyImageChanges()">
+                    <i class="fas fa-check"></i> Aplicar
+                </button>
+                <button class="control-btn control-btn-secondary" onclick="closeImageControls()">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
+        `;
+        
+        // Agregar estilos necesarios
+        panel.style.cssText = `
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            width: 280px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 9999;
+            font-family: Arial, sans-serif;
+            display: none;
+        `;
+        
+        // Agregar al body
+        document.body.appendChild(panel);
+        
+        console.log('Panel de emergencia creado:', panel);
+        
+        // Agregar estilos CSS para los botones de alineación
+        const style = document.createElement('style');
+        style.textContent = `
+            .align-btn {
+                transition: all 0.2s ease;
+            }
+            .align-btn:hover {
+                background: #e9ecef !important;
+                border-color: #adb5bd !important;
+            }
+            .align-btn.active {
+                background: #007bff !important;
+                color: white !important;
+                border-color: #007bff !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Configurar la clase show
+        panel.classList.add = function(className) {
+            if (className === 'show') {
+                this.style.display = 'block';
+            }
+        };
+        
+        panel.classList.remove = function(className) {
+            if (className === 'show') {
+                this.style.display = 'none';
+            }
+        };
+        
+        // Configurar event listeners para sliders
+        setTimeout(() => {
+            const borderSlider = document.getElementById('imageBorder');
+            const radiusSlider = document.getElementById('imageBorderRadius');
+            
+            if (borderSlider) {
+                borderSlider.addEventListener('input', function() {
+                    const borderValue = document.getElementById('borderValue');
+                    if (borderValue) borderValue.textContent = this.value + 'px';
+                });
+            }
+            
+            if (radiusSlider) {
+                radiusSlider.addEventListener('input', function() {
+                    const radiusValue = document.getElementById('radiusValue');
+                    if (radiusValue) radiusValue.textContent = this.value + 'px';
+                });
+            }
+        }, 100);
+        
+        console.log('Panel de emergencia configurado exitosamente');
+    };
 });
 
 // File upload functions
@@ -1907,10 +2369,34 @@ window.handleImageUpload = function(input) {
                 // Create unique ID for the image
                 const imageId = 'img_' + Date.now();
                 
-                                    // Insert resizable image into editor
+                // Crear imagen temporal para obtener dimensiones naturales
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    const naturalWidth = tempImg.width;
+                    const naturalHeight = tempImg.height;
+                    
+                    // Determinar tamaño inicial inteligente
+                    let initialWidth = naturalWidth;
+                    let initialHeight = naturalHeight;
+                    
+                    // Auto-ajustar si la imagen es muy grande
+                    const maxWidth = 600; // Máximo ancho permitido
+                    const maxHeight = 400; // Máximo alto permitido
+                    
+                    if (naturalWidth > maxWidth) {
+                        initialWidth = maxWidth;
+                        initialHeight = Math.round((maxWidth / naturalWidth) * naturalHeight);
+                    }
+                    
+                    if (initialHeight > maxHeight) {
+                        initialHeight = maxHeight;
+                        initialWidth = Math.round((maxHeight / initialHeight) * naturalWidth);
+                    }
+                    
+                    // Insert resizable image into editor with smart sizing
                     const imgHTML = `
-                        <div class="resizable-image" id="${imageId}" onclick="parent.selectImage('${imageId}')">
-                            <img src="${base64Data}" alt="${file.name}" style="max-width: 100%; height: auto; border-radius: 4px; display: block;">
+                        <div class="resizable-image" id="${imageId}" onclick="parent.selectImage('${imageId}')" style="margin: 10px 0; text-align: left;">
+                            <img src="${base64Data}" alt="${file.name}" style="width: ${initialWidth}px; height: ${initialHeight}px; border-radius: 4px; display: block; cursor: pointer; transition: all 0.2s ease;">
                             <div class="resize-handles">
                                 <div class="resize-handle nw" onmousedown="parent.startResize(event, '${imageId}', 'nw')"></div>
                                 <div class="resize-handle ne" onmousedown="parent.startResize(event, '${imageId}', 'ne')"></div>
@@ -1923,7 +2409,12 @@ window.handleImageUpload = function(input) {
                             </div>
                         </div>
                     `;
-                formatText('insertHTML', imgHTML);
+                    
+                    formatText('insertHTML', imgHTML);
+                    
+                                         console.log(`Imagen insertada: ${file.name} (${naturalWidth}×${naturalHeight} → ${initialWidth}×${initialHeight})`);
+                };
+                tempImg.src = base64Data;
                 
                 // Reset progress bar
                 setTimeout(() => {
@@ -1947,59 +2438,258 @@ window.handleImageUpload = function(input) {
 };
 
 // Image resizing and control functions
-let selectedImage = null;
-let isResizing = false;
-let resizeStartData = {};
+// Variables moved to global scope
 
 // Select image function
 window.selectImage = function(imageId) {
+    console.log('=== selectImage llamada ===');
+    console.log('imageId recibido:', imageId, typeof imageId);
+    
     try {
+        if (!iframeDoc) {
+            console.error('iframeDoc no está disponible en selectImage');
+            return;
+        }
+        
+        console.log('iframeDoc disponible en selectImage');
+        
         // Remove selection from all images
-        const allImages = iframeDoc.querySelectorAll('.resizable-image');
+        const allImages = iframeDoc.querySelectorAll('.resizable-image, img');
+        console.log(`Removiendo selección de ${allImages.length} imágenes`);
         allImages.forEach(img => img.classList.remove('selected'));
         
         // Select clicked image
-        const image = iframeDoc.getElementById(imageId);
+        let image = null;
+        
+        if (typeof imageId === 'string') {
+            image = iframeDoc.getElementById(imageId);
+            console.log('Buscando por ID:', imageId, 'Encontrada:', image);
+        } else if (typeof imageId === 'object' && imageId.tagName) {
+            image = imageId; // El imageId es el elemento directamente
+            console.log('Usando elemento directo:', image);
+        }
+        
         if (image) {
+            console.log('Imagen encontrada, aplicando selección...');
             image.classList.add('selected');
             selectedImage = image;
-            showImageControls(image);
             
-            // Add click event to iframe to handle clicks within iframe
-            const iframeWindow = iframe.contentWindow;
-            if (iframeWindow) {
-                iframeWindow.addEventListener('click', function(e) {
-                    if (!e.target.closest('.resizable-image')) {
-                        closeImageControls();
-                    }
-                });
-            }
+            console.log('Llamando a showImageControls...');
+            const controlsResult = showImageControls(image);
+            console.log('Resultado de showImageControls:', controlsResult);
+            
+            console.log('Imagen seleccionada exitosamente:', image);
+        } else {
+            console.error('No se encontró imagen:', imageId);
         }
+        
     } catch (error) {
-        console.error('Error selecting image:', error);
+        console.error('Error en selectImage:', error);
     }
 };
 
+// Función para hacer todas las imágenes del iframe seleccionables
+function makeImagesSelectable() {
+    console.log('=== makeImagesSelectable llamada ===');
+    
+    if (!iframeDoc) {
+        console.error('iframeDoc no está disponible en makeImagesSelectable');
+        return;
+    }
+    
+    console.log('iframeDoc disponible:', iframeDoc);
+    
+    // Buscar todas las imágenes en el iframe
+    const allImages = iframeDoc.querySelectorAll('img');
+    console.log(`Encontradas ${allImages.length} imágenes en el iframe`);
+    
+    let processedCount = 0;
+    
+    allImages.forEach((img, index) => {
+        console.log(`Procesando imagen ${index}:`, img);
+        
+        // Si la imagen ya tiene un contenedor resizable, saltar
+        if (img.closest('.resizable-image')) {
+            console.log(`Imagen ${index} ya tiene contenedor resizable, saltando`);
+            return;
+        }
+        
+        // Crear ID único si no tiene
+        if (!img.id) {
+            img.id = 'img_existing_' + index + '_' + Date.now();
+            console.log(`Asignado ID: ${img.id}`);
+        }
+        
+        // Remover listeners previos para evitar duplicados
+        img.removeEventListener('click', handleImageClick);
+        
+        // Agregar evento de click
+        img.addEventListener('click', handleImageClick);
+        
+        // Agregar cursor pointer
+        img.style.cursor = 'pointer';
+        
+        // Agregar clase para estilos
+        img.classList.add('selectable-image');
+        
+        processedCount++;
+        console.log(`Imagen ${index} procesada exitosamente`);
+    });
+    
+    console.log(`Hecho seleccionables ${processedCount} imágenes de ${allImages.length} totales`);
+}
+
+// Función separada para manejar clicks en imágenes
+function handleImageClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('=== CLICK EN IMAGEN ===');
+    console.log('Imagen clickeada:', this);
+    console.log('Event:', e);
+    
+    selectImage(this);
+}
+
+// Initialize image control events
+function initializeImageControls() {
+    // Close controls when clicking outside in iframe
+    if (iframeDoc) {
+        iframeDoc.addEventListener('click', function(e) {
+            // If clicking on an image, don't close controls
+            if (e.target.tagName === 'IMG' || e.target.closest('.resizable-image')) {
+                return;
+            }
+            // Close controls if clicking elsewhere
+            closeImageControls();
+        });
+    }
+    
+    // Close controls when clicking outside in parent window
+    document.addEventListener('click', function(e) {
+        // Don't close if clicking on the controls panel itself
+        if (e.target.closest('#imageControls')) {
+            return;
+        }
+        // Don't close if clicking on an iframe image
+        if (e.target.closest('iframe')) {
+            return;
+        }
+        closeImageControls();
+    });
+    
+    console.log('Image control events initialized');
+}
+
 // Show image controls panel
 function showImageControls(image) {
-    const controls = document.getElementById('imageControls');
-    const img = image.querySelector('img');
+    console.log('=== showImageControls llamada ===');
+    console.log('Imagen recibida:', image);
     
-    if (img) {
-        // Get current dimensions
-        const rect = img.getBoundingClientRect();
-        document.getElementById('imageWidth').value = Math.round(img.offsetWidth);
-        document.getElementById('imageHeight').value = Math.round(img.offsetHeight);
+    try {
+        const controls = document.getElementById('imageControls');
+        console.log('Panel de control encontrado:', controls);
         
-        // Get current alignment
-        const parentStyle = image.style.textAlign || 'left';
-        document.getElementById('imageAlignment').value = parentStyle;
+        if (!controls) {
+            console.error('Panel de control de imagen no encontrado en el DOM!');
+            return { success: false, error: 'Panel no encontrado' };
+        }
+    
+    // Determinar si es un img directo o dentro de un contenedor
+    let img = image;
+    if (image.tagName !== 'IMG') {
+        img = image.querySelector('img');
+        console.log('Buscando img dentro del contenedor:', img);
+    } else {
+        console.log('Es un elemento img directo');
+    }
+    
+    if (!img) {
+        console.error('No se encontró elemento img en showImageControls');
+        return;
+    }
+    
+    console.log('Elemento img encontrado:', img);
+    
+    // Get current dimensions
+    const currentWidth = Math.round(img.offsetWidth);
+    const currentHeight = Math.round(img.offsetHeight);
+    
+    console.log(`Dimensiones actuales: ${currentWidth}x${currentHeight}`);
+    
+    const widthInput = document.getElementById('imageWidth');
+    const heightInput = document.getElementById('imageHeight');
+    
+    if (widthInput && heightInput) {
+        widthInput.value = currentWidth;
+        heightInput.value = currentHeight;
+        console.log('Campos de dimensiones actualizados');
+    } else {
+        console.error('Campos de entrada de dimensiones no encontrados:', widthInput, heightInput);
+    }
+    
+    // Update image info
+    const imageInfo = document.getElementById('imageInfo');
+    if (imageInfo) {
+        if (img.naturalWidth && img.naturalHeight) {
+            imageInfo.textContent = `Original: ${img.naturalWidth}×${img.naturalHeight} | Actual: ${currentWidth}×${currentHeight}`;
+        } else {
+            imageInfo.textContent = `Actual: ${currentWidth}×${currentHeight}`;
+        }
+        console.log('Información de imagen actualizada');
+    } else {
+        console.error('Elemento imageInfo no encontrado');
+    }
+    
+    // Get current alignment and update buttons
+    const parent = img.parentElement;
+    const computedStyle = window.getComputedStyle(parent);
+    const textAlign = computedStyle.textAlign || parent.style.textAlign || 'left';
+    
+    document.querySelectorAll('.align-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    const activeBtn = document.querySelector(`[data-align="${textAlign}"]`);
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+        console.log('Botón de alineación activado:', textAlign);
+    }
+    
+    // Get current border and radius
+    const borderWidth = parseInt(img.style.borderWidth) || 0;
+    const borderRadius = parseInt(img.style.borderRadius) || 4;
+    
+    const borderInput = document.getElementById('imageBorder');
+    const radiusInput = document.getElementById('imageBorderRadius');
+    const borderValue = document.getElementById('borderValue');
+    const radiusValue = document.getElementById('radiusValue');
+    
+    if (borderInput && radiusInput && borderValue && radiusValue) {
+        borderInput.value = borderWidth;
+        radiusInput.value = borderRadius;
+        borderValue.textContent = borderWidth + 'px';
+        radiusValue.textContent = borderRadius + 'px';
+        console.log('Controles de borde actualizados');
+    } else {
+        console.error('Controles de borde no encontrados');
+    }
+    
+    // Mostrar el panel
+    console.log('Mostrando panel de control...');
+    controls.classList.add('show');
+    
+    // Verificar que se mostró
+    setTimeout(() => {
+        const isVisible = controls.classList.contains('show');
+        console.log('Panel visible después de mostrar:', isVisible);
+        console.log('Estilos del panel:', window.getComputedStyle(controls).display);
+    }, 100);
+    
+        console.log('showImageControls completado exitosamente');
+        return { success: true };
         
-        // Get current border
-        const borderWidth = parseInt(img.style.borderWidth) || 0;
-        document.getElementById('imageBorder').value = borderWidth;
-        
-        controls.classList.add('show');
+    } catch (error) {
+        console.error('Error en showImageControls:', error);
+        return { success: false, error: error.message };
     }
 }
 
@@ -2023,12 +2713,42 @@ window.applyImageChanges = function() {
         return;
     }
     
-    const img = selectedImage.querySelector('img');
-    const width = parseInt(document.getElementById('imageWidth').value);
-    const height = parseInt(document.getElementById('imageHeight').value);
-    const alignment = document.getElementById('imageAlignment').value;
-    const border = parseInt(document.getElementById('imageBorder').value) || 0;
-    const maintainRatio = document.getElementById('maintainAspectRatio').checked;
+    // Determinar si es un img directo o dentro de un contenedor
+    let img = selectedImage;
+    if (selectedImage.tagName !== 'IMG') {
+        img = selectedImage.querySelector('img');
+    }
+    
+    if (!img) {
+        console.error('No se encontró elemento img para aplicar cambios');
+        return;
+    }
+    
+    // Verificar que los elementos del panel existen, si no, usar valores por defecto
+    const widthElement = document.getElementById('imageWidth');
+    const heightElement = document.getElementById('imageHeight');
+    const borderElement = document.getElementById('imageBorder');
+    const maintainRatioElement = document.getElementById('maintainAspectRatio');
+    
+    if (!widthElement || !heightElement) {
+        console.error('Panel de control no encontrado. Creando panel de emergencia...');
+        createImageControlsPanel();
+        
+        // Intentar de nuevo después de crear el panel
+        setTimeout(() => {
+            applyImageChanges();
+        }, 100);
+        return;
+    }
+    
+    const width = parseInt(widthElement.value) || img.offsetWidth;
+    const height = parseInt(heightElement.value) || img.offsetHeight;
+    const border = parseInt(borderElement ? borderElement.value : 0) || 0;
+    const maintainRatio = maintainRatioElement ? maintainRatioElement.checked : false;
+    
+    // Para alineación, detectar el botón activo
+    const activeAlignBtn = document.querySelector('.align-btn.active');
+    const alignment = activeAlignBtn ? activeAlignBtn.getAttribute('data-align') : 'left';
     
     console.log(`Applying changes: ${width}x${height}, align: ${alignment}, border: ${border}, ratio: ${maintainRatio}`);
     
@@ -2076,8 +2796,17 @@ window.applyImageChanges = function() {
         // Apply border
         if (border > 0) {
             img.style.border = border + 'px solid #dee2e6';
-    } else {
+        } else {
             img.style.border = 'none';
+        }
+        
+        // Apply border radius
+        const borderRadiusElement = document.getElementById('imageBorderRadius');
+        const borderRadius = parseInt(borderRadiusElement ? borderRadiusElement.value : 0) || 0;
+        if (borderRadius > 0) {
+            img.style.borderRadius = borderRadius + 'px';
+        } else {
+            img.style.borderRadius = '0px';
         }
     }
 };
@@ -2097,10 +2826,15 @@ window.resetImageSize = function() {
         selectedImage.style.margin = '10px 0';
         
         // Update controls with natural dimensions
-        document.getElementById('imageWidth').value = img.naturalWidth;
-        document.getElementById('imageHeight').value = img.naturalHeight;
-        document.getElementById('imageAlignment').value = 'left';
-        document.getElementById('imageBorder').value = 0;
+        const widthControl = document.getElementById('imageWidth');
+        const heightControl = document.getElementById('imageHeight');
+        const alignmentControl = document.getElementById('imageAlignment');
+        const borderControl = document.getElementById('imageBorder');
+        
+        if (widthControl) widthControl.value = img.naturalWidth;
+        if (heightControl) heightControl.value = img.naturalHeight;
+        if (alignmentControl) alignmentControl.value = 'left';
+        if (borderControl) borderControl.value = 0;
         
         console.log(`Image reset to natural size: ${img.naturalWidth}x${img.naturalHeight}`);
     }
@@ -2190,10 +2924,159 @@ function initializeImageControls() {
     const imageBorder = document.getElementById('imageBorder');
     if (imageBorder) {
         imageBorder.addEventListener('input', function() {
+            document.getElementById('borderValue').textContent = this.value + 'px';
             if (selectedImage) {
                 applyImageChanges();
             }
         });
+    }
+    
+    const imageBorderRadius = document.getElementById('imageBorderRadius');
+    if (imageBorderRadius) {
+        imageBorderRadius.addEventListener('input', function() {
+            document.getElementById('radiusValue').textContent = this.value + 'px';
+            if (selectedImage) {
+                applyImageChanges();
+            }
+        });
+    }
+}
+
+// Nueva función para aplicar tamaños predefinidos
+window.applyPresetSize = function(preset) {
+    if (!selectedImage) return;
+    
+    // Determinar si es un img directo o dentro de un contenedor
+    let img = selectedImage;
+    if (selectedImage.tagName !== 'IMG') {
+        img = selectedImage.querySelector('img');
+    }
+    
+    if (!img) return;
+    
+    const naturalWidth = img.naturalWidth || img.offsetWidth;
+    const naturalHeight = img.naturalHeight || img.offsetHeight;
+    let newWidth, newHeight;
+    
+    switch (preset) {
+        case 'small':
+            newWidth = Math.min(naturalWidth, 200);
+            newHeight = Math.round(newWidth * (naturalHeight / naturalWidth));
+            break;
+        case 'medium':
+            newWidth = Math.min(naturalWidth, 400);
+            newHeight = Math.round(newWidth * (naturalHeight / naturalWidth));
+            break;
+        case 'large':
+            newWidth = Math.min(naturalWidth, 600);
+            newHeight = Math.round(newWidth * (naturalHeight / naturalWidth));
+            break;
+        case 'original':
+            newWidth = naturalWidth;
+            newHeight = naturalHeight;
+            break;
+        default:
+            return;
+    }
+    
+    // Actualizar campos de input
+    document.getElementById('imageWidth').value = newWidth;
+    document.getElementById('imageHeight').value = newHeight;
+    
+    // Aplicar cambios
+    applyImageChanges();
+    
+    console.log(`Applied preset "${preset}": ${newWidth}x${newHeight}`);
+};
+
+// Nueva función para aplicar alineación de imagen
+window.applyImageAlignment = function(alignment) {
+    if (!selectedImage) return;
+    
+    // Actualizar estado visual de botones
+    document.querySelectorAll('.align-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-align="${alignment}"]`).classList.add('active');
+    
+    // Determinar el elemento a alinear
+    let elementToAlign = selectedImage;
+    if (selectedImage.tagName === 'IMG') {
+        // Para imágenes directas, trabajar con el elemento padre o crear un wrapper
+        const parent = selectedImage.parentElement;
+        if (parent && parent.tagName !== 'BODY') {
+            elementToAlign = parent;
+        } else {
+            // Crear wrapper si es necesario
+            const wrapper = iframeDoc.createElement('div');
+            wrapper.style.textAlign = alignment;
+            selectedImage.parentNode.insertBefore(wrapper, selectedImage);
+            wrapper.appendChild(selectedImage);
+            elementToAlign = wrapper;
+        }
+    }
+    
+    // Aplicar alineación
+    elementToAlign.style.textAlign = alignment;
+    
+    switch (alignment) {
+        case 'left':
+            elementToAlign.style.display = 'block';
+            elementToAlign.style.margin = '10px 0';
+            elementToAlign.style.marginLeft = '0';
+            elementToAlign.style.marginRight = 'auto';
+            break;
+        case 'center':
+            elementToAlign.style.display = 'block';
+            elementToAlign.style.margin = '10px auto';
+            break;
+        case 'right':
+            elementToAlign.style.display = 'block';
+            elementToAlign.style.margin = '10px 0';
+            elementToAlign.style.marginLeft = 'auto';
+            elementToAlign.style.marginRight = '0';
+            break;
+    }
+    
+    console.log(`Applied alignment: ${alignment}`);
+};
+
+// Función mejorada para mostrar controles de imagen
+function showImageControls(image) {
+    const controls = document.getElementById('imageControls');
+    const img = image.querySelector('img');
+    
+    if (img) {
+        // Get current dimensions
+        const currentWidth = Math.round(img.offsetWidth);
+        const currentHeight = Math.round(img.offsetHeight);
+        
+        document.getElementById('imageWidth').value = currentWidth;
+        document.getElementById('imageHeight').value = currentHeight;
+        
+        // Update image info
+        const imageInfo = document.getElementById('imageInfo');
+        imageInfo.textContent = `Original: ${img.naturalWidth}×${img.naturalHeight} | Actual: ${currentWidth}×${currentHeight}`;
+        
+        // Get current alignment and update buttons
+        const computedStyle = window.getComputedStyle(image);
+        const textAlign = computedStyle.textAlign || 'left';
+        document.querySelectorAll('.align-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        const activeBtn = document.querySelector(`[data-align="${textAlign}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+        
+        // Get current border and radius
+        const borderWidth = parseInt(img.style.borderWidth) || 0;
+        const borderRadius = parseInt(img.style.borderRadius) || 4;
+        
+        document.getElementById('imageBorder').value = borderWidth;
+        document.getElementById('imageBorderRadius').value = borderRadius;
+        document.getElementById('borderValue').textContent = borderWidth + 'px';
+        document.getElementById('radiusValue').textContent = borderRadius + 'px';
+        
+        controls.classList.add('show');
     }
 }
 
@@ -2493,18 +3376,95 @@ window.insertGoogleDrive = function() {
     }
 };
 
+// Función auxiliar para limpiar códigos embed
+function cleanEmbedCode(embedCode) {
+    // Detectar diferentes tipos de embeds y procesarlos
+    
+    // Canva embed
+    if (embedCode.includes('canva.com') && embedCode.includes('iframe')) {
+        const srcMatch = embedCode.match(/src\s*=\s*["']([^"']+)["']/i);
+        if (srcMatch) {
+            return `
+                <div style="margin: 20px 0; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; text-align: center;">
+                    <iframe src="${srcMatch[1]}" style="width: 100%; height: 500px; border: 0;" allowfullscreen></iframe>
+                    <div style="padding: 8px; background: #f8f9fa; font-size: 12px; color: #6c757d;">
+                        <i class="fas fa-external-link-alt"></i> Contenido de Canva
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Google Docs embed
+    if (embedCode.includes('docs.google.com') && embedCode.includes('iframe')) {
+        const srcMatch = embedCode.match(/src\s*=\s*["']([^"']+)["']/i);
+        if (srcMatch) {
+            return `
+                <div style="margin: 20px 0; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+                    <iframe src="${srcMatch[1]}" style="width: 100%; height: 600px; border: 0;"></iframe>
+                    <div style="padding: 8px; background: #f8f9fa; font-size: 12px; color: #6c757d;">
+                        <i class="fab fa-google"></i> Documento de Google
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // YouTube embed (mejor formatting)
+    if (embedCode.includes('youtube.com') || embedCode.includes('youtu.be')) {
+        const srcMatch = embedCode.match(/src\s*=\s*["']([^"']+)["']/i);
+        if (srcMatch) {
+            return `
+                <div style="margin: 20px 0; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                    <iframe src="${srcMatch[1]}" style="width: 100%; height: 315px; border: 0;" allowfullscreen></iframe>
+                </div>
+            `;
+        }
+    }
+    
+    // Fallback para otros embeds
+    const srcMatch = embedCode.match(/src\s*=\s*["']([^"']+)["']/i);
+    if (srcMatch) {
+        return `
+            <div style="margin: 20px 0; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+                <iframe src="${srcMatch[1]}" style="width: 100%; height: 400px; border: 0;" allowfullscreen></iframe>
+            </div>
+        `;
+    }
+    
+    return null;
+}
+
 window.insertInteractiveContent = function(type) {
     let html = '';
     
     switch(type) {
         case 'iframe':
-            const iframeUrl = prompt('URL del sitio web a insertar:');
-            if (iframeUrl) {
-                html = `
-                    <div style="margin: 20px 0; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
-                        <iframe src="${iframeUrl}" style="width: 100%; height: 400px; border: 0;"></iframe>
-                    </div>
-                `;
+            const embedCode = prompt('Pega aquí la URL o el código embed completo (iframe):\n\nEjemplos soportados:\n• Canva\n• Google Docs/Slides\n• YouTube\n• Cualquier URL web');
+            if (embedCode) {
+                // Intentar limpiar el código usando la función auxiliar
+                const cleanedHtml = cleanEmbedCode(embedCode);
+                
+                if (cleanedHtml) {
+                    html = cleanedHtml;
+                } else if (embedCode.includes('<') && embedCode.includes('>')) {
+                    // Es código HTML pero no se pudo procesar - usar regex más simple
+                    const srcMatch = embedCode.match(/src\s*=\s*["']([^"']+)["']/i);
+                    if (srcMatch) {
+                        html = `
+                            <div style="margin: 20px 0; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+                                <iframe src="${srcMatch[1]}" style="width: 100%; height: 400px; border: 0;" allowfullscreen></iframe>
+                            </div>
+                        `;
+                    }
+                } else {
+                    // Es una URL simple
+                    html = `
+                        <div style="margin: 20px 0; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden;">
+                            <iframe src="${embedCode}" style="width: 100%; height: 400px; border: 0;" allowfullscreen></iframe>
+                        </div>
+                    `;
+                }
             }
             break;
         case 'simulation':

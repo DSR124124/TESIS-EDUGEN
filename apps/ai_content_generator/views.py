@@ -3875,38 +3875,78 @@ class ContentPreviewView(View):
             # Remover verificación de referer para permitir iframes
             # Los iframes pueden no enviar referer correctamente
             
-            # Usar exactamente el mismo contenido que la vista de edición
-            # Priorizar formatted_content sobre raw_content para consistencia
-            # EXCEPCIÓN: Para contenido incompleto, usar raw_content si formatted_content no tiene contenido educativo
+            # Usar contenido con lógica mejorada y menos restrictiva
             formatted_content = content.formatted_content or ""
+            raw_content_fallback = content.raw_content or ""
+            
+            # Lógica mejorada para determinar si el contenido está completo
             is_formatted_complete = (
                 formatted_content and 
-                len(formatted_content.strip()) > 1000 and
+                len(formatted_content.strip()) > 500 and  # Reducido de 1000 a 500
                 '<div class="main-container"></div>' not in formatted_content and
                 'main-container">' not in formatted_content.replace(' ', '').replace('\n', '') and
-                # Also check for educational content presence
-                not (
-                    'institutional-header' in formatted_content and
-                    'ecuaciones' not in formatted_content.lower() and
-                    'ejercicio' not in formatted_content.lower() and
-                    'actividad' not in formatted_content.lower() and
-                    'ejemplo' not in formatted_content.lower() and
-                    len(formatted_content) < 15000
-                )
+                # Verificar que hay contenido de texto real (no solo HTML vacío)
+                len(formatted_content.strip().replace('<', '').replace('>', '').replace(' ', '').replace('\n', '')) > 100
             )
+            
+            # Logging para debug
+            logger.info(f"Contenido {pk} - análisis: formatted_len={len(formatted_content)}, raw_len={len(raw_content_fallback)}, is_complete={is_formatted_complete}")
             
             if is_formatted_complete:
                 raw_content = content.formatted_content
+                logger.info(f"Contenido {pk} - usando formatted_content")
+            elif raw_content_fallback and len(raw_content_fallback.strip()) > 100:
+                raw_content = raw_content_fallback
+                logger.info(f"Contenido {pk} - usando raw_content (formatted incompleto)")
             else:
-                logger.info(f"Contenido {pk} - formatted_content incompleto, usando raw_content")
-                raw_content = content.raw_content or content.formatted_content or ""
+                # Usar el mejor contenido disponible
+                raw_content = formatted_content if len(formatted_content) > len(raw_content_fallback) else raw_content_fallback
+                logger.info(f"Contenido {pk} - usando mejor contenido disponible")
             
             if not raw_content.strip():
-                return HttpResponse("""
-                    <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
-                        <h2 style="color: #ffc107;">Sin Contenido</h2>
-                        <p>Este contenido aún no ha sido generado o está vacío.</p>
-                    </div>
+                logger.warning(f"Contenido {pk} está completamente vacío")
+                return HttpResponse(f"""
+                    <!DOCTYPE html>
+                    <html lang="es">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Contenido No Disponible</title>
+                        <style>
+                            body {{
+                                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                                padding: 40px;
+                                text-align: center;
+                                background: #f8f9fa;
+                                color: #333;
+                            }}
+                            .warning-box {{
+                                background: #fff3cd;
+                                border: 2px solid #ffc107;
+                                border-radius: 8px;
+                                padding: 30px;
+                                margin: 20px auto;
+                                max-width: 600px;
+                            }}
+                            h2 {{ color: #856404; margin-bottom: 15px; }}
+                            p {{ color: #856404; margin-bottom: 10px; }}
+                            .content-id {{ font-size: 0.9em; color: #6c757d; }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="warning-box">
+                            <h2>⚠️ Contenido No Disponible</h2>
+                            <p>Este contenido aún no ha sido generado completamente o está vacío.</p>
+                            <p><strong>Qué puedes hacer:</strong></p>
+                            <ul style="text-align: left; max-width: 400px; margin: 0 auto;">
+                                <li>Esperar a que termine la generación</li>
+                                <li>Recargar la página</li>
+                                <li>Volver a la lista de contenidos</li>
+                            </ul>
+                            <p class="content-id">ID: {pk}</p>
+                        </div>
+                    </body>
+                    </html>
                 """)
             
             # Verificar si el contenido ya es HTML completo (puede empezar con meta o html)
@@ -4025,11 +4065,47 @@ class ContentPreviewView(View):
         except Exception as e:
             logger.error(f"Error al mostrar preview del contenido {pk}: {str(e)}")
             return HttpResponse(f"""
-                <div style="padding: 40px; text-align: center; font-family: Arial, sans-serif;">
-                    <h2 style="color: #dc3545;">Error al Cargar Contenido</h2>
-                    <p>Se produjo un error al intentar mostrar el contenido.</p>
-                    <p style="color: #6c757d; font-size: 0.9em;">Error técnico corregido - contenido en modo seguro</p>
-                </div>
+                <!DOCTYPE html>
+                <html lang="es">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Error al Cargar Contenido</title>
+                    <style>
+                        body {{
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            padding: 40px;
+                            text-align: center;
+                            background: #f8f9fa;
+                            color: #333;
+                        }}
+                        .error-box {{
+                            background: #f8d7da;
+                            border: 2px solid #dc3545;
+                            border-radius: 8px;
+                            padding: 30px;
+                            margin: 20px auto;
+                            max-width: 600px;
+                        }}
+                        h2 {{ color: #721c24; margin-bottom: 15px; }}
+                        p {{ color: #721c24; margin-bottom: 10px; }}
+                        .error-details {{ font-size: 0.9em; color: #6c757d; }}
+                    </style>
+                </head>
+                <body>
+                    <div class="error-box">
+                        <h2>❌ Error al Cargar Contenido</h2>
+                        <p>Se produjo un error al intentar mostrar el contenido.</p>
+                        <p><strong>Qué puedes hacer:</strong></p>
+                        <ul style="text-align: left; max-width: 400px; margin: 0 auto;">
+                            <li>Refresca la página</li>
+                            <li>Vuelve a la lista de contenidos</li>
+                            <li>Reporta este error al administrador</li>
+                        </ul>
+                        <p class="error-details">ID: {pk} | Error: {str(e)[:100]}</p>
+                    </div>
+                </body>
+                </html>
             """)
     
     def _clean_content_for_display(self, content: str) -> str:
