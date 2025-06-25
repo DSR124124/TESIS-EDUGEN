@@ -39,4 +39,5 @@ urlpatterns = [
     # Auto Assignment Management (solo vistas que existen realmente)
     path('admin/auto-assignment-monitor/', views.AutoAssignmentMonitorView.as_view(), name='auto_assignment_monitor'),
     path('admin/manual-sync-student/', views.ManualSyncStudentView.as_view(), name='manual_sync_student'),
+    path('admin/repair-scorm-materials/', views.repair_scorm_materials, name='repair_scorm_materials'),
 ] 

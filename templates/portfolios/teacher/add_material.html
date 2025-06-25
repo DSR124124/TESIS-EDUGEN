@@ -201,6 +201,33 @@
         color: white;
     }
     
+    .material-type-card[data-value="SCORM"] {
+        background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+        color: white;
+        border: none;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .material-type-card[data-value="SCORM"]::before {
+        content: '⚡';
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        font-size: 1.2rem;
+        opacity: 0.7;
+    }
+    
+    .material-type-card[data-value="SCORM"]:hover {
+        transform: translateY(-2px) scale(1.05);
+        box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+    }
+    
+    .material-type-card[data-value="SCORM"].active {
+        background: linear-gradient(135deg, #FF4757, #2F3542);
+        box-shadow: 0 10px 25px rgba(255, 71, 87, 0.4);
+    }
+    
     .material-type-card i {
         font-size: 1.1rem;
         margin-bottom: 0.3rem;
@@ -388,6 +415,7 @@
                                                {% elif value == 'EXAMEN' %}fa-file-alt
                                                {% elif value == 'PROYECTO' %}fa-project-diagram
                                                {% elif value == 'LECTURA' %}fa-book
+                                               {% elif value == 'SCORM' %}fa-cube
                                                {% else %}fa-folder{% endif %}"></i>
                                     <div>{{ label }}</div>
                                 </div>
@@ -398,6 +426,23 @@
                                 <option value="{{ value }}">{{ label }}</option>
                                 {% endfor %}
                             </select>
+                            
+                            <!-- Información SCORM -->
+                            <div id="scormInfo" class="alert alert-info mt-3" style="display: none;">
+                                <div class="d-flex align-items-start">
+                                    <i class="fas fa-info-circle me-3 mt-1"></i>
+                                    <div>
+                                        <h6 class="mb-2">📦 ¿Qué es SCORM?</h6>
+                                        <p class="mb-2">SCORM (Sharable Content Object Reference Model) es un estándar para contenido educativo interactivo.</p>
+                                        <ul class="mb-0 small">
+                                            <li><strong>Compatible con LMS:</strong> Funciona en sistemas de gestión de aprendizaje</li>
+                                            <li><strong>Seguimiento:</strong> Registra el progreso y calificaciones del estudiante</li>
+                                            <li><strong>Interactivo:</strong> Incluye elementos multimedia, cuestionarios, simulaciones</li>
+                                            <li><strong>Formato:</strong> Debe ser un archivo ZIP con la estructura SCORM</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Información del Material -->
@@ -426,7 +471,7 @@
                                 <input type="file" class="d-none" id="file" name="file" required>
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 <p class="mb-0">Haz clic o arrastra un archivo aquí</p>
-                                <small class="text-muted">PDF, Word, Excel, PowerPoint, etc. (Máx. 10MB)</small>
+                                <small class="text-muted">PDF, Word, Excel, PowerPoint, ZIP SCORM, etc. (Máx. 10MB)</small>
                             </div>
                             <div id="filePreview" class="mt-3 d-none">
                                 <div class="d-flex align-items-center">
@@ -470,6 +515,27 @@ document.addEventListener('DOMContentLoaded', function() {
             this.classList.add('active');
             // Actualizar el select oculto
             typeSelect.value = this.dataset.value;
+            
+            // Mostrar información específica para SCORM
+            const uploadZone = document.querySelector('.file-upload-zone');
+            const uploadText = uploadZone.querySelector('p');
+            const uploadSubtext = uploadZone.querySelector('small');
+            const scormInfo = document.getElementById('scormInfo');
+            
+            if (this.dataset.value === 'SCORM') {
+                uploadText.innerHTML = '📦 Sube tu archivo ZIP SCORM aquí';
+                uploadSubtext.innerHTML = 'Archivos ZIP SCORM compatibles con LMS (Máx. 10MB)';
+                uploadZone.style.background = 'linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(78, 205, 196, 0.1))';
+                uploadZone.style.borderColor = '#FF6B6B';
+                scormInfo.style.display = 'block';
+                scormInfo.style.animation = 'fadeIn 0.5s ease-out';
+            } else {
+                uploadText.innerHTML = 'Haz clic o arrastra un archivo aquí';
+                uploadSubtext.innerHTML = 'PDF, Word, Excel, PowerPoint, ZIP SCORM, etc. (Máx. 10MB)';
+                uploadZone.style.background = '';
+                uploadZone.style.borderColor = '#e0e0e0';
+                scormInfo.style.display = 'none';
+            }
         });
     });
     

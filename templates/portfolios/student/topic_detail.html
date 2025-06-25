@@ -616,6 +616,49 @@
         transform: translateY(-2px);
         box-shadow: var(--shadow-sm);
     }
+    
+    /* SCORM Specific Styles */
+    .scorm-material {
+        position: relative;
+        border-left: 4px solid #ff6b6b !important;
+        background: linear-gradient(135deg, rgba(255, 107, 107, 0.05), rgba(78, 205, 196, 0.05));
+    }
+    
+    .scorm-material::before {
+        content: '⚡';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.2rem;
+        opacity: 0.7;
+        color: #ff6b6b;
+    }
+    
+    .btn-material-scorm {
+        background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+        color: white;
+        border: none;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-material-scorm:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        color: white;
+    }
+    
+    .scorm-info {
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.2);
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-top: 8px;
+        font-size: 0.85rem;
+        color: #d63031;
+    }
 
     /* Empty States */
     .empty-state {
@@ -983,7 +1026,7 @@
                     </div>
                     <div class="materials-list">
                         {% for material in class_materials %}
-                            <div class="material-item" data-material-id="{{ material.id }}">
+                            <div class="material-item{% if material.is_scorm_package and material.scorm_package %} scorm-material{% endif %}" data-material-id="{{ material.id }}">
                                 <div class="material-header">
                                     <h4 class="material-title">
                                         {{ material.title }}
@@ -1001,7 +1044,12 @@
                                         <i class="fas fa-user-tie"></i>
                                         Material del Profesor
                                     </div>
-                                    {% if material.file %}
+                                    {% if material.is_scorm_package and material.scorm_package %}
+                                    <div class="material-meta-item">
+                                        <i class="fas fa-cube text-warning"></i>
+                                        <span>SCORM Interactivo</span>
+                                    </div>
+                                    {% elif material.file %}
                                     <div class="material-meta-item">
                                         {% with file_ext=material.file.name|slice:"-4:" %}
                                             {% if ".pdf" in file_ext %}
@@ -1029,7 +1077,15 @@
                                 </div>
 
                                                 <div class="material-actions">
-                    {% if material.file %}
+                    {% if material.is_scorm_package and material.scorm_package %}
+                        <!-- Solo mostrar botón SCORM para materiales SCORM -->
+                        <a href="{% url 'scorm_packager:student_scorm_execute' material.scorm_package.id %}" 
+                           class="btn-material btn-material-scorm" target="_blank">
+                            <i class="fas fa-play-circle"></i>
+                            🚀 Ejecutar SCORM
+                        </a>
+                    {% elif material.file %}
+                        <!-- Mostrar botones normales solo para materiales NO-SCORM -->
                         <a href="{{ material.file.url }}" class="btn-material btn-material-primary" target="_blank">
                             <i class="fas fa-eye"></i>
                             Ver Archivo
@@ -1038,17 +1094,6 @@
                             <i class="fas fa-download"></i>
                             Descargar
                         </a>
-                    {% endif %}
-                    {% if material.is_scorm_package and material.scorm_package %}
-                        <a href="{% url 'scorm_packager:student_scorm_execute' material.scorm_package.id %}" 
-                           class="btn-material btn-material-warning" target="_blank">
-                            <i class="fas fa-play-circle"></i>
-                            Ejecutar SCORM
-                        </a>
-                        <small class="text-muted d-block mt-1">
-                            <i class="fas fa-cube"></i>
-                            Contenido interactivo SCORM
-                        </small>
                     {% endif %}
                 </div>
                             </div>
@@ -1080,7 +1125,7 @@
                     </div>
                     <div class="materials-list">
                         {% for material in ai_materials %}
-                            <div class="material-item ai-material" data-material-id="{{ material.id }}">
+                            <div class="material-item ai-material{% if material.is_scorm_package and material.scorm_package %} scorm-material{% endif %}" data-material-id="{{ material.id }}">
                                 <div class="material-header">
                                     <h4 class="material-title">
                                         {{ material.title }}
@@ -1109,7 +1154,12 @@
                                             Material del Profesor
                                         {% endif %}
                                     </div>
-                                    {% if material.file %}
+                                    {% if material.is_scorm_package and material.scorm_package %}
+                                    <div class="material-meta-item">
+                                        <i class="fas fa-cube text-warning"></i>
+                                        <span>SCORM Interactivo</span>
+                                    </div>
+                                    {% elif material.file %}
                                     <div class="material-meta-item">
                                         {% with file_ext=material.file.name|slice:"-4:" %}
                                             {% if ".pdf" in file_ext %}
@@ -1136,7 +1186,15 @@
                                     {% endif %}
                                 </div>
                                 <div class="material-actions">
-                                    {% if material.file %}
+                                    {% if material.is_scorm_package and material.scorm_package %}
+                                        <!-- Solo mostrar botón SCORM para materiales SCORM -->
+                                        <a href="{% url 'scorm_packager:student_scorm_execute' material.scorm_package.id %}" 
+                                           class="btn-material btn-material-scorm" target="_blank">
+                                            <i class="fas fa-play-circle"></i>
+                                            🚀 Ejecutar SCORM
+                                        </a>
+                                    {% elif material.file %}
+                                        <!-- Mostrar botones normales solo para materiales NO-SCORM -->
                                         <a href="{{ material.file.url }}" class="btn-material btn-material-success" target="_blank">
                                             <i class="fas fa-eye"></i>
                                             Ver Archivo
@@ -1145,17 +1203,6 @@
                                             <i class="fas fa-download"></i>
                                             Descargar
                                         </a>
-                                    {% endif %}
-                                    {% if material.is_scorm_package and material.scorm_package %}
-                                        <a href="{% url 'scorm_packager:student_scorm_execute' material.scorm_package.id %}" 
-                                           class="btn-material btn-material-warning" target="_blank">
-                                            <i class="fas fa-play-circle"></i>
-                                            Ejecutar SCORM
-                                        </a>
-                                        <small class="text-muted d-block mt-1">
-                                            <i class="fas fa-cube"></i>
-                                            Contenido interactivo SCORM
-                                        </small>
                                     {% endif %}
                                 </div>
                             </div>

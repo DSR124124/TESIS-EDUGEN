@@ -1,6 +1,11 @@
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+import logging
+
+logger = logging.getLogger(__name__)
 
 class StudentPortfolio(models.Model):
     """Modelo para el portafolio mensual de estudiantes."""
@@ -109,3 +114,81 @@ class PortfolioMaterial(models.Model):
         if self.course_topic:
             return f"{self.title} - {self.course_topic.title} - {self.course_topic.course.name}"
         return f"{self.title} - {self.topic.title} - {self.topic.course.name}"
+
+@receiver(post_save, sender=PortfolioMaterial)
+def auto_process_scorm_material(sender, instance, created, **kwargs):
+    """
+    Signal para procesar automáticamente materiales SCORM cuando se crean
+    """
+    if created and instance.material_type == 'SCORM' and instance.file:
+        # Verificar si es un archivo ZIP
+        if instance.file.name.lower().endswith('.zip'):
+            # Verificar si ya tiene un SCORM package asociado
+            if not hasattr(instance, 'scorm_package') or not instance.scorm_package:
+                try:
+                    from apps.scorm_packager.models import SCORMPackage
+                    from apps.ai_content_generator.models import GeneratedContent, ContentRequest, ContentType
+                    
+                    # Obtener el profesor
+                    teacher = instance.topic.teacher if instance.topic else instance.course_topic.teacher
+                    
+                    # Crear o obtener ContentType para SCORM
+                    content_type, created_type = ContentType.objects.get_or_create(
+                        name='SCORM Package',
+                        defaults={
+                            'description': 'Paquete SCORM interactivo',
+                            'template_prompt': 'Contenido SCORM interactivo'
+                        }
+                    )
+                    
+                    # Obtener el curso
+                    course = instance.topic.course if instance.topic else instance.course_topic.course
+                    
+                    # Crear ContentRequest
+                    content_request = ContentRequest.objects.create(
+                        teacher=teacher.user,
+                        course=course,
+                        content_type=content_type,
+                        topic=instance.title,
+                        grade_level='General',
+                        additional_instructions=instance.description or 'Material SCORM procesado automáticamente',
+                        status='completed',
+                        related_topic=instance.topic,
+                        for_class=instance.is_class_material
+                    )
+                    
+                    # Crear GeneratedContent
+                    generated_content = GeneratedContent.objects.create(
+                        request=content_request,
+                        title=instance.title,
+                        raw_content=f"Contenido SCORM: {instance.title}",
+                        formatted_content=f"<p>Material SCORM interactivo: {instance.title}</p>",
+                        model_used='auto_processed',
+                        tokens_used=0
+                    )
+                    
+                    # Crear el paquete SCORM
+                    scorm_package = SCORMPackage.objects.create(
+                        generated_content=generated_content,
+                        title=instance.title,
+                        description=instance.description or f"Paquete SCORM: {instance.title}",
+                        standard='scorm_2004_4th',
+                        package_file=instance.file,
+                        is_published=True,
+                        created_by=teacher.user
+                    )
+                    
+                    # Asociar el paquete SCORM al material
+                    instance.scorm_package = scorm_package
+                    instance.save(update_fields=['scorm_package'])
+                    
+                    logger.info(f"🤖 SCORM procesado automáticamente por signal: {scorm_package.id} para material: {instance.title}")
+                    
+                except Exception as e:
+                    logger.error(f"❌ Error en signal auto_process_scorm_material: {str(e)}")
+            else:
+                logger.info(f"📦 Material SCORM ya tiene paquete asociado: {instance.title}")
+        else:
+            logger.warning(f"⚠️ Material marcado como SCORM pero no es ZIP: {instance.title}")
+    elif not created and instance.material_type == 'SCORM':
+        logger.info(f"🔄 Material SCORM actualizado: {instance.title}")

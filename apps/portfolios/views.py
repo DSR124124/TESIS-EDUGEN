@@ -759,6 +759,76 @@ def add_portfolio_material(request, topic_id):
                     is_class_material=is_class_material
                 )
                 
+                # Si es un archivo SCORM, procesarlo
+                if material_type == 'SCORM' and file.name.lower().endswith('.zip'):
+                    try:
+                        from apps.scorm_packager.models import SCORMPackage
+                        from apps.ai_content_generator.models import GeneratedContent, ContentRequest, ContentType
+                        
+                        # Crear o obtener ContentType para SCORM
+                        content_type, created = ContentType.objects.get_or_create(
+                            name='SCORM Package',
+                            defaults={
+                                'description': 'Paquete SCORM interactivo',
+                                'template_prompt': 'Contenido SCORM interactivo'
+                            }
+                        )
+                        
+                        # Obtener el curso
+                        course = topic.course if topic else course_topic.course
+                        
+                        # Crear ContentRequest
+                        content_request = ContentRequest.objects.create(
+                            teacher=teacher.user,
+                            course=course,
+                            content_type=content_type,
+                            topic=title,
+                            grade_level='General',
+                            additional_instructions=description or 'Material SCORM subido manualmente',
+                            status='completed',
+                            related_topic=topic,
+                            for_class=is_class_material
+                        )
+                        
+                        # Crear GeneratedContent con los campos correctos
+                        generated_content = GeneratedContent.objects.create(
+                            request=content_request,
+                            title=title,
+                            raw_content=f"Contenido SCORM: {title}",
+                            formatted_content=f"<p>Material SCORM interactivo: {title}</p>",
+                            model_used='manual_upload',
+                            tokens_used=0
+                        )
+                        
+                        # Crear el paquete SCORM
+                        scorm_package = SCORMPackage.objects.create(
+                            generated_content=generated_content,
+                            title=title,
+                            description=description or f"Paquete SCORM: {title}",
+                            standard='scorm_2004_4th',
+                            package_file=file,
+                            is_published=True,
+                            created_by=teacher.user
+                        )
+                        
+                        # Asociar el paquete SCORM al material
+                        material.scorm_package = scorm_package
+                        material.save()
+                        
+                        logger.info(f"✅ Paquete SCORM creado automáticamente: {scorm_package.id} para material: {material.title}")
+                        messages.success(request, f'Material SCORM "{title}" subido y configurado automáticamente para ejecución interactiva.')
+                        
+                    except Exception as e:
+                        logger.error(f"❌ Error al procesar archivo SCORM automáticamente: {str(e)}")
+                        # El material ya fue creado, solo falló el procesamiento SCORM
+                        messages.warning(request, f'Material subido exitosamente, pero hubo un problema al configurar SCORM automáticamente: {str(e)}')
+                elif material_type == 'SCORM' and not file.name.lower().endswith('.zip'):
+                    messages.warning(request, '⚠️ Para materiales SCORM se requieren archivos ZIP. El archivo se guardó como material regular.')
+                else:
+                    # Material no SCORM
+                    logger.info(f"📄 Material regular creado: {material.title} (tipo: {material_type})")
+                    messages.success(request, f'Material "{title}" subido exitosamente.')
+                
                 # Si es un CourseTopic, distribuir automáticamente a todos los estudiantes
                 if is_course_topic and course_topic:
                     from apps.academic.models import Student
@@ -781,6 +851,7 @@ def add_portfolio_material(request, topic_id):
                             
                             # Distribuir a cada estudiante
                             created_count = 0
+                            scorm_distributed_count = 0
                             for student in students:
                                 # Obtener o crear el portafolio del estudiante
                                 portfolio, _ = StudentPortfolio.objects.get_or_create(
@@ -812,7 +883,7 @@ def add_portfolio_material(request, topic_id):
                                     new_file = ContentFile(file_content)
                                     new_file.name = file.name
                                     
-                                    PortfolioMaterial.objects.create(
+                                    student_material = PortfolioMaterial.objects.create(
                                         topic=portfolio_topic,
                                         course_topic=course_topic,
                                         title=title,
@@ -822,13 +893,26 @@ def add_portfolio_material(request, topic_id):
                                         ai_generated=False,
                                         is_class_material=True
                                     )
+                                    
+                                    # Si el material original tiene un scorm_package, asociarlo también al estudiante
+                                    if hasattr(material, 'scorm_package') and material.scorm_package:
+                                        student_material.scorm_package = material.scorm_package
+                                        student_material.save()
+                                        scorm_distributed_count += 1
+                                        logger.info(f"📦 SCORM distribuido a estudiante {student.user.get_full_name()}: {material.scorm_package.id}")
+                                    
                                     created_count += 1
                             
-                            messages.success(request, f'Material subido exitosamente y distribuido a {created_count} estudiantes.')
-                            
+                            # Mensaje de éxito mejorado
+                            if material_type == 'SCORM' and scorm_distributed_count > 0:
+                                messages.success(request, f'🚀 Material SCORM "{title}" distribuido automáticamente a {created_count} estudiantes. Todos pueden ejecutarlo interactivamente.')
+                            else:
+                                messages.success(request, f'Material "{title}" distribuido exitosamente a {created_count} estudiantes.')
+                
                     except Exception as e:
-                        logger.error(f"Error al distribuir material: {str(e)}")
+                        logger.error(f"❌ Error al distribuir material: {str(e)}")
                         messages.success(request, 'Material subido exitosamente, pero hubo problemas al distribuir a algunos estudiantes.')
+                
                 else:
                     messages.success(request, 'Material subido exitosamente.')
                 
@@ -889,11 +973,96 @@ def add_material_form(request, topic_id):
             ('EXAMEN', 'Examen'),
             ('PROYECTO', 'Proyecto'),
             ('LECTURA', 'Lectura'),
+            ('SCORM', 'Paquete SCORM'),
             ('OTRO', 'Otro')
         ]
     }
     
     return render(request, 'portfolios/teacher/add_material.html', context)
+
+@login_required
+def repair_scorm_materials(request):
+    """Vista para reparar materiales SCORM que no tienen paquete asociado"""
+    if not request.user.is_superuser:
+        messages.error(request, 'No tienes permisos para realizar esta acción.')
+        return redirect('dashboard:teacher')
+    
+    if request.method == 'POST':
+        try:
+            from apps.scorm_packager.models import SCORMPackage
+            from apps.ai_content_generator.models import GeneratedContent
+            from django.core.files.base import ContentFile
+            
+            # Buscar materiales SCORM que no tienen scorm_package asociado
+            broken_materials = PortfolioMaterial.objects.filter(
+                material_type='SCORM',
+                scorm_package__isnull=True,
+                file__isnull=False
+            )
+            
+            repaired_count = 0
+            for material in broken_materials:
+                if material.file and material.file.name.lower().endswith('.zip'):
+                    try:
+                        # Crear GeneratedContent temporal
+                        generated_content = GeneratedContent.objects.create(
+                            title=material.title,
+                            content=material.description or "Paquete SCORM reparado",
+                            teacher=material.topic.teacher if material.topic else material.course_topic.teacher,
+                            is_published=True
+                        )
+                        
+                        # Leer el archivo existente
+                        material.file.seek(0)
+                        file_content = material.file.read()
+                        material.file.seek(0)
+                        
+                        # Crear archivo para SCORM package
+                        scorm_file = ContentFile(file_content)
+                        scorm_file.name = f"repaired_scorm_{material.file.name}"
+                        
+                        # Crear SCORMPackage
+                        scorm_package = SCORMPackage.objects.create(
+                            generated_content=generated_content,
+                            title=material.title,
+                            description=material.description or "Paquete SCORM reparado",
+                            package_file=scorm_file,
+                            is_published=True,
+                            created_by=request.user
+                        )
+                        
+                        # Asociar al material
+                        material.scorm_package = scorm_package
+                        material.save()
+                        
+                        repaired_count += 1
+                        logger.info(f"Material SCORM reparado: {material.id} -> SCORMPackage: {scorm_package.id}")
+                        
+                    except Exception as e:
+                        logger.error(f"Error reparando material SCORM {material.id}: {str(e)}")
+                        continue
+            
+            if repaired_count > 0:
+                messages.success(request, f'Se repararon {repaired_count} materiales SCORM.')
+            else:
+                messages.info(request, 'No se encontraron materiales SCORM que necesiten reparación.')
+                
+        except Exception as e:
+            logger.error(f"Error en reparación masiva de SCORM: {str(e)}")
+            messages.error(request, f'Error durante la reparación: {str(e)}')
+    
+    # Mostrar estadísticas
+    total_scorm = PortfolioMaterial.objects.filter(material_type='SCORM').count()
+    with_package = PortfolioMaterial.objects.filter(material_type='SCORM', scorm_package__isnull=False).count()
+    without_package = total_scorm - with_package
+    
+    context = {
+        'total_scorm': total_scorm,
+        'with_package': with_package,
+        'without_package': without_package,
+    }
+    
+    return render(request, 'portfolios/admin/repair_scorm.html', context)
 
 def delete_portfolio_material(request, material_id):
     """Vista para eliminar un material didáctico de un tema del portafolio"""
